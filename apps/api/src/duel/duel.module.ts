@@ -9,5 +9,6 @@ import { CoinLedgerModule } from '../coin-ledger/coin-ledger.module';
 @Module({
   imports: [AuthModule, RedisModule, ProgressionModule, CoinLedgerModule],
   providers: [DuelGateway, DuelService],
+  exports: [DuelService],
 })
 export class DuelModule {}

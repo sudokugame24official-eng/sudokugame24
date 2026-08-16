@@ -824,6 +824,34 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * P1-N: friend duel — creates a real match for two friends.
+   * Called by the presence gateway when a Redis-TTL'd challenge is ACCEPTED.
+   */
+  async createFriendMatch(
+    p1: { userId: string; username: string; rating: number },
+    p2: { userId: string; username: string; rating: number },
+    difficulty: string,
+    betAmount: number,
+  ) {
+    // Both players must have enough coins for the wager (if any)
+    if (betAmount > 0) {
+      const [w1, w2] = await Promise.all([
+        prisma.profile.findUnique({ where: { userId: p1.userId }, select: { coins: true } }),
+        prisma.profile.findUnique({ where: { userId: p2.userId }, select: { coins: true } }),
+      ]);
+      if ((w1?.coins ?? 0) < betAmount || (w2?.coins ?? 0) < betAmount) {
+        throw new Error('Un des joueurs n’a pas assez de coins pour ce pari.');
+      }
+    }
+
+    return this.startDuel(
+      { socketId: 'friend-match', userId: p1.userId, username: p1.username, difficulty: difficulty as any, betAmount, rating: p1.rating, joinedAt: Date.now() },
+      { socketId: 'friend-match', userId: p2.userId, username: p2.username, difficulty: difficulty as any, betAmount, rating: p2.rating, joinedAt: Date.now() },
+      false,
+    );
+  }
+
   // --- GAMEPLAY ---
 
   private async startDuel(
@@ -907,6 +935,7 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     this.server.to(`match_${match.id}`).emit('duel_start', payload);
 
     if (isBotMatch) this.startBotLoop(match.id);
+    return match;
   }
 
   private startBotLoop(matchId: string) {

@@ -96,6 +96,7 @@ describe('P1-M: presence gateway (ZSET + handshake auth)', () => {
       { getClient: () => redis } as any,
       friendsService as any,
       jwtService,
+      { createFriendMatch: jest.fn() } as any,
     );
     server = makeServer();
     (presence as any).server = server;
