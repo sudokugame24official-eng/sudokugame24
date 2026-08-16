@@ -24,6 +24,7 @@ import {
   ShoppingCart,
   Image as ImageIcon,
   CalendarDays,
+  Gamepad2,
 } from "lucide-react";
 
 // Staff roles allowed into the admin panel. The API enforces permissions
@@ -66,6 +67,7 @@ export default function AdminLayout({
         { name: "Moderation", path: "/moderation", icon: ShieldAlert },
         { name: "Audit Logs", path: "/audit", icon: ScrollText },
         { name: "Daily Challenge", path: "/daily", icon: CalendarDays },
+        { name: "Game Modes", path: "/modes", icon: Gamepad2 },
       ],
     },
     {
