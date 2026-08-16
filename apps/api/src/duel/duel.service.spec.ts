@@ -111,7 +111,7 @@ describe('DuelService.atomicHandleMove — P0-E concurrency regression', () => {
   it('loses NO update when 10 concurrent moves target 10 DISTINCT cells', async () => {
     await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
 
-    const moves = [];
+    const moves: Promise<any>[] = [];
     for (let i = 0; i < 10; i++) {
       moves.push(move(i % 2 === 0 ? 'p1' : 'p2', 0, i, 1));
     }

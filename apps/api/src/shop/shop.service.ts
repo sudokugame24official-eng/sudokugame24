@@ -152,10 +152,12 @@ export class ShopService {
         stripeEventId,
       );
     } catch (e) {
-      this.logger.error(`Erreur pour ${sessionId}`, e);
+      // P0-G/D1: a failed completion must be terminal (FAILED), never reverted
+      // to PENDING — reverting allowed a replayed webhook to double-credit.
+      this.logger.error(`Paiement échoué pour ${sessionId}`, e);
       await prisma.purchase.updateMany({
         where: { stripeSessionId: sessionId, status: 'COMPLETED' },
-        data: { status: 'PENDING' },
+        data: { status: 'FAILED' },
       });
     }
   }
@@ -175,14 +177,17 @@ export class ShopService {
 
     try {
       await prisma.$transaction(async (tx) => {
-        // Debit coins
+        // Debit coins. No Date.now()-based idempotency key: such keys never
+        // deduplicate anything (every retry is a new key). The $transaction +
+        // optimistic balance lock below is the actual double-spend guard, and
+        // a retried purchase fairly delivers the product twice for two charges.
         await this.coinLedger.debit(
           userId,
           product.priceCoins,
           CoinTransactionType.SHOP_PURCHASE,
           'Shop',
           productId,
-          `buy_prod_${productId}_${userId}_${Date.now()}`,
+          undefined,
           undefined,
           tx,
         );
@@ -226,11 +231,41 @@ export class ShopService {
 
     const REWARD_HINTS = 1;
     const REWARD_COINS = 10;
-    const idempotencyKey = `ad_${userId}_${Date.now()}`;
+    // P0-G: daily cap — without it, spamming the (client-simulated) ad watch
+    // was an unlimited coin faucet (a Date.now() idempotency key dedups nothing).
+    const DAILY_CAP = parseInt(process.env.AD_REWARD_DAILY_CAP || '5', 10);
+
+    const dayStart = new Date();
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const claimedToday = await prisma.coinTransaction.count({
+      where: {
+        userId,
+        type: CoinTransactionType.AD_REWARD,
+        createdAt: { gte: dayStart },
+      },
+    });
+    if (claimedToday >= DAILY_CAP) {
+      throw new BadRequestException('Limite quotidienne de récompenses publicitaires atteinte.');
+    }
 
     try {
-      await this.coinLedger.credit(userId, REWARD_COINS, CoinTransactionType.AD_REWARD, 'AdSense_Rewarded', 'ad_reward', idempotencyKey);
-      await prisma.profile.update({ where: { userId }, data: { hints: { increment: REWARD_HINTS } } });
+      // Coins and hints atomically: one transaction, no partial reward.
+      await prisma.$transaction(async (tx) => {
+        await this.coinLedger.credit(
+          userId,
+          REWARD_COINS,
+          CoinTransactionType.AD_REWARD,
+          'AdSense_Rewarded',
+          'ad_reward',
+          undefined,
+          undefined,
+          tx,
+        );
+        await tx.profile.update({
+          where: { userId },
+          data: { hints: { increment: REWARD_HINTS } },
+        });
+      });
     } catch (e) {
       throw new BadRequestException('Could not reward at this time');
     }

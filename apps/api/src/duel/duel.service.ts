@@ -1127,8 +1127,12 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    await this.removeActiveDuel(duel.id);
+    // P0-G: atomically CLAIM the right to finalize this duel.
+    // DEL returns 1 only for the first caller — concurrent finishers
+    // (last two moves, timeout + move, multi-instance) cannot double-pay.
     const redis = this.redisService.getClient();
+    const claim = await redis.del('duel:active:' + duel.id);
+    if (claim === 0) return; // someone else already finalized this duel
     await redis.srem('duel:active_ids', duel.id);
 
     const winnerId =
@@ -1221,53 +1225,71 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       } catch (err) {
         this.logger.error('Failed to update Glicko-2 ratings', err);
       }
+    } // end progression/ratings block (real matches only)
 
-      // Award bets
-      if (duel.betAmount > 0) {
-        try {
-          if (winnerId === 'BOT') {
-            // Bot keeps the money
-          } else if (winnerId === duel.player1Id) {
-            const totalPrize = duel.isBotMatch
-              ? duel.betAmount * 2
-              : duel.betAmount * 2;
+    // P0-G: Award bets — moved OUT of the !isBotMatch block (bot matches
+    // previously never paid anything: a human beating the bot still lost their stake).
+    // Economy rules:
+    //  - Real match: winner receives BOTH stakes (betAmount * 2) — zero-sum transfer.
+    //  - Draw: both stakes refunded.
+    //  - Bot match: the bot paid no real stake, so the house NEVER mints betAmount*2.
+    //    Human win or draw = stake refunded exactly; bot win = stake lost to the
+    //    house (coin sink). Every payout carries a stable idempotency key so a
+    //    replayed finish event can never double-credit.
+    if (duel.betAmount > 0) {
+      try {
+        if (duel.isBotMatch) {
+          if (winnerId === duel.player1Id || !winnerId) {
             await this.coinLedger.credit(
               duel.player1Id,
-              totalPrize,
+              duel.betAmount,
+              CoinTransactionType.DUEL_WAGER,
+              duel.isBotMatch && winnerId ? 'DuelBotRefund' : 'DuelBotDraw',
+              duel.id,
+              `duel_bot_stake_${duel.id}`,
+            );
+          }
+          // winnerId === 'BOT' (or opponent id of a bot): stake is lost to the house.
+        } else if (duel.player2Id) {
+          if (winnerId === duel.player1Id) {
+            await this.coinLedger.credit(
+              duel.player1Id,
+              duel.betAmount * 2,
               CoinTransactionType.DUEL_WAGER,
               'DuelWin',
               duel.id,
+              `duel_win_${duel.id}_p1`,
             );
-          } else if (winnerId === duel.player2Id && !duel.isBotMatch) {
+          } else if (winnerId === duel.player2Id) {
             await this.coinLedger.credit(
               duel.player2Id,
               duel.betAmount * 2,
               CoinTransactionType.DUEL_WAGER,
               'DuelWin',
               duel.id,
+              `duel_win_${duel.id}_p2`,
             );
-          } else if (!winnerId) {
-            // Draw
+          } else {
             await this.coinLedger.credit(
               duel.player1Id,
               duel.betAmount,
               CoinTransactionType.DUEL_WAGER,
               'DuelDraw',
               duel.id,
+              `duel_draw_${duel.id}_p1`,
             );
-            if (!duel.isBotMatch) {
-              await this.coinLedger.credit(
-                duel.player2Id,
-                duel.betAmount,
-                CoinTransactionType.DUEL_WAGER,
-                'DuelDraw',
-                duel.id,
-              );
-            }
+            await this.coinLedger.credit(
+              duel.player2Id,
+              duel.betAmount,
+              CoinTransactionType.DUEL_WAGER,
+              'DuelDraw',
+              duel.id,
+              `duel_draw_${duel.id}_p2`,
+            );
           }
-        } catch (err) {
-          this.logger.error('Failed to award duel bets', err);
         }
+      } catch (err) {
+        this.logger.error('Failed to award duel bets', err);
       }
     }
 

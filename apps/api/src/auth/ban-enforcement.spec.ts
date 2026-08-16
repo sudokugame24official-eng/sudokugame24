@@ -77,7 +77,7 @@ describe('P0-F: ban enforcement', () => {
       });
 
       const guard = new WsJwtGuard(jwtService);
-      const client = { handshake: { auth: { token }, headers: {} }, data: {} };
+      const client = { handshake: { auth: { token }, headers: {} }, data: {} as any };
       await expect(guard.canActivate(makeContext(client) as any)).resolves.toBe(true);
       expect(client.data.user.id).toBe('u2');
     });
