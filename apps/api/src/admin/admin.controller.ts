@@ -41,8 +41,8 @@ export class AdminController {
     @Param('id') id: string,
     @Body('role') role: Role,
   ) {
-    const adminRole = req.user.role;
-    return this.adminService.updateUserRole(adminRole, id, role);
+    const admin = { id: req.user.id, role: req.user.role };
+    return this.adminService.updateUserRole(admin, id, role);
   }
 
   @Patch('users/:id/ban')
@@ -53,16 +53,16 @@ export class AdminController {
     @Param('id') id: string,
     @Body('reason') reason: string,
   ) {
-    const adminRole = req.user.role;
-    return this.adminService.banUser(adminRole, id, reason);
+    const admin = { id: req.user.id, role: req.user.role };
+    return this.adminService.banUser(admin, id, reason);
   }
 
   @Patch('users/:id/unban')
   @RequirePermission('users.ban')
   @AuditAction('users.unban')
   async unbanUser(@Request() req: any, @Param('id') id: string) {
-    const adminRole = req.user.role;
-    return this.adminService.unbanUser(adminRole, id);
+    const admin = { id: req.user.id, role: req.user.role };
+    return this.adminService.unbanUser(admin, id);
   }
 
   @Delete('users/:id')
@@ -163,9 +163,9 @@ export class AdminController {
     @Param('key') key: string,
     @Body() body: { enabled: boolean; description?: string },
   ) {
-    const adminRole = req.user.role;
+    const admin = { id: req.user.id, role: req.user.role };
     return this.adminService.updateFeatureFlag(
-      adminRole,
+      admin,
       key,
       body.enabled,
       body.description,

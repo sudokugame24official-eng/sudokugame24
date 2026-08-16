@@ -32,6 +32,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
+    // P0-F: a banned user must immediately lose all authenticated access,
+    // not keep it until the JWT cookie expires.
+    if (user.isBanned) {
+      throw new UnauthorizedException('Account suspended');
+    }
+
     const { passwordHash, ...result } = user;
     return result;
   }

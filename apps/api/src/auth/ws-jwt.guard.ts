@@ -49,6 +49,11 @@ export class WsJwtGuard implements CanActivate {
         throw new UnauthorizedException('User not found');
       }
 
+      // P0-F: banned users are rejected on every WebSocket message.
+      if (user.isBanned) {
+        throw new UnauthorizedException('Account suspended');
+      }
+
       // Store user on client for easy access
       client.data.user = user;
       return true;

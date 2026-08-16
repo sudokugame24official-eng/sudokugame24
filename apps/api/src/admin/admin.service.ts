@@ -37,7 +37,8 @@ export class AdminService {
     });
   }
 
-  async updateUserRole(adminRole: Role, targetUserId: string, newRole: Role) {
+  async updateUserRole(admin: { id: string; role: Role }, targetUserId: string, newRole: Role) {
+    const adminRole = admin.role;
     if (adminRole !== Role.SUPER_ADMIN && adminRole !== Role.ADMIN) {
       throw new ForbiddenException();
     }
@@ -63,7 +64,7 @@ export class AdminService {
     });
     return prisma.auditLog.create({
       data: {
-        actorId: adminRole,
+        actorId: admin.id, // the acting admin's user id, not their role string
         action: 'UPDATE_ROLE',
         target: targetUserId,
         newValue: newRole,
@@ -71,7 +72,8 @@ export class AdminService {
     });
   }
 
-  async banUser(adminRole: Role, targetUserId: string, reason: string) {
+  async banUser(admin: { id: string; role: Role }, targetUserId: string, reason: string) {
+    const adminRole = admin.role;
     const target = await prisma.user.findUnique({
       where: { id: targetUserId },
     });
@@ -92,7 +94,7 @@ export class AdminService {
     });
     return prisma.auditLog.create({
       data: {
-        actorId: adminRole,
+        actorId: admin.id, // the acting admin's user id, not their role string
         action: 'BAN_USER',
         target: targetUserId,
         newValue: reason,
@@ -100,11 +102,21 @@ export class AdminService {
     });
   }
 
-  async unbanUser(adminRole: Role, targetUserId: string) {
-    return prisma.user.update({
+  async unbanUser(admin: { id: string; role: Role }, targetUserId: string) {
+    const result = await prisma.user.update({
       where: { id: targetUserId },
       data: { isBanned: false, banReason: null },
     });
+    // P0-F: unban actions must be traceable too (was not audited at all).
+    await prisma.auditLog.create({
+      data: {
+        actorId: admin.id,
+        action: 'UNBAN_USER',
+        target: targetUserId,
+        newValue: 'unbanned',
+      },
+    });
+    return result;
   }
 
   async deleteUser(adminRole: Role, targetUserId: string) {
@@ -323,12 +335,12 @@ export class AdminService {
   }
 
   async updateFeatureFlag(
-    adminRole: Role,
+    admin: { id: string; role: Role },
     key: string,
     enabled: boolean,
     description?: string,
   ) {
-    if (adminRole !== Role.SUPER_ADMIN && adminRole !== Role.ADMIN)
+    if (admin.role !== Role.SUPER_ADMIN && admin.role !== Role.ADMIN)
       throw new ForbiddenException();
     const flag = await prisma.featureFlag.upsert({
       where: { key },
@@ -346,7 +358,7 @@ export class AdminService {
     });
     await prisma.auditLog.create({
       data: {
-        actorId: adminRole,
+        actorId: admin.id, // the acting admin's user id, not their role string
         action: 'UPDATE_FEATURE_FLAG',
         target: key,
         newValue: String(enabled),
