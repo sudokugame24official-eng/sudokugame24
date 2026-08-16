@@ -2,9 +2,11 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   UseGuards,
+  UseInterceptors,
   Request,
 } from '@nestjs/common';
 import { DailyService } from './daily.service';
@@ -48,3 +50,7 @@ export class DailyController {
     return this.dailyService.getLeaderboard(challengeId);
   }
 }
+import { PermissionGuard } from '../auth/guards/permission.guard';
+import { RequirePermission } from '../auth/guards/require-permission.decorator';
+import { AuditAction } from '../auth/decorators/audit-action.decorator';
+import { AuditLogInterceptor } from '../auth/interceptors/audit-log.interceptor';

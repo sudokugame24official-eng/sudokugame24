@@ -606,12 +606,14 @@ model TicketMessage {
 }
 
 model DailyChallenge {
-  id        String                @id @default(cuid())
-  date      DateTime              @unique
-  puzzleId  String
-  puzzle    SudokuPuzzle          @relation(fields: [puzzleId], references: [id])
-  entries   DailyChallengeEntry[]
-  createdAt DateTime              @default(now())
+  id           String                @id @default(cuid())
+  date         DateTime              @unique
+  puzzleId     String
+  puzzle       SudokuPuzzle          @relation(fields: [puzzleId], references: [id])
+  featured     Boolean               @default(false)
+  announcement String?
+  entries      DailyChallengeEntry[]
+  createdAt    DateTime              @default(now())
 }
 
 model DailyChallengeEntry {

@@ -64,6 +64,7 @@ export default function AdminLayout({
         { name: "Users", path: "/users", icon: Users },
         { name: "Moderation", path: "/moderation", icon: ShieldAlert },
         { name: "Audit Logs", path: "/audit", icon: ScrollText },
+        { name: "Daily Challenge", path: "/daily", icon: CalendarDays },
       ],
     },
     {

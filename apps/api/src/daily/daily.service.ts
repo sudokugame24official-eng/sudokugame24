@@ -1,7 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import { prisma, Difficulty, CoinTransactionType } from '@repo/database';
 import { SudokuGenerator } from '@repo/sudoku-engine';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
+
+export interface DailyConfig {
+  enabled: boolean;
+  difficulty: string;
+  xpReward: number;
+  coinRewardPerCell: number;
+  streakBonus: number;
+  maxAttempts: number;
+  featured: boolean;
+  announcement: string | null;
+}
+
+const DAILY_CONFIG_KEY = 'daily_config';
+
+const DEFAULT_DAILY_CONFIG: DailyConfig = {
+  enabled: true,
+  difficulty: 'MEDIUM',
+  xpReward: 50,
+  coinRewardPerCell: 5,
+  streakBonus: 25,
+  maxAttempts: 1,
+  featured: false,
+  announcement: null,
+};
 
 @Injectable()
 export class DailyService {
@@ -9,7 +33,34 @@ export class DailyService {
 
   constructor(private readonly coinLedger: CoinLedgerService) {}
 
+  /** P1-O: owner-configurable daily challenge settings (SiteSettings-backed). */
+  async getDailyConfig(): Promise<DailyConfig> {
+    const row = await prisma.siteSettings.findUnique({ where: { key: DAILY_CONFIG_KEY } });
+    if (!row) return { ...DEFAULT_DAILY_CONFIG };
+    try {
+      return { ...DEFAULT_DAILY_CONFIG, ...JSON.parse(String(row.value)) };
+    } catch {
+      return { ...DEFAULT_DAILY_CONFIG };
+    }
+  }
+
+  async updateDailyConfig(patch: Partial<DailyConfig>): Promise<DailyConfig> {
+    const current = await this.getDailyConfig();
+    const merged = { ...current, ...patch };
+    await prisma.siteSettings.upsert({
+      where: { key: DAILY_CONFIG_KEY },
+      update: { value: JSON.stringify(merged) },
+      create: { key: DAILY_CONFIG_KEY, value: JSON.stringify(merged) },
+    });
+    return merged;
+  }
+
   async getTodaysChallenge() {
+    const config = await this.getDailyConfig();
+    if (!config.enabled) {
+      throw new ForbiddenException('Le défi du jour est désactivé.');
+    }
+
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
@@ -20,7 +71,7 @@ export class DailyService {
 
     if (!challenge) {
       this.logger.log('Generating new Daily Challenge for today');
-      const puzzleData = SudokuGenerator.generate(Difficulty.MEDIUM as any);
+      const puzzleData = SudokuGenerator.generate(config.difficulty as any);
 
       challenge = await prisma.dailyChallenge.create({
         data: {
@@ -29,7 +80,7 @@ export class DailyService {
             create: {
               initialBoard: puzzleData.initialBoard,
               solvedBoard: puzzleData.solvedBoard,
-              difficulty: Difficulty.MEDIUM,
+              difficulty: config.difficulty as Difficulty,
             },
           },
         },
@@ -43,6 +94,57 @@ export class DailyService {
     }
 
     return challenge;
+  }
+
+  /** P1-O: explicitly (re)generate and publish today's challenge. */
+  async publishToday(difficultyOverride?: string) {
+    const config = await this.getDailyConfig();
+    const difficulty = (difficultyOverride || config.difficulty) as Difficulty;
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const existing = await prisma.dailyChallenge.findUnique({ where: { date: today } });
+    if (existing) {
+      throw new ForbiddenException(
+        'Le défi du jour existe déjà (des joueurs ont peut-être participé).',
+      );
+    }
+
+    const puzzleData = SudokuGenerator.generate(difficulty as any);
+    const challenge = await prisma.dailyChallenge.create({
+      data: {
+        date: today,
+        featured: config.featured,
+        announcement: config.announcement,
+        puzzle: {
+          create: {
+            initialBoard: puzzleData.initialBoard,
+            solvedBoard: puzzleData.solvedBoard,
+            difficulty,
+          },
+        },
+      },
+      include: { puzzle: true },
+    });
+    (challenge.puzzle as any).solvedBoard = null;
+    return challenge;
+  }
+
+  /** P1-O: preview tomorrow's challenge WITHOUT persisting anything. */
+  async previewTomorrow() {
+    const config = await this.getDailyConfig();
+    const tomorrow = new Date();
+    tomorrow.setUTCHours(24, 0, 0, 0);
+    const puzzleData = SudokuGenerator.generate(config.difficulty as any);
+    return {
+      date: tomorrow.toISOString(),
+      difficulty: config.difficulty,
+      initialBoard: puzzleData.initialBoard,
+      // solvedBoard intentionally omitted — preview is for layout checking
+      emptyCells: (puzzleData.initialBoard as number[][])
+        .flat()
+        .filter((v) => v === 0).length,
+    };
   }
 
   async startChallenge(userId: string, challengeId: string) {
@@ -90,6 +192,7 @@ export class DailyService {
     challengeId: string,
     finalBoard: any[][], // Add finalBoard
   ) {
+    const config = await this.getDailyConfig();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const challenge = await prisma.dailyChallenge.findUnique({
@@ -124,7 +227,7 @@ export class DailyService {
             initialBoard[r][c] === 0 &&
             finalBoard[r][c] === solvedBoard[r][c]
           ) {
-            trueScore += 5; // 5 coins per correct cell
+            trueScore += config.coinRewardPerCell; // owner-configurable
           }
         }
       }
