@@ -79,3 +79,22 @@ P1-A validation DTO → P1-B admin frontend security → P1-C shop admin + packs
 
 ## BLOCKED_BY_OWNER (rappel)
 1. Rotation secrets Neon + JWT_SECRET  2. Backup + migrate resolve staging  3. Purge données bots (optionnel)
+
+
+---
+
+# VAGUE P1 (suite 2) — session du 2026-08-16
+
+| ID | Item | Status | Preuve |
+|---|---|---|---|
+| P1-F/G | Architecture Ads DB-driven complète | ✅ VERIFIED (archi+unit 5/5) | migration 20260816200000 + composant AdSense réel + admin UI; livraison réelle = BLOCKED (credentials AdSense owner) |
+| P1-I | CMS workflow complet + révisions | ✅ VERIFIED (9/9) | migration 20260816210000; fix sécurité fuite REVIEW; UI admin complète |
+| P1-J | Media library + abstraction storage | ✅ VERIFIED (4/4, FS réel) | migration 20260816220000; S3 = NOT CONFIGURED (fail-fast, runbook) |
+| P1-M | Chat multi-instance + présence TTL | ✅ VERIFIED (unit 9/9) | map locale supprimée, rooms Redis, handshake auth, ZSET+TTL+sweep; E2E 2-process = pending staging |
+| — | Suite API complète | ✅ 67/67 tests, tsc api+web clean | exécution réelle |
+
+## Reste P1 (ordre directive)
+P1-K (Q&A), P1-L (Forum+), P1-N (challenge ami), P1-O (Daily admin), P1-P (modes), P1-Q (leaderboard), P1-R/S/T/U (SEO — priorité business), P1-V/W (analytics), P1-X/Y/Z (thèmes/homepage/SEO admin), P1-AA→AG (handover, perf, load, tests, docs, cleanup, audit final).
+
+## Migrations en attente d'application staging (owner, après backup)
+- 0_init (baseline resolve) → 20260816200000 → 20260816210000 → 20260816220000
