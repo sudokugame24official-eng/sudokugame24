@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   SudokuGenerator,
+  SudokuSolver,
   Difficulty,
   SudokuGrid as GridType,
   SudokuValue,
@@ -20,7 +21,6 @@ interface SudokuGridProps {
   onGameOver?: () => void;
   onBoardChange?: (board: GridType) => void;
   initialBoardProp?: GridType;
-  solvedBoardProp?: GridType;
   onCorrectCell?: (coins: number) => void;
 }
 
@@ -32,7 +32,6 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
   onGameOver,
   onBoardChange,
   initialBoardProp,
-  solvedBoardProp,
   onCorrectCell,
 }) => {
   const [initialBoard, setInitialBoard] = useState<GridType | null>(null);
@@ -64,9 +63,14 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
 
   useEffect(() => {
     let initial, solved;
-    if (initialBoardProp && solvedBoardProp) {
+    if (initialBoardProp) {
+      // Server-provided puzzle (solo session / daily challenge).
+      // The server never sends the solution; derive it locally for UX only
+      // (mistake marking + completion detection). Server stays authoritative on submit.
       initial = initialBoardProp;
-      solved = solvedBoardProp;
+      const derived = initialBoardProp.map((row) => [...row]);
+      SudokuSolver.solve(derived);
+      solved = derived;
     } else {
       const puzzle = SudokuGenerator.generate(difficulty);
       initial = puzzle.initialBoard;
@@ -81,7 +85,7 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
     setNotes({});
     setSelectedCell(null);
     setHistory([]);
-  }, [difficulty, isDaily, initialBoardProp, solvedBoardProp]);
+  }, [difficulty, isDaily, initialBoardProp]);
 
   const handleCellClick = (row: number, col: number) => {
     if (initialBoard && initialBoard[row]?.[col] === 0) {

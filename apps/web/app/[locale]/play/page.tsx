@@ -246,7 +246,6 @@ export default function SoloPlayPage() {
             onGameOver={handleGameOverErrors}
             onBoardChange={setCurrentBoard}
             initialBoardProp={dailyPuzzle?.initialBoard}
-            solvedBoardProp={dailyPuzzle?.solvedBoard}
           />
         </div>
 

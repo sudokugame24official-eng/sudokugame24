@@ -45,11 +45,12 @@ export class SudokuService {
       },
     });
 
+    // Anti-cheat: the solution must NEVER be sent to the client.
+    // The server validates the submitted board against puzzle.solvedBoard in submitSession.
     return {
       sessionId: session.id,
       difficulty: puzzle.difficulty,
       initialBoard: puzzleData.initialBoard,
-      solvedBoard: puzzleData.solvedBoard,
     };
   }
 
