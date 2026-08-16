@@ -98,3 +98,29 @@ P1-K (Q&A), P1-L (Forum+), P1-N (challenge ami), P1-O (Daily admin), P1-P (modes
 
 ## Migrations en attente d'application staging (owner, après backup)
 - 0_init (baseline resolve) → 20260816200000 → 20260816210000 → 20260816220000
+
+---
+
+# VAGUE P1 (suite 3) — session du 2026-08-17
+
+| ID | Item | Status | Preuve |
+|---|---|---|---|
+| P1-K | Q&A complet | OK | 16/16 tests; pages SSR + JSON-LD; migration 20260817000000 |
+| P1-L | Forum modération + SEO | OK | 10/10 tests; topic slug SSR + DiscussionForumPosting; migration 20260817010000 |
+| P1-N | Friend challenge TTL | OK (unit) | 11/11 tests; invitation Redis EX 60s atomique; E2E live = pending staging |
+| P1-O | Daily admin | OK | 8/8 tests; config SiteSettings + publish/preview; migration 20260817020000 |
+| P1-P | Game modes | OK | 6/6 tests; 7 modes, désactivés invisibles |
+| P1-Q | Leaderboard périodes | OK | 7/7 tests; groupBy SQL + cache 60s; page SSR reconstruite |
+| P1-R/S | Landing pages /sudoku | OK (R partiel) | build exit 0, pages SSG statiques; contenu unique par niveau |
+| P1-T | Locales SEO | OK | SEO_LOCALES en/fr/de; es/it hors hreflang/sitemap (1/16 namespaces) |
+
+Etat global session : 15 suites / 125 tests verts + build web production PASS (exit 0).
+Commits totaux : 30.
+
+## Reste
+P1-R audit complet des métadonnées de chaque page, P1-U graphe de contenu,
+P1-V/W analytics, P1-X/Y/Z themes/homepage/SEO admin, P1-AA jusqu a P1-AG.
+
+## Migrations en attente d application par l owner (apres backup)
+0_init, 20260816200000 ads, 20260816210000 CMS, 20260816220000 media,
+20260817000000 QA, 20260817010000 forum, 20260817020000 daily.
