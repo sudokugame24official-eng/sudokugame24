@@ -14,12 +14,14 @@ import {
 } from "lucide-react";
 import { SudokuBoard } from "@/components/SudokuGrid";
 import AdSlot from "@/components/monetization/AdSlot";
+import { useGameModes } from "@/hooks/useGameModes";
 import { cn } from "@/lib/utils";
 import { Link } from "@/navigation";
 
 export default function SoloPlayPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameMode, setGameMode] = useState<"SOLO" | "DAILY">("SOLO");
+  const { isEnabled } = useGameModes(); // P1-P: disabled modes disappear
   const [selectedDifficulty, setSelectedDifficulty] =
     useState<string>("MEDIUM");
 
@@ -381,6 +383,7 @@ export default function SoloPlayPage() {
           <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
             onClick={() => startGame("DAILY", "MEDIUM")}
+            style={isEnabled("DAILY") ? undefined : { display: "none" }}
             className="bg-gradient-to-br from-[#041E42] to-[#0A2A5C] border border-[#FF4500]/30 p-8 rounded-[2rem] relative overflow-hidden group cursor-pointer shadow-[0_20px_50px_rgba(4,30,66,0.5)]"
           >
             <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500">

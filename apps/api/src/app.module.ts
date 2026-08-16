@@ -29,6 +29,7 @@ import { SudokuModule } from './sudoku/sudoku.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MediaModule } from './media/media.module';
 import { QuestionsModule } from './questions/questions.module';
+import { GameModesModule } from './gamemodes/game-modes.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { QuestionsModule } from './questions/questions.module';
     KnowledgeModule,
     MediaModule,
     QuestionsModule,
+    GameModesModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

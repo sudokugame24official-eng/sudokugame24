@@ -109,7 +109,7 @@ describe('P1-O: daily challenge admin configurability', () => {
 
     expect(preview.difficulty).toBe('MEDIUM');
     expect(preview.emptyCells).toBe(81);
-    expect(preview.solvedBoard).toBeUndefined();
+    expect((preview as any).solvedBoard).toBeUndefined();
     expect(prisma.dailyChallenge.create).not.toHaveBeenCalled();
   });
 });
