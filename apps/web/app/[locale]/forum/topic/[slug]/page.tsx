@@ -1,5 +1,6 @@
-import { Metadata } from "next";
 import Link from "next/link";
+import { extractContextualLinks } from "@/lib/related-links";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { API_URL } from "@/lib/api";
 import { MessageCircle, Eye, Pin, Lock, CheckCircle2 } from "lucide-react";
@@ -149,6 +150,22 @@ export default async function ForumTopicPage({
         {/* Semantic graph: contextual links (techniques mentioned → Academy, game modes → their pages) */}
         <aside className="mt-12 bg-card/30 border border-white/10 rounded-2xl p-6 text-sm">
           <h2 className="font-black mb-3">{t("Explore", "Explorer")}</h2>
+          {(() => {
+            // P1-U: links derived from what THIS topic actually mentions
+            const ctx = extractContextualLinks(
+              `${topic.title} ${topic.content}`,
+              locale,
+            );
+            return ctx.length > 0 ? (
+              <div className="flex flex-wrap gap-3 mb-4">
+                {ctx.map((l) => (
+                  <Link key={l.href} href={l.href} className="bg-primary/20 text-primary border border-primary/30 px-4 py-2 rounded-lg hover:bg-primary/30">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            ) : null;
+          })()}
           <div className="flex flex-wrap gap-3">
             <Link href={`/${locale}/learn`} className="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20">{t("Sudoku Academy", "Académie Sudoku")}</Link>
             <Link href={`/${locale}/questions`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">Q&A</Link>
