@@ -13,13 +13,14 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() body: any, @Res({ passthrough: true }) res: Response) {
+  async register(@Body() body: RegisterDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.authService.register(
       body.email,
       body.password,
@@ -39,7 +40,7 @@ export class AuthController {
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
-  async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
+  async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.authService.validateUser(body.email, body.password);
     if (!user) {
       res.status(401).json({ message: 'Identifiants invalides' });

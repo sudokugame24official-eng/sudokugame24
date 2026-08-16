@@ -54,7 +54,7 @@ export default function MarketingAdminPage() {
       await fetch(`${API_URL}/admin/marketing-settings`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pixels),
+        body: JSON.stringify({ settings: pixels }),
         credentials: "include",
       });
       showSuccess();

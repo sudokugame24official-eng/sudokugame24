@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { DailyService } from './daily.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SubmitChallengeDto } from './dto/submit-challenge.dto';
 
 @Controller('daily')
 export class DailyController {
@@ -32,13 +33,13 @@ export class DailyController {
   @Post(':challengeId/submit')
   async submitEntry(
     @Param('challengeId') challengeId: string,
-    @Body() body: { finalBoard: any[][] },
+    @Body() dto: SubmitChallengeDto,
     @Request() req,
   ) {
     return this.dailyService.submitEntry(
       req.user.id,
       challengeId,
-      body.finalBoard,
+      dto.finalBoard,
     );
   }
 

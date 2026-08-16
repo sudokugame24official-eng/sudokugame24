@@ -10,6 +10,11 @@ import {
 } from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  SendFriendRequestDto,
+  RespondFriendRequestDto,
+  BlockByUsernameDto,
+} from './dto/friends.dto';
 
 @Controller('friends')
 @UseGuards(JwtAuthGuard)
@@ -27,17 +32,13 @@ export class FriendsController {
   }
 
   @Post('request')
-  async sendRequest(@Request() req, @Body('username') username: string) {
-    return this.friendsService.sendRequest(req.user.id, username);
+  async sendRequest(@Request() req, @Body() dto: SendFriendRequestDto) {
+    return this.friendsService.sendRequest(req.user.id, dto.username);
   }
 
   @Post('respond')
-  async respondToRequest(
-    @Request() req,
-    @Body('friendId') friendId: string,
-    @Body('accept') accept: boolean,
-  ) {
-    return this.friendsService.respondToRequest(req.user.id, friendId, accept);
+  async respondToRequest(@Request() req, @Body() dto: RespondFriendRequestDto) {
+    return this.friendsService.respondToRequest(req.user.id, dto.friendId, dto.accept);
   }
 
   @Delete(':friendId')
@@ -46,7 +47,7 @@ export class FriendsController {
   }
 
   @Post('block')
-  async blockUser(@Request() req, @Body('username') username: string) {
-    return this.friendsService.blockUser(req.user.id, username);
+  async blockUser(@Request() req, @Body() dto: BlockByUsernameDto) {
+    return this.friendsService.blockUser(req.user.id, dto.username);
   }
 }

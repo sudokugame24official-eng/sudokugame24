@@ -124,7 +124,7 @@ export default function SoloPlayPage() {
         gameResult === "VICTORY" ||
         gameResult === "ERRORS")
     ) {
-      if (gameMode === "DAILY" && challengeId) {
+      if (gameMode === "DAILY" && challengeId && Array.isArray(currentBoard)) {
         fetch(`${API_URL}/daily/${challengeId}/submit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -134,7 +134,7 @@ export default function SoloPlayPage() {
           }),
           credentials: "include",
         }).catch((err) => console.error("Failed to submit daily score", err));
-      } else if (gameMode === "SOLO" && soloSessionId) {
+      } else if (gameMode === "SOLO" && soloSessionId && Array.isArray(currentBoard)) {
         fetch(`${API_URL}/sudoku/${soloSessionId}/submit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -39,6 +39,8 @@
     "@types/nodemailer": "^8.0.1",
     "bcryptjs": "^3.0.3",
     "bullmq": "^6.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "glicko2": "^1.2.1",
     "helmet": "^8.3.0",

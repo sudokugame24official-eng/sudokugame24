@@ -4,6 +4,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '@repo/database';
+import {
+  UpdateMonetizationFlagDto,
+  UpdateAdConfigDto,
+} from '../admin/dto/admin.dto';
 
 @Controller('monetization')
 export class MonetizationController {
@@ -34,9 +38,7 @@ export class MonetizationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('flags')
-  async updateFlag(
-    @Body() body: { key: string; enabled: boolean; description?: string },
-  ) {
+  async updateFlag(@Body() body: UpdateMonetizationFlagDto) {
     return this.monetizationService.updateFeatureFlag(
       body.key,
       body.enabled,
@@ -47,15 +49,7 @@ export class MonetizationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('ad-config')
-  async updateAdConfig(
-    @Body()
-    body: {
-      slotName: string;
-      provider: string;
-      enabled: boolean;
-      publisherId?: string;
-    },
-  ) {
+  async updateAdConfig(@Body() body: UpdateAdConfigDto) {
     return this.monetizationService.updateAdConfig(
       body.slotName,
       body.provider,

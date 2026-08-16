@@ -22,6 +22,12 @@ import { PermissionGuard } from '../auth/guards/permission.guard';
 import { RequirePermission } from '../auth/guards/require-permission.decorator';
 import { AuditAction } from '../auth/decorators/audit-action.decorator';
 import { AuditLogInterceptor } from '../auth/interceptors/audit-log.interceptor';
+import {
+  BuyCoinsDto,
+  BuyProductDto,
+  CreateProductDto,
+  UpdateProductDto,
+} from './dto/shop.dto';
 
 @Controller('shop')
 export class ShopController {
@@ -54,7 +60,7 @@ export class ShopController {
 
   @UseGuards(JwtAuthGuard)
   @Post('buy-coins')
-  async buyCoins(@Request() req, @Body() body: { packId: string }) {
+  async buyCoins(@Request() req, @Body() body: BuyCoinsDto) {
     if (!(await this.featureFlags.isFeatureEnabled('PAYMENTS_ENABLED')))
       throw new ForbiddenException('Payments are disabled');
     return this.shopService.createCheckoutSession(req.user.id, body.packId);
@@ -62,7 +68,7 @@ export class ShopController {
 
   @UseGuards(JwtAuthGuard)
   @Post('buy-product')
-  async buyProduct(@Request() req, @Body() body: { productId: string }) {
+  async buyProduct(@Request() req, @Body() body: BuyProductDto) {
     if (!(await this.featureFlags.isFeatureEnabled('SHOP_ENABLED')))
       throw new ForbiddenException('Shop is disabled');
     return this.shopService.buyProduct(req.user.id, body.productId);
@@ -117,8 +123,8 @@ export class ShopController {
   @Post('admin/products')
   @RequirePermission('shop.manage')
   @AuditAction('shop.create_product')
-  async createProductAdmin(@Body() data: any) {
-    return this.shopService.createProductAdmin(data);
+  async createProductAdmin(@Body() data: CreateProductDto) {
+    return this.shopService.createProductAdmin(data as any);
   }
 
   @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -126,8 +132,8 @@ export class ShopController {
   @Put('admin/products/:id')
   @RequirePermission('shop.manage')
   @AuditAction('shop.update_product')
-  async updateProductAdmin(@Param('id') id: string, @Body() data: any) {
-    return this.shopService.updateProductAdmin(id, data);
+  async updateProductAdmin(@Param('id') id: string, @Body() data: UpdateProductDto) {
+    return this.shopService.updateProductAdmin(id, data as any);
   }
 
   @UseGuards(JwtAuthGuard, PermissionGuard)

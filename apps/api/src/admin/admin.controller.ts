@@ -19,6 +19,16 @@ import { PermissionGuard } from '../auth/guards/permission.guard';
 import { RequirePermission } from '../auth/guards/require-permission.decorator';
 import { AuditAction } from '../auth/decorators/audit-action.decorator';
 import { AuditLogInterceptor } from '../auth/interceptors/audit-log.interceptor';
+import {
+  UpdateFeatureFlagDto,
+  GrantCoinsDto,
+  ReplyTicketDto,
+  UpdateMarketingSettingsDto,
+  CreateArticleDto,
+  UpdateAdSlotDto,
+  BanUserDto,
+  UpdateUserRoleDto,
+} from './dto/admin.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -39,10 +49,10 @@ export class AdminController {
   async updateUserRole(
     @Request() req: any,
     @Param('id') id: string,
-    @Body('role') role: Role,
+    @Body() body: UpdateUserRoleDto,
   ) {
     const admin = { id: req.user.id, role: req.user.role };
-    return this.adminService.updateUserRole(admin, id, role);
+    return this.adminService.updateUserRole(admin, id, body.role as Role);
   }
 
   @Patch('users/:id/ban')
@@ -51,10 +61,10 @@ export class AdminController {
   async banUser(
     @Request() req: any,
     @Param('id') id: string,
-    @Body('reason') reason: string,
+    @Body() body: BanUserDto,
   ) {
     const admin = { id: req.user.id, role: req.user.role };
-    return this.adminService.banUser(admin, id, reason);
+    return this.adminService.banUser(admin, id, body.reason);
   }
 
   @Patch('users/:id/unban')
@@ -92,10 +102,10 @@ export class AdminController {
   async replyToTicket(
     @Request() req: any,
     @Param('id') id: string,
-    @Body('content') content: string,
+    @Body() body: ReplyTicketDto,
   ) {
     const adminId = req.user.id;
-    return this.adminService.replyToTicket(adminId, id, content);
+    return this.adminService.replyToTicket(adminId, id, body.content);
   }
 
   @Patch('tickets/:id/close')
@@ -130,9 +140,9 @@ export class AdminController {
   @Post('content')
   @RequirePermission('cms.edit')
   @AuditAction('cms.create_article')
-  async createArticle(@Request() req: any, @Body() data: any) {
+  async createArticle(@Request() req: any, @Body() data: CreateArticleDto) {
     const adminId = req.user.id;
-    return this.adminService.createArticle(adminId, data);
+    return this.adminService.createArticle(adminId, data as any);
   }
 
   // --- ANALYTICS ---
@@ -161,7 +171,7 @@ export class AdminController {
   async updateFeatureFlag(
     @Request() req: any,
     @Param('key') key: string,
-    @Body() body: { enabled: boolean; description?: string },
+    @Body() body: UpdateFeatureFlagDto,
   ) {
     const admin = { id: req.user.id, role: req.user.role };
     return this.adminService.updateFeatureFlag(
@@ -182,8 +192,8 @@ export class AdminController {
   @Put('marketing-settings')
   @RequirePermission('settings.manage')
   @AuditAction('settings.update')
-  async updateMarketingSettings(@Body() data: any) {
-    return this.adminService.updateMarketingSettings(data);
+  async updateMarketingSettings(@Body() data: UpdateMarketingSettingsDto) {
+    return this.adminService.updateMarketingSettings(data.settings as any);
   }
 
   // --- ECONOMY ---
@@ -192,12 +202,10 @@ export class AdminController {
   @AuditAction('economy.grant_coins')
   async grantCoins(
     @Request() req: any,
-    @Body('userId') userId: string,
-    @Body('amount') amount: number,
-    @Body('reason') reason: string,
+    @Body() body: GrantCoinsDto,
   ) {
     const adminId = req.user.id;
-    return this.adminService.grantCoins(adminId, userId, amount, reason);
+    return this.adminService.grantCoins(adminId, body.userId, body.amount, body.reason);
   }
 
   @Get('economy/reconciliation')
@@ -218,9 +226,9 @@ export class AdminController {
   @AuditAction('ads.update_slot')
   async updateAdSlot(
     @Param('slotName') slotName: string,
-    @Body() data: any,
+    @Body() data: UpdateAdSlotDto,
   ) {
-    return this.adminService.updateAdSlot(slotName, data);
+    return this.adminService.updateAdSlot(slotName, data as any);
   }
 
   // --- SYSTEM HEALTH ---

@@ -13,6 +13,10 @@ import {
 import { ContentService } from './content.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Role } from '@repo/database';
+import {
+  ContentCreateArticleDto,
+  ContentUpdateArticleDto,
+} from './dto/article.dto';
 
 @Controller('content')
 export class ContentController {
@@ -34,19 +38,33 @@ export class ContentController {
   // Admin endpoints
   @UseGuards(JwtAuthGuard)
   @Post('articles')
-  async createArticle(@Request() req, @Body() body) {
-    if (req.user.role !== Role.ADMIN && req.user.role !== Role.MODERATOR) {
+  async createArticle(@Request() req, @Body() body: ContentCreateArticleDto) {
+    if (
+      req.user.role !== Role.ADMIN &&
+      req.user.role !== Role.SUPER_ADMIN &&
+      req.user.role !== Role.CONTENT_MANAGER &&
+      req.user.role !== Role.MODERATOR
+    ) {
       throw new ForbiddenException('Not authorized to publish content');
     }
-    return this.contentService.createArticle(body, req.user.id);
+    return this.contentService.createArticle(body as any, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('articles/:id')
-  async updateArticle(@Request() req, @Param('id') id: string, @Body() body) {
-    if (req.user.role !== Role.ADMIN && req.user.role !== Role.MODERATOR) {
+  async updateArticle(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: ContentUpdateArticleDto,
+  ) {
+    if (
+      req.user.role !== Role.ADMIN &&
+      req.user.role !== Role.SUPER_ADMIN &&
+      req.user.role !== Role.CONTENT_MANAGER &&
+      req.user.role !== Role.MODERATOR
+    ) {
       throw new ForbiddenException('Not authorized to edit content');
     }
-    return this.contentService.updateArticle(id, body);
+    return this.contentService.updateArticle(id, body as any);
   }
 }

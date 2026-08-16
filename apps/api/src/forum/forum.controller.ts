@@ -12,6 +12,11 @@ import {
 } from '@nestjs/common';
 import { ForumService } from './forum.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  CreateForumPostDto,
+  CreateForumCommentDto,
+  UpdateForumPostDto,
+} from './dto/forum.dto';
 
 @Controller('forum')
 export class ForumController {
@@ -36,17 +41,12 @@ export class ForumController {
 
   @UseGuards(JwtAuthGuard)
   @Post('posts')
-  async createPost(
-    @Request() req: any,
-    @Body('title') title: string,
-    @Body('content') content: string,
-    @Body('categoryId') categoryId: string,
-  ) {
+  async createPost(@Request() req: any, @Body() dto: CreateForumPostDto) {
     return this.forumService.createPost(
       req.user.id,
-      title,
-      content,
-      categoryId,
+      dto.title,
+      dto.content,
+      dto.categoryId,
     );
   }
 
@@ -55,9 +55,9 @@ export class ForumController {
   async createComment(
     @Request() req: any,
     @Param('id') postId: string,
-    @Body('content') content: string,
+    @Body() dto: CreateForumCommentDto,
   ) {
-    return this.forumService.createComment(req.user.id, postId, content);
+    return this.forumService.createComment(req.user.id, postId, dto.content);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -65,14 +65,13 @@ export class ForumController {
   async updatePost(
     @Request() req: any,
     @Param('id') postId: string,
-    @Body('title') title: string,
-    @Body('content') content: string,
+    @Body() dto: UpdateForumPostDto,
   ) {
     return this.forumService.updatePost(
       req.user.id,
       postId,
-      title,
-      content,
+      dto.title,
+      dto.content,
       req.user.role,
     );
   }
@@ -88,12 +87,12 @@ export class ForumController {
   async updateComment(
     @Request() req: any,
     @Param('id') commentId: string,
-    @Body('content') content: string,
+    @Body() dto: CreateForumCommentDto,
   ) {
     return this.forumService.updateComment(
       req.user.id,
       commentId,
-      content,
+      dto.content,
       req.user.role,
     );
   }

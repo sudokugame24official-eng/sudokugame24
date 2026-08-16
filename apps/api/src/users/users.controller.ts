@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { prisma } from '@repo/database';
+import { AddFriendByIdDto } from '../friends/dto/friends.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -57,7 +58,7 @@ export class UsersController {
   }
 
   @Post('friends/request')
-  async addFriend(@Req() req, @Body() body: { targetUserId: string }) {
+  async addFriend(@Req() req, @Body() body: AddFriendByIdDto) {
     // Check if already friends or requested
     const existing = await prisma.friendship.findFirst({
       where: {
