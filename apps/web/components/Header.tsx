@@ -509,7 +509,7 @@ export const Header = () => {
                     {
                       label: "Communauté",
                       items: [
-                        { href: "/forum", icon: MessageSquare, label: t("forum") },
+                        { href: "/forum", icon: MessageSquare, label: t("forum") }, { name: "Q&A", href: `/${lang}/questions` },
                         { href: "/friends", icon: UsersIcon, label: t("friends") },
                         { href: "/messages", icon: Bell, label: t("messages") },
                       ],

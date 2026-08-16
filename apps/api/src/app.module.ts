@@ -28,6 +28,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { SudokuModule } from './sudoku/sudoku.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MediaModule } from './media/media.module';
+import { QuestionsModule } from './questions/questions.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { MediaModule } from './media/media.module';
     SudokuModule,
     KnowledgeModule,
     MediaModule,
+    QuestionsModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

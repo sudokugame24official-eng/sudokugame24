@@ -91,6 +91,11 @@ model User {
   perks            UserPerk[]
   coinTransactions CoinTransaction[]
   articles         ContentArticle[]  @relation("WrittenArticles")
+  questions        Question[]       @relation("AuthoredQuestions")
+  answers          Answer[]         @relation("AuthoredAnswers")
+  questionVotes    QuestionVote[]
+  answerVotes      AnswerVote[]
+  followedQuestions QuestionFollow[]
   mediaUploads     MediaAsset[]     @relation("UploadedMedia")
 }
 
@@ -158,6 +163,88 @@ model MediaAsset {
   createdAt  DateTime @default(now())
 
   @@index([uploadedBy])
+}
+
+// P1-K: Q&A community
+model Question {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  body          String   @db.Text
+  tags          String[] @default([])
+  views         Int      @default(0)
+  score         Int      @default(0)
+  answerCount   Int      @default(0)
+  hasAccepted   Boolean  @default(false)
+  isClosed      Boolean  @default(false)
+  isLocked      Boolean  @default(false)
+  isPinned      Boolean  @default(false)
+  authorId      String
+  author        User     @relation("AuthoredQuestions", fields: [authorId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+  votes         QuestionVote[]
+  followers     QuestionFollow[]
+  lastActivityAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([score])
+  @@index([lastActivityAt])
+  @@index([isClosed])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation("AuthoredAnswers", fields: [authorId], references: [id], onDelete: Cascade)
+  body       String   @db.Text
+  score      Int      @default(0)
+  isAccepted Boolean  @default(false)
+  votes      AnswerVote[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([questionId])
+  @@index([authorId])
+}
+
+model QuestionVote {
+  id         String @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value      Int // +1 or -1
+  createdAt  DateTime @default(now())
+
+  @@unique([questionId, userId])
+}
+
+model AnswerVote {
+  id        String @id @default(cuid())
+  answerId  String
+  answer    Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value     Int
+  createdAt DateTime @default(now())
+
+  @@unique([answerId, userId])
+}
+
+model QuestionFollow {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([questionId, userId])
 }
 model SudokuPuzzle {
   id             String     @id @default(cuid())
