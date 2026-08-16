@@ -23,6 +23,7 @@ import {
   DollarSign,
   ShoppingCart,
   Image as ImageIcon,
+  CalendarDays,
 } from "lucide-react";
 
 // Staff roles allowed into the admin panel. The API enforces permissions
