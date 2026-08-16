@@ -1,9 +1,10 @@
 import { MetadataRoute } from "next";
+import { SEO_LOCALES } from "../i18n";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
-  const locales = ["en", "fr", "de", "es", "it"];
+  const locales = SEO_LOCALES;
 
   const getAlternates = (route: string) => {
     return {
@@ -19,6 +20,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes = [
     "",
+    "/sudoku",
+    "/sudoku/easy",
+    "/sudoku/medium",
+    "/sudoku/hard",
+    "/sudoku/expert",
+    "/sudoku/extreme",
+    "/questions",
     "/play",
     "/daily",
     "/duel",

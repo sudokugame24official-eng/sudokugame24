@@ -3,6 +3,13 @@ import { getRequestConfig } from "next-intl/server";
 
 // Can be imported from a shared config
 const locales = ["en", "fr", "de", "es", "it"];
+
+/**
+ * P1-T: locales that get hreflang/sitemap SEO signals. es/it have stub
+ * translations (1 namespace vs 16) and must NOT be exposed to search engines
+ * until their message catalogs are complete. Routing still works for humans.
+ */
+export const SEO_LOCALES = ["en", "fr", "de"];
 const defaultLocale = "en";
 
 export default getRequestConfig(async ({ locale }) => {
