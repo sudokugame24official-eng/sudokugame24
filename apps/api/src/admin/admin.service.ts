@@ -576,24 +576,18 @@ export class AdminService {
   }
 
   async updateAdSlot(slotName: string, data: any) {
+    // P1-F/G: full-field ad slot configuration (undefined fields are ignored
+    // by Prisma, so partial updates are safe).
     return prisma.adSlotConfig.upsert({
       where: { slotName },
       update: {
-        provider: data.provider,
-        enabled: data.enabled,
-        publisherId: data.publisherId,
-        adSlotId: data.adSlotId,
-        deviceTarget: data.deviceTarget,
-        pageTarget: data.pageTarget,
+        ...data,
       },
       create: {
         slotName,
         provider: data.provider || 'GoogleAdSense',
         enabled: data.enabled || false,
-        publisherId: data.publisherId,
-        adSlotId: data.adSlotId,
-        deviceTarget: data.deviceTarget || 'ALL',
-        pageTarget: data.pageTarget,
+        ...data,
       },
     });
   }

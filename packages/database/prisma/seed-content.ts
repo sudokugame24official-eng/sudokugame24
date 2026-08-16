@@ -2,6 +2,22 @@ import { PrismaClient, Difficulty, Role } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+
+// P1-F/G: safe default ad slots (DISABLED by default — owner enables per-slot)
+const AD_SLOTS = [
+  { slotName: 'home_leaderboard', placement: 'leaderboard', format: 'horizontal', height: 90 },
+  { slotName: 'academy_incontent', placement: 'in_content', format: 'rectangle', height: 250 },
+  { slotName: 'post_game', placement: 'post_game', format: 'rectangle', height: 250 },
+  { slotName: 'forum_sidebar', placement: 'sidebar', format: 'vertical', height: 600 },
+];
+for (const s of AD_SLOTS) {
+  await prisma.adSlotConfig.upsert({
+    where: { slotName: s.slotName },
+    update: {},
+    create: { slotName: s.slotName, enabled: false, ...s },
+  });
+}
+
 async function main() {
   console.log("Starting massive content seeding for Phase 5...");
 

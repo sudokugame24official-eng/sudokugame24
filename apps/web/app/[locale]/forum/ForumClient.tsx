@@ -3,6 +3,7 @@ import { API_URL } from "@/lib/api";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import AdSlot from "@/components/monetization/AdSlot";
 import {
   MessageSquare,
   Users,

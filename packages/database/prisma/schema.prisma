@@ -374,14 +374,24 @@ model FeatureFlag {
 }
 
 model AdSlotConfig {
-  slotName     String   @id // e.g., 'header', 'forum_sidebar', 'sudoku_page'
-  provider     String   @default("GoogleAdSense")
-  enabled      Boolean  @default(false)
-  publisherId  String?
-  adSlotId     String? // The specific ad unit ID from Google
-  deviceTarget String   @default("ALL") // ALL, DESKTOP, MOBILE
-  pageTarget   String? // Regex or path match
-  updatedAt    DateTime @updatedAt
+  slotName        String   @id // e.g., 'home_leaderboard', 'forum_sidebar', 'post_game'
+  provider        String   @default("GoogleAdSense")
+  enabled         Boolean  @default(false) // ads stay OFF until the owner enables them
+  publisherId     String?
+  adSlotId        String? // The specific ad unit ID from Google
+  deviceTarget    String   @default("ALL") // ALL, DESKTOP, MOBILE
+  pageTarget      String? // path match
+  placement       String? // leaderboard | in_content | sidebar | post_game
+  format          String   @default("auto") // auto | horizontal | rectangle | vertical
+  width           Int? // reserved dimensions (CLS-safe container)
+  height          Int?
+  lazyLoad        Boolean  @default(true) // push to AdSense only when visible
+  consentRequired Boolean  @default(true) // requires GDPR consent
+  frequencyCap    Int? // max impressions per user session
+  experimentGroup String? // A/B experiment label
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model DuelMatch {

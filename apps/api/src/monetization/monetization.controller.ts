@@ -50,12 +50,8 @@ export class MonetizationController {
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('ad-config')
   async updateAdConfig(@Body() body: UpdateAdConfigDto) {
-    return this.monetizationService.updateAdConfig(
-      body.slotName,
-      body.provider,
-      body.enabled,
-      body.publisherId,
-    );
+    const { slotName, ...config } = body;
+    return this.monetizationService.updateAdConfig(slotName, config);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

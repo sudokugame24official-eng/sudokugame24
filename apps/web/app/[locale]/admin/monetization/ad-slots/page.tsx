@@ -209,6 +209,84 @@ export default function AdSlotsAdmin() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm mb-1">Placement</label>
+                  <select
+                    value={editingSlot.placement || "leaderboard"}
+                    onChange={(e) => setEditingSlot({...editingSlot, placement: e.target.value})}
+                    className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2 text-white"
+                  >
+                    <option value="leaderboard">leaderboard</option>
+                    <option value="in_content">in_content</option>
+                    <option value="sidebar">sidebar</option>
+                    <option value="post_game">post_game</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">Format</label>
+                  <select
+                    value={editingSlot.format || "auto"}
+                    onChange={(e) => setEditingSlot({...editingSlot, format: e.target.value})}
+                    className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2 text-white"
+                  >
+                    <option value="auto">auto</option>
+                    <option value="horizontal">horizontal</option>
+                    <option value="rectangle">rectangle</option>
+                    <option value="vertical">vertical</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm mb-1">Largeur (px)</label>
+                  <input
+                    type="number" min={0} max={2000}
+                    value={editingSlot.width ?? ""}
+                    onChange={(e) => setEditingSlot({...editingSlot, width: e.target.value === "" ? undefined : Number(e.target.value)})}
+                    className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">Hauteur (px, anti-CLS)</label>
+                  <input
+                    type="number" min={0} max={2000}
+                    value={editingSlot.height ?? ""}
+                    onChange={(e) => setEditingSlot({...editingSlot, height: e.target.value === "" ? undefined : Number(e.target.value)})}
+                    className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">Cap fréquence/session</label>
+                  <input
+                    type="number" min={0} max={1000}
+                    value={editingSlot.frequencyCap ?? ""}
+                    onChange={(e) => setEditingSlot({...editingSlot, frequencyCap: e.target.value === "" ? undefined : Number(e.target.value)})}
+                    className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={editingSlot.lazyLoad !== false}
+                    onChange={(e) => setEditingSlot({...editingSlot, lazyLoad: e.target.checked})}
+                  />
+                  Lazy loading (chargement à l&apos;apparition)
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={editingSlot.consentRequired !== false}
+                    onChange={(e) => setEditingSlot({...editingSlot, consentRequired: e.target.checked})}
+                  />
+                  Consentement RGPD requis
+                </label>
+              </div>
+
               <div className="pt-4 flex justify-end gap-3">
                 <button
                   type="button"

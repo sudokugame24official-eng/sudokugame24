@@ -13,6 +13,7 @@ import {
   Coins,
 } from "lucide-react";
 import { SudokuBoard } from "@/components/SudokuGrid";
+import AdSlot from "@/components/monetization/AdSlot";
 import { cn } from "@/lib/utils";
 import { Link } from "@/navigation";
 
@@ -317,6 +318,7 @@ export default function SoloPlayPage() {
                   </div>
                 )}
 
+                <AdSlot slotName="post_game" />
                 <div className="flex gap-4">
                   {gameMode === "DAILY" ? (
                     <Link

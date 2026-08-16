@@ -11,6 +11,7 @@ import {
   MaxLength,
   IsObject,
   IsDateString,
+  IsIn,
 } from 'class-validator';
 
 export class UpdateFeatureFlagDto {
@@ -135,12 +136,58 @@ export class UpdateAdSlotDto {
   adSlotId?: string;
 
   @IsOptional()
-  @IsObject()
-  deviceTarget?: any;
+  @IsIn(['ALL', 'DESKTOP', 'MOBILE'])
+  deviceTarget?: string;
 
   @IsOptional()
-  @IsObject()
-  pageTarget?: any;
+  @IsString()
+  @MaxLength(200)
+  pageTarget?: string;
+
+  @IsOptional()
+  @IsIn(['leaderboard', 'in_content', 'sidebar', 'post_game'])
+  placement?: string;
+
+  @IsOptional()
+  @IsIn(['auto', 'horizontal', 'rectangle', 'vertical'])
+  format?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  width?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  height?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  lazyLoad?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  consentRequired?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1000)
+  frequencyCap?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  experimentGroup?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  priority?: number;
 }
 
 export class UpdateMonetizationFlagDto {
@@ -162,17 +209,78 @@ export class UpdateAdConfigDto {
   @MaxLength(50)
   slotName!: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(50)
-  provider!: string;
+  provider?: string;
 
+  @IsOptional()
   @IsBoolean()
-  enabled!: boolean;
+  enabled?: boolean;
 
   @IsOptional()
   @IsString()
   @MaxLength(100)
   publisherId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  adSlotId?: string;
+
+  @IsOptional()
+  @IsIn(['ALL', 'DESKTOP', 'MOBILE'])
+  deviceTarget?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  pageTarget?: string;
+
+  @IsOptional()
+  @IsIn(['leaderboard', 'in_content', 'sidebar', 'post_game'])
+  placement?: string;
+
+  @IsOptional()
+  @IsIn(['auto', 'horizontal', 'rectangle', 'vertical'])
+  format?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  width?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  height?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  lazyLoad?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  consentRequired?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1000)
+  frequencyCap?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  experimentGroup?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  priority?: number;
 }
 
 export class BanUserDto {
