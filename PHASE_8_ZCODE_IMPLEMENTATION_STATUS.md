@@ -49,3 +49,33 @@ Légende : ✅ VERIFIED_BY_EXECUTION · 🔎 VERIFIED_STATICALLY · ⏳ PARTIAL 
 ## Prochaines vagues (ordre)
 
 P1-A validation DTO → P1-B admin frontend security → P1-C shop admin + packs DB → P1-D Stripe server-authoritative → P1-E SEO core → P1-F chat multi-instance → P1-G CD réel → P1-H index BDD → P2…
+
+
+---
+
+# VAGUE P1 — STATUT (session du 2026-08-16, suite)
+
+| ID | Item | Status | Preuve |
+|---|---|---|---|
+| P1-A | ValidationPipe global + DTOs 13 domaines | ✅ | 13 tests exécutés (malformed/unknown/enum/UUID/négatif/board 10x10/oversized) ; tsc clean |
+| P1-B | Guard admin frontend + identité réelle | ✅ | layout rewrité ; 0 Bearer-null restant ; tsc web clean |
+| P1-B | Vraies données audit (endpoint + page) | ✅ | GET /admin/audit fusionne AdminActionLog+AuditLog |
+| P1-C | Menu admin = pages fonctionnelles uniquement | ✅ | menu élagué ; règle respectée |
+| P1-D | Users: search/filtres/pagination/détail | ✅ | API paginée (cap 50) + UI complète ; ban avec raison audité |
+| P1-E | Shop admin 100% DB-driven (UI CRUD) | ✅ | /admin/shop complet ; contraintes stock/maxPerUser/fenêtres enforced serveur |
+| P1-H | Stripe server-authoritative | ✅ (unit) | webhook forgé client supprimé ; verify serveur ; signature toujours vérifiée ; fail-closed secrets ; 11/11 tests. E2E live Stripe = BLOCKED (clés owner) |
+| P1-F/G | Monetization flags/Ads | ⏳ PARTIAL | UI flags+ad-slots existe ; rendu AdSense réel non câblé |
+| P1-I+ | CMS, Media, Q&A, Forum+, Chat multi-instance, Friends challenge, Daily admin, Game modes, Leaderboard+, SEO core, i18n ES/IT, Analytics, Insights, Themes, Homepage builder, SEO admin, Handover, Perf/index, Load tests | ⬛ NON DÉMARRÉ (ordonnancement P1 respecté : A→B→C→D→E→H effectués d'abord) |
+
+## Corrections apportées pendant P1 (honnêteté d'exécution)
+- enableImplicitConversion retiré (option supprimée de Nest 11) — la coercion de chaînes n'était pas nécessaire.
+- GrantCoins: montants strictement positifs (le retrait = futur flux dédié permissionné).
+- updateMarketingSettings: payload frontend adapté à { settings: {...} } (contrat vérifié avant cassure).
+
+## Vérifications de fin de session
+- API : suite complète VERTE (7 suites / 40 tests) — exécution réelle
+- Web : tsc 0 erreur + build production exit 0 — exécution réelle
+- Aucune donnée staging/production touchée ; aucune migration appliquée hors génération locale
+
+## BLOCKED_BY_OWNER (rappel)
+1. Rotation secrets Neon + JWT_SECRET  2. Backup + migrate resolve staging  3. Purge données bots (optionnel)

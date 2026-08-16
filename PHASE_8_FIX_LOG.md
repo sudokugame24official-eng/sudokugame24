@@ -102,3 +102,31 @@ Format: Feature / Before / Change / After / Tests / Security / Performance / Sta
 - P1: ValidationPipe + DTO globaux ; guard frontend admin ; UI shop admin ; Stripe server-verify (checkout succès client = webhook forgé — toujours présent) ; SEO core ; chat multi-instance ; CD réel ; index BDD.
 - Rotation des secrets (action OWNER côté console Neon).
 - `migrate resolve` staging (action OWNER, après backup).
+
+
+---
+
+# VAGUE P1 — FIX LOG (extrait)
+
+## P1-A Validation — ✅
+Before: @Body() any généralisé, aucune couche de validation (class-validator absent).
+Change: ValidationPipe global (whitelist/forbidNonWhitelisted/transform/forbidUnknownValues) + DTOs typés sur auth, sudoku (validateur 9x9), daily, shop (+CRUD admin), forum, friends, users, admin (12 DTOs), content, knowledge, monetization. Fix au passage: content.controller excluait SUPER_ADMIN/CONTENT_MANAGER du CMS.
+Tests: 13 cas exécutés dont mass-assignment isAdmin rejeté → 400.
+
+## P1-B Admin security — ✅
+Before: 0 contrôle d'accès frontend, carte "Admin User/SUPER_ADMIN" codée en dur, 4 pages Bearer null (401 garantis), page audit fictive.
+Change: guard par session (redirect/denied), identité réelle, logout réel, menu limité aux pages fonctionnelles, credentials:"include" partout, GET /admin/audit réel (fusion des 2 tables, cap 500).
+
+## P1-D Users — ✅
+Before: take:100 sans recherche ni détail.
+Change: GET /admin/users paginé+filtrable, GET /admin/users/:id (agrégats, achats, transactions, signalements, audit lié, passwordHash strippé), UI avec modales d'action (ban à raison obligatoire).
+
+## P1-E Shop — ✅
+Before: colonnes stock/maxPerUser/dates mortes ; aucune UI produits.
+Change: enforcement serveur (fenêtre, stock, maxPerUser compté depuis le ledger) + décrément atomique du stock dans la transaction d'achat ; UI CRUD complète /admin/shop.
+
+## P1-H Stripe — ✅ (unit)
+Before: page succès forgant un webhook depuis le navigateur ; bypass signature en NODE_ENV=test ; fallbacks sk_test_mock/whsec_test ; sessions mock.
+Change: GET /shop/purchase/status (vérifie AUPRÈS de Stripe, ownership, idempotent) ; signature toujours vérifiée ; secrets requis fail-closed ; sessions toujours réelles. Webhook = source de vérité principale, verify = rattrapage.
+Tests: 11/11 (cross-user rejeté, double-crédit impossible, fail-closed).
+LIMITS: E2E avec vraies clés Stripe NON exécuté (BLOCKED: clés propriétaire).
