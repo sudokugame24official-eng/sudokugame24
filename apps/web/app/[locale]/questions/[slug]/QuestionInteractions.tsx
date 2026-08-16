@@ -5,15 +5,21 @@ import { API_URL } from "@/lib/api";
 
 export default function QuestionInteractions({
   questionId,
+  slug,
   score,
   followers,
-  isAuthorActionsEnabled,
 }: {
   questionId: string;
+  slug: string;
   score: number;
   followers: number;
-  isAuthorActionsEnabled: boolean;
 }) {
+  // Real view counting happens client-side only (SSR passes trackView=false
+  // so crawlers and prefetches never inflate the view counter).
+  React.useEffect(() => {
+    fetch(`${API_URL}/questions/${encodeURIComponent(slug)}`).catch(() => undefined);
+  }, [slug]);
+
   const [currentScore, setCurrentScore] = useState(score);
   const [voted, setVoted] = useState<0 | 1 | -1>(0);
   const [following, setFollowing] = useState(false);
