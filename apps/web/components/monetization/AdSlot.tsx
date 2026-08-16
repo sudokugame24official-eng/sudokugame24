@@ -104,7 +104,7 @@ export default function AdSlot({ slotName, className = "" }: { slotName: string;
 
   if (!enabled) return null;
 
-  const dims = FORMAT_DIMS[slotConfig.format] ?? FORMAT_DIMS.auto;
+  const dims = FORMAT_DIMS[slotConfig.format] ?? { minHeight: 120 };
   const reservedHeight = slotConfig.height || dims.minHeight;
 
   return (
