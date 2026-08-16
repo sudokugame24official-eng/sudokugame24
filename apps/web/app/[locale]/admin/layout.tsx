@@ -22,6 +22,7 @@ import {
   Megaphone,
   DollarSign,
   ShoppingCart,
+  Image as ImageIcon,
 } from "lucide-react";
 
 // Staff roles allowed into the admin panel. The API enforces permissions
@@ -76,6 +77,7 @@ export default function AdminLayout({
       title: "Content",
       items: [
         { name: "Articles", path: "/content", icon: FileText },
+        { name: "Media", path: "/media", icon: ImageIcon },
         { name: "Marketing", path: "/marketing", icon: Megaphone },
       ],
     },

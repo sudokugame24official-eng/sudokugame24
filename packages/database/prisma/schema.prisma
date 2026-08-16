@@ -91,6 +91,7 @@ model User {
   perks            UserPerk[]
   coinTransactions CoinTransaction[]
   articles         ContentArticle[]  @relation("WrittenArticles")
+  mediaUploads     MediaAsset[]     @relation("UploadedMedia")
 }
 
 model Profile {
@@ -139,6 +140,24 @@ model ContentRevision {
 
   @@unique([articleId, revisionNumber])
   @@index([articleId])
+}
+
+// P1-J: media library (uploads abstraction: local dev / S3-compatible prod)
+model MediaAsset {
+  id         String   @id @default(cuid())
+  key        String   @unique // storage key (path)
+  url        String
+  filename   String   // original (sanitized) filename
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  altText    String?
+  uploadedBy String
+  uploader   User     @relation("UploadedMedia", fields: [uploadedBy], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([uploadedBy])
 }
 model SudokuPuzzle {
   id             String     @id @default(cuid())

@@ -27,6 +27,7 @@ import { ContentModule } from './content/content.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { SudokuModule } from './sudoku/sudoku.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
     LeaderboardModule,
     SudokuModule,
     KnowledgeModule,
+    MediaModule,
   ],
   controllers: [AppController, UsersController],
   providers: [
