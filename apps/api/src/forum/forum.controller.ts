@@ -9,7 +9,13 @@ import {
   UseGuards,
   Request,
   Query,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
+import { PermissionGuard } from '../auth/guards/permission.guard';
+import { RequirePermission } from '../auth/guards/require-permission.decorator';
+import { AuditAction } from '../auth/decorators/audit-action.decorator';
+import { AuditLogInterceptor } from '../auth/interceptors/audit-log.interceptor';
 import { ForumService } from './forum.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
@@ -28,10 +34,26 @@ export class ForumController {
   }
 
   @Get('posts')
-  async getPosts(@Query('page') page?: string, @Query('limit') limit?: string) {
-    const pageNum = parseInt(page as string, 10) || 1;
-    const limitNum = parseInt(limit as string, 10) || 10;
-    return this.forumService.getPosts(pageNum, limitNum);
+  async getPosts(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('categoryId') categoryId?: string,
+  ) {
+    return this.forumService.getPosts({
+      page: parseInt(page || '1', 10) || 1,
+      limit: parseInt(limit || '15', 10) || 15,
+      search,
+      categoryId,
+    });
+  }
+
+  @Get('posts/slug/:slug')
+  async getPostBySlug(
+    @Param('slug') slug: string,
+    @Query('trackView') trackView?: string,
+  ) {
+    return this.forumService.getPostBySlug(slug, trackView !== 'false');
   }
 
   @Get('posts/:id')
@@ -117,5 +139,21 @@ export class ForumController {
   @Post('comments/:id/like')
   async toggleLikeComment(@Request() req: any, @Param('id') commentId: string) {
     return this.forumService.toggleLikeComment(req.user.id, commentId);
+  }
+  // P1-L: moderation actions (pin/close/lock/soft-delete/restore)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @RequirePermission('forum.moderate')
+  @UseInterceptors(AuditLogInterceptor)
+  @AuditAction('forum.moderate')
+  @Post('posts/:id/moderate')
+  async moderatePost(
+    @Param('id') id: string,
+    @Body() body: { action: string },
+  ) {
+    const valid = ['pin', 'close', 'lock', 'delete', 'restore'];
+    if (!valid.includes(body.action)) {
+      throw new BadRequestException('Action de modération inconnue.');
+    }
+    return this.forumService.moderatePost(id, body.action as any);
   }
 }

@@ -349,8 +349,14 @@ model ContentArticle {
 
 model ForumPost {
   id        String   @id @default(cuid())
+  slug      String   @unique
   title     String
   content   String   @db.Text
+  isPinned  Boolean  @default(false)
+  isClosed  Boolean  @default(false)
+  isLocked  Boolean  @default(false)
+  isDeleted Boolean  @default(false) // soft delete — restorable by moderators
+  views     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

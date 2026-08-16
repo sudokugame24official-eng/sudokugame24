@@ -4,6 +4,28 @@ const prisma = new PrismaClient();
 
 
 // P1-F/G: safe default ad slots (DISABLED by default — owner enables per-slot)
+
+// P1-L: structured forum categories (4 groups, 12 boards)
+const FORUM_CATEGORIES = [
+  ['General Sudoku', 'Any sudoku talk: rules, grids, variants, curiosities.'],
+  ['Beginner Help', 'New to sudoku? Ask anything — no question is too simple.'],
+  ['Strategies', 'Discuss solving strategies and step-by-step approaches.'],
+  ['Advanced Techniques', 'X-Wing, Swordfish, XY-Wing and beyond — for experienced solvers.'],
+  ['Daily Challenge', 'Talk about today's daily challenge — no full-solution spoilers in titles.'],
+  ['Duel', 'Matchmaking stories, duel tactics and rematch requests.'],
+  ['Leaderboards', 'Rankings, ratings and competitive discussion.'],
+  ['Tournaments', 'Announcements and discussion around competitive events.'],
+  ['Introductions', 'Say hello and introduce yourself to the community.'],
+  ['General Discussion', 'Off-topic friendly chat (keep it kind).'],
+  ['Suggestions', 'Ideas to improve the platform — feature requests welcome.'],
+  ['Feature Requests', 'Formal requests: describe the problem you want solved.'],
+  ['Technical Support', 'Trouble playing, loading or accessing the site? Get help here.'],
+  ['Bug Reports', 'Report reproducible bugs (steps, browser, device).'],
+];
+for (const [name, description] of FORUM_CATEGORIES) {
+  await prisma.forumCategory.upsert({ where: { name }, update: { description }, create: { name, description } });
+}
+
 const AD_SLOTS = [
   { slotName: 'home_leaderboard', placement: 'leaderboard', format: 'horizontal', height: 90 },
   { slotName: 'academy_incontent', placement: 'in_content', format: 'rectangle', height: 250 },

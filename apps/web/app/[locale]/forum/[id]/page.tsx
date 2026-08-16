@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { API_URL } from "@/lib/api";
 import React from "react";
 import { Metadata } from "next";
@@ -70,8 +71,12 @@ export default async function ForumTopicPage({
 }: {
   params: Promise<{ id: string; locale: string }>;
 }) {
+  // P1-L SEO: one canonical URL per topic — legacy id URLs redirect to /forum/topic/[slug]
   const { id, locale: lang } = await params;
   const topic = await fetchTopic(id);
+  if (topic?.slug) {
+    redirect(`/${lang}/forum/topic/${topic.slug}`);
+  }
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
 

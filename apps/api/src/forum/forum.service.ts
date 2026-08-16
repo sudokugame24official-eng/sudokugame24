@@ -12,28 +12,50 @@ export class ForumService {
     return prisma.forumCategory.findMany();
   }
 
-  async getPosts(page: number = 1, limit: number = 10) {
+  /**
+   * P1-L: search + category filter + pin-first ordering + soft-delete
+   * exclusion + pagination (capped). Public listing.
+   */
+  async getPosts(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryId?: string;
+  }) {
+    const page = Math.max(1, params.page ?? 1);
+    const limit = Math.min(50, Math.max(5, params.limit ?? 15));
     const skip = (page - 1) * limit;
-    return prisma.forumPost.findMany({
-      skip,
-      take: limit,
-      include: {
-        author: {
-          select: {
-            profile: {
-              select: { username: true, avatarUrl: true },
+
+    const where: any = { isDeleted: false };
+    if (params.search) {
+      where.OR = [
+        { title: { contains: params.search, mode: 'insensitive' } },
+        { content: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+    if (params.categoryId) where.categoryId = params.categoryId;
+
+    const [posts, total] = await Promise.all([
+      prisma.forumPost.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          author: {
+            select: {
+              profile: { select: { username: true, avatarUrl: true } },
+              role: true,
+              perks: true,
             },
-            role: true,
-            perks: true,
           },
+          category: true,
+          _count: { select: { comments: true } },
         },
-        category: true,
-        _count: {
-          select: { comments: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+      }),
+      prisma.forumPost.count({ where }),
+    ]);
+    return { posts, total, page, pageCount: Math.ceil(total / limit) || 1 };
   }
 
   async getPostById(id: string) {
@@ -77,7 +99,43 @@ export class ForumService {
       },
     });
 
-    if (!post) throw new NotFoundException('Post not found');
+    if (!post || post.isDeleted) throw new NotFoundException('Post not found');
+    return post;
+  }
+
+  /** P1-L: fetch by SEO slug for the public topic page. */
+  async getPostBySlug(slug: string, incrementViews = true) {
+    const post = await prisma.forumPost.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          select: {
+            profile: { select: { username: true, avatarUrl: true, level: true, rating: true } },
+            role: true,
+            perks: true,
+          },
+        },
+        category: true,
+        comments: {
+          include: {
+            author: {
+              select: {
+                profile: { select: { username: true, avatarUrl: true, level: true, rating: true } },
+                role: true,
+                perks: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+    if (!post || post.isDeleted) throw new NotFoundException('Post not found');
+    if (incrementViews) {
+      await prisma.forumPost
+        .update({ where: { id: post.id }, data: { views: { increment: 1 } } })
+        .catch(() => undefined);
+    }
     return post;
   }
 
@@ -95,8 +153,24 @@ export class ForumService {
       .replace(/>/g, '&gt;');
     const sanitizedTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+    // P1-L: SEO slug (unique — suffixed on collision)
+    const baseSlug =
+      sanitizedTitle
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 70) || 'topic';
+    let slug = baseSlug;
+    let i = 2;
+    while (await prisma.forumPost.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${i++}`;
+    }
+
     return prisma.forumPost.create({
       data: {
+        slug,
         title: sanitizedTitle,
         content: sanitizedContent,
         authorId: userId,
@@ -106,6 +180,11 @@ export class ForumService {
   }
 
   async createComment(userId: string, postId: string, content: string) {
+    const post = await prisma.forumPost.findUnique({ where: { id: postId }, select: { isClosed: true, isLocked: true } });
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.isClosed || post.isLocked) {
+      throw new BadRequestException('Ce sujet est fermé ou verrouillé.');
+    }
     const sanitizedContent = content
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
@@ -229,5 +308,27 @@ export class ForumService {
       });
       return { liked: true };
     }
+  }
+  // --- P1-L moderation (permission-guarded at the controller) ---
+
+  async moderatePost(
+    postId: string,
+    action: 'pin' | 'close' | 'lock' | 'delete' | 'restore',
+  ) {
+    const post = await prisma.forumPost.findUnique({ where: { id: postId } });
+    if (!post) throw new NotFoundException('Post not found');
+
+    const data: any =
+      action === 'pin'
+        ? { isPinned: !post.isPinned }
+        : action === 'close'
+          ? { isClosed: !post.isClosed }
+          : action === 'lock'
+            ? { isLocked: !post.isLocked }
+            : action === 'delete'
+              ? { isDeleted: true } // soft delete: restorable
+              : { isDeleted: false, isPinned: false, isClosed: false, isLocked: false };
+
+    return prisma.forumPost.update({ where: { id: postId }, data });
   }
 }
