@@ -1,0 +1,646 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  GUEST
+  MEMBER
+  PREMIUM_MEMBER
+  SUPPORT_AGENT
+  CONTENT_MANAGER
+  ANALYST
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+model RolePermission {
+  id         String   @id @default(cuid())
+  role       Role
+  permission String // e.g., 'users.view', 'shop.edit'
+  createdAt  DateTime @default(now())
+
+  @@unique([role, permission])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+  MASTER
+}
+
+enum GameStatus {
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum GameMode {
+  SOLO
+  MULTIPLAYER_1V1
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String?
+  googleId        String?  @unique
+  appleId         String?  @unique
+  isEmailVerified Boolean  @default(false)
+  role            Role     @default(MEMBER)
+  isBanned        Boolean  @default(false)
+  banReason       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profile       Profile?
+  gameSessions  GameSession[]
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
+  likes         Like[]
+  achievements  UserAchievement[]
+  subscriptions Subscription[]
+
+  matchesAsP1 DuelMatch[] @relation("Player1Matches")
+  matchesAsP2 DuelMatch[] @relation("Player2Matches")
+  matchesWon  DuelMatch[] @relation("WonMatches")
+
+  friends  Friendship[] @relation("UserFriends")
+  friendOf Friendship[] @relation("FriendUsers")
+
+  supportTickets SupportTicket[]
+  ticketMessages TicketMessage[]
+  dailyEntries   DailyChallengeEntry[]
+
+  blocksInitiated  Block[]           @relation("BlocksInitiated")
+  blocksReceived   Block[]           @relation("BlocksReceived")
+  sentMessages     PrivateMessage[]  @relation("SentMessages")
+  receivedMessages PrivateMessage[]  @relation("ReceivedMessages")
+  reportsMade      Report[]          @relation("ReportsMade")
+  reportsReceived  Report[]          @relation("ReportsReceived")
+  notifications    Notification[]
+  purchases        Purchase[]
+  perks            UserPerk[]
+  coinTransactions CoinTransaction[]
+  articles         ContentArticle[]  @relation("WrittenArticles")
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  username   String  @unique
+  avatarUrl  String?
+  level      Int     @default(1)
+  xp         Int     @default(0)
+  globalRank Int?
+  coins      Int     @default(1000)
+  hints      Int     @default(3)
+
+  // Glicko-2 Rating System
+  rating           Float @default(1500)
+  ratingDeviation  Float @default(350)
+  ratingVolatility Float @default(0.06)
+
+  gamesPlayed    Int  @default(0)
+  gamesWon       Int  @default(0)
+  averageTimeSec Int  @default(0)
+  bestTimeSec    Int?
+  experience     Int  @default(0)
+
+  // Retention Engine
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastPlayedDate DateTime?
+}
+
+model SudokuPuzzle {
+  id             String     @id @default(cuid())
+  initialBoard   Json // Stored as 2D array or string
+  solvedBoard    Json
+  difficulty     Difficulty
+  averageTimeSec Int?
+
+  sessions        GameSession[]
+  duelMatches     DuelMatch[]
+  dailyChallenges DailyChallenge[]
+}
+
+model GameSession {
+  id       String       @id @default(cuid())
+  userId   String
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puzzleId String
+  puzzle   SudokuPuzzle @relation(fields: [puzzleId], references: [id])
+
+  mode   GameMode   @default(SOLO)
+  status GameStatus @default(IN_PROGRESS)
+
+  startTime   DateTime  @default(now())
+  endTime     DateTime?
+  durationSec Int?
+
+  moves Json? // Storing move history for replay or analysis
+
+  @@index([userId])
+  @@index([puzzleId])
+}
+
+model Achievement {
+  id          String  @id @default(cuid())
+  name        String
+  description String
+  xpReward    Int
+  iconUrl     String?
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+}
+
+model ForumCategory {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  posts       ForumPost[]
+}
+
+model ContentArticle {
+  id     String @id @default(cuid())
+  slug   String @unique
+  locale String @default("en")
+  title  String
+
+  // SEO Fields
+  metaTitle       String?
+  metaDescription String? @db.Text
+  canonicalUrl    String?
+  openGraphImage  String?
+  noIndex         Boolean @default(false)
+
+  excerpt String? @db.Text
+  content String  @db.Text
+  status  String  @default("DRAFT") // DRAFT, REVIEW, PUBLISHED, ARCHIVED
+  type    String  @default("BLOG") // BLOG, PAGE, FAQ, HELP
+
+  authorId    String
+  author      User      @relation("WrittenArticles", fields: [authorId], references: [id])
+  category    String?
+  tags        String[]  @default([])
+  indexable   Boolean   @default(true) // Deprecated, use noIndex
+  readingTime Int       @default(3)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([status])
+  @@index([type])
+}
+
+model ForumPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId   String
+  author     User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   ForumCategory @relation(fields: [categoryId], references: [id])
+
+  comments ForumComment[]
+  likes    Like[]
+
+  @@index([categoryId])
+  @@index([authorId])
+}
+
+model ForumComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  postId   String
+  post     ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  likes Like[]
+
+  @@index([postId])
+  @@index([authorId])
+}
+
+model Like {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId    String?
+  post      ForumPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   ForumComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId, commentId])
+  @@index([postId])
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  stripeSubId String @unique
+  status      String // active, canceled, past_due
+  plan        String // premium_monthly, premium_yearly
+
+  currentPeriodEnd DateTime
+}
+
+enum PerkType {
+  NO_ADS
+  CHAT_VIP
+  CUSTOM_BADGE
+  EXTRA_HINTS
+}
+
+model UserPerk {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  perkType  PerkType
+  expiresAt DateTime? // Null means permanent
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, perkType])
+}
+
+model Purchase {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stripeSessionId String? @unique
+  amount          Float
+  currency        String  @default("EUR")
+  coinsGranted    Int
+
+  status    String // PENDING, COMPLETED, FAILED
+  createdAt DateTime @default(now())
+}
+
+enum SpectatorMode {
+  ALL
+  NO_CHAT
+  PRIVATE
+  NONE
+}
+
+enum CoinTransactionType {
+  DUEL_WAGER
+  PURCHASE
+  REWARD
+  AD_REWARD
+  DAILY_REWARD
+  ACHIEVEMENT
+  SHOP_PURCHASE
+  ADMIN_GRANT
+  REFUND
+  REVERSAL
+}
+
+model CoinTransaction {
+  id             String              @id @default(cuid())
+  userId         String
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           CoinTransactionType
+  amount         Int // Can be positive or negative
+  balanceBefore  Int
+  balanceAfter   Int
+  source         String? // e.g., 'Stripe', 'System', 'Admin'
+  referenceId    String? // e.g., Stripe Session ID, Daily Challenge ID
+  idempotencyKey String?             @unique
+  metadata       Json?
+  createdAt      DateTime            @default(now())
+
+  @@index([userId])
+  @@index([referenceId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  action      String
+  target      String?
+  oldValue    Json?
+  newValue    Json?
+  referenceId String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+}
+
+model FeatureFlag {
+  key         String   @id // e.g., 'ENABLE_STRIPE', 'ENABLE_ADS'
+  enabled     Boolean  @default(false)
+  description String?
+  percentage  Int?     @default(100) // 0-100 rollout
+  targetRoles Role[] // Array of Roles that bypass the percentage check
+  updatedAt   DateTime @updatedAt
+}
+
+model AdSlotConfig {
+  slotName     String   @id // e.g., 'header', 'forum_sidebar', 'sudoku_page'
+  provider     String   @default("GoogleAdSense")
+  enabled      Boolean  @default(false)
+  publisherId  String?
+  adSlotId     String? // The specific ad unit ID from Google
+  deviceTarget String   @default("ALL") // ALL, DESKTOP, MOBILE
+  pageTarget   String? // Regex or path match
+  updatedAt    DateTime @updatedAt
+}
+
+model DuelMatch {
+  id         String     @id @default(cuid())
+  status     GameStatus @default(WAITING)
+  difficulty Difficulty
+  betAmount  Int        @default(0)
+
+  // Lobby Settings
+  hasTimer           Boolean @default(true)
+  timeLimitSec       Int? // e.g., 300 for 5 minutes
+  allowSpectators    Boolean @default(true)
+  allowSpectatorChat Boolean @default(true)
+
+  player1Id String
+  player1   User    @relation("Player1Matches", fields: [player1Id], references: [id])
+  player2Id String?
+  player2   User?   @relation("Player2Matches", fields: [player2Id], references: [id])
+
+  scoreP1 Int @default(0)
+  scoreP2 Int @default(0)
+
+  winnerId String?
+  winner   User?   @relation("WonMatches", fields: [winnerId], references: [id])
+
+  spectatorMode SpectatorMode @default(ALL)
+
+  puzzleId String?
+  puzzle   SudokuPuzzle? @relation(fields: [puzzleId], references: [id])
+
+  gameLog Json? // Stores the timeline of moves
+
+  startTime DateTime?
+  endTime   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([player1Id])
+  @@index([player2Id])
+  @@index([status])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model SupportTicket {
+  id          String       @id @default(cuid())
+  title       String
+  description String       @db.Text
+  status      TicketStatus @default(OPEN)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages TicketMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TicketMessage {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model DailyChallenge {
+  id        String                @id @default(cuid())
+  date      DateTime              @unique
+  puzzleId  String
+  puzzle    SudokuPuzzle          @relation(fields: [puzzleId], references: [id])
+  entries   DailyChallengeEntry[]
+  createdAt DateTime              @default(now())
+}
+
+model DailyChallengeEntry {
+  id          String         @id @default(cuid())
+  challengeId String
+  challenge   DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score     Int      @default(0) // Usually coins earned
+  timeSec   Int      @default(120) // Time left or taken
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([challengeId, userId]) // User can only have one final entry per challenge
+}
+
+model SiteSettings {
+  key       String   @id // e.g., 'homepage_carousel'
+  value     Json // Storing an array of image URLs or other structured data
+  updatedAt DateTime @updatedAt
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("BlocksInitiated", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friendId  String
+  friend    User     @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+  status    String   @default("PENDING") // PENDING, ACCEPTED
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model PrivateMessage {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  OFFENSIVE_CONTENT
+  SCAM
+  INAPPROPRIATE
+  OTHER
+}
+
+model Report {
+  id         String  @id @default(cuid())
+  reporterId String
+  reporter   User    @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedId String?
+  reported   User?   @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  // Can be a message, post, or just a user profile
+  targetType String // e.g., "USER", "POST", "COMMENT", "MESSAGE"
+  targetId   String?
+
+  reason      ReportReason
+  description String?      @db.Text
+  resolved    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  MENTION
+  ACHIEVEMENT
+  DAILY_SUDOKU
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  content   String           @db.Text
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subject     String
+  htmlContent String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ShopProduct {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?
+  iconUrl      String?
+  priceCoins   Int
+  category     String // e.g., 'boosters', 'cosmetics', 'utilities'
+  type         String // e.g., 'perk', 'consumable'
+  entitlement  String // e.g., 'EXTRA_HINTS', 'VIP', 'NO_ADS'
+  durationDays Int? // If temporary perk
+  quantity     Int? // If consumable (e.g. 5 hints)
+  isActive     Boolean   @default(false)
+  isFeatured   Boolean   @default(false)
+  startDate    DateTime?
+  endDate      DateTime?
+  maxPerUser   Int? // Purchase limit per user
+  stock        Int? // Global stock
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([category])
+}
+
+model AdminActionLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String // e.g., 'users.ban', 'shop.create'
+  targetId  String?
+  details   Json? // Stores what was changed
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+}
+
+model SudokuTechnique {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  description String     @db.Text
+  difficulty  Difficulty
+
+  // SEO
+  metaTitle       String?
+  metaDescription String? @db.Text
+  canonicalUrl    String?
+
+  // Interactive Elements
+  exampleBoard        Json? // 2D Array or string representation of the grid
+  highlightCells      Json? // Cells to highlight
+  highlightCandidates Json? // Candidates to highlight
+  solutionSteps       Json? // Array of steps to solve the example
+
+  videoUrl        String?
+  relatedArticles Json? // Array of slugs
+
+  status    String   @default("DRAFT") // DRAFT, PUBLISHED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL pour Staging
+  postgres-staging:
+    image: postgres:15-alpine
+    container_name: sudoku-postgres-staging
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-staging_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-staging_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sudoku_staging}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+    networks:
+      - sudoku-staging-net
+
+  # Optionnel : pgAdmin pour le monitoring de la DB
+  pgadmin-staging:
+    image: dpage/pgadmin4
+    container_name: sudoku-pgadmin-staging
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sudoku.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-staging
+    networks:
+      - sudoku-staging-net
+
+volumes:
+  pgdata_staging:
+
+networks:
+  sudoku-staging-net:
+    driver: bridge

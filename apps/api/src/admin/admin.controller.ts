@@ -1,0 +1,232 @@
+import {
+  Controller,
+  Get,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Post,
+  Put,
+  Query,
+  Request,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AdminService } from './admin.service';
+import { Role } from '@repo/database';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionGuard } from '../auth/guards/permission.guard';
+import { RequirePermission } from '../auth/guards/require-permission.decorator';
+import { AuditAction } from '../auth/decorators/audit-action.decorator';
+import { AuditLogInterceptor } from '../auth/interceptors/audit-log.interceptor';
+
+@Controller('admin')
+@UseGuards(JwtAuthGuard, PermissionGuard)
+@UseInterceptors(AuditLogInterceptor)
+export class AdminController {
+  constructor(private readonly adminService: AdminService) {}
+
+  // --- USERS ---
+  @Get('users')
+  @RequirePermission('users.view')
+  async getUsers() {
+    return this.adminService.getAllUsers();
+  }
+
+  @Patch('users/:id/role')
+  @RequirePermission('users.manage_roles')
+  @AuditAction('users.update_role')
+  async updateUserRole(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body('role') role: Role,
+  ) {
+    const adminRole = req.user.role;
+    return this.adminService.updateUserRole(adminRole, id, role);
+  }
+
+  @Patch('users/:id/ban')
+  @RequirePermission('users.ban')
+  @AuditAction('users.ban')
+  async banUser(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
+    const adminRole = req.user.role;
+    return this.adminService.banUser(adminRole, id, reason);
+  }
+
+  @Patch('users/:id/unban')
+  @RequirePermission('users.ban')
+  @AuditAction('users.unban')
+  async unbanUser(@Request() req: any, @Param('id') id: string) {
+    const adminRole = req.user.role;
+    return this.adminService.unbanUser(adminRole, id);
+  }
+
+  @Delete('users/:id')
+  @RequirePermission('users.delete')
+  @AuditAction('users.delete')
+  async deleteUser(@Request() req: any, @Param('id') id: string) {
+    const adminRole = req.user.role;
+    return this.adminService.deleteUser(adminRole, id);
+  }
+
+  // --- TICKETS ---
+  @Get('tickets')
+  @RequirePermission('support.view')
+  async getTickets() {
+    return this.adminService.getTickets();
+  }
+
+  @Get('tickets/:id')
+  @RequirePermission('support.view')
+  async getTicketDetails(@Param('id') id: string) {
+    return this.adminService.getTicketDetails(id);
+  }
+
+  @Post('tickets/:id/reply')
+  @RequirePermission('support.reply')
+  @AuditAction('support.reply')
+  async replyToTicket(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body('content') content: string,
+  ) {
+    const adminId = req.user.id;
+    return this.adminService.replyToTicket(adminId, id, content);
+  }
+
+  @Patch('tickets/:id/close')
+  @RequirePermission('support.manage')
+  @AuditAction('support.close_ticket')
+  async closeTicket(@Param('id') id: string) {
+    return this.adminService.closeTicket(id);
+  }
+
+  // --- FORUM MODERATION & REPORTS ---
+  @Get('reports')
+  @RequirePermission('forum.moderate') // Or reports.view if exists
+  async getReports() {
+    return this.adminService.getReports();
+  }
+
+  @Delete('forum/posts/:id')
+  @RequirePermission('forum.moderate')
+  @AuditAction('forum.delete_post')
+  async deletePost(@Request() req: any, @Param('id') id: string) {
+    const adminRole = req.user.role;
+    return this.adminService.deleteForumPost(adminRole, id);
+  }
+
+  // --- CONTENT CMS ---
+  @Get('content')
+  @RequirePermission('cms.view')
+  async getArticles() {
+    return this.adminService.getArticles();
+  }
+
+  @Post('content')
+  @RequirePermission('cms.edit')
+  @AuditAction('cms.create_article')
+  async createArticle(@Request() req: any, @Body() data: any) {
+    const adminId = req.user.id;
+    return this.adminService.createArticle(adminId, data);
+  }
+
+  // --- ANALYTICS ---
+  @Get('analytics/overview')
+  @RequirePermission('analytics.view')
+  async getAnalyticsOverview() {
+    return this.adminService.getAnalyticsOverview();
+  }
+
+  @Get('analytics/chart')
+  @RequirePermission('analytics.view')
+  async getAnalyticsChart(@Query('period') period: string) {
+    return this.adminService.getAnalyticsChart(period || '7d');
+  }
+
+  // --- FEATURE FLAGS ---
+  @Get('features')
+  @RequirePermission('features.view')
+  async getFeatureFlags() {
+    return this.adminService.getFeatureFlags();
+  }
+
+  @Patch('features/:key')
+  @RequirePermission('features.manage')
+  @AuditAction('features.update')
+  async updateFeatureFlag(
+    @Request() req: any,
+    @Param('key') key: string,
+    @Body() body: { enabled: boolean; description?: string },
+  ) {
+    const adminRole = req.user.role;
+    return this.adminService.updateFeatureFlag(
+      adminRole,
+      key,
+      body.enabled,
+      body.description,
+    );
+  }
+
+  // --- SETTINGS, MONETIZATION, APPEARANCE ---
+  @Get('marketing-settings')
+  @RequirePermission('settings.view')
+  async getMarketingSettings() {
+    return this.adminService.getMarketingSettings();
+  }
+
+  @Put('marketing-settings')
+  @RequirePermission('settings.manage')
+  @AuditAction('settings.update')
+  async updateMarketingSettings(@Body() data: any) {
+    return this.adminService.updateMarketingSettings(data);
+  }
+
+  // --- ECONOMY ---
+  @Post('economy/grant')
+  @RequirePermission('economy.adjust')
+  @AuditAction('economy.grant_coins')
+  async grantCoins(
+    @Request() req: any,
+    @Body('userId') userId: string,
+    @Body('amount') amount: number,
+    @Body('reason') reason: string,
+  ) {
+    const adminId = req.user.id;
+    return this.adminService.grantCoins(adminId, userId, amount, reason);
+  }
+
+  @Get('economy/reconciliation')
+  @RequirePermission('economy.audit')
+  async runReconciliation() {
+    return this.adminService.verifyFinancialIntegrity();
+  }
+
+  // --- AD MANAGEMENT ---
+  @Get('ads')
+  @RequirePermission('ads.view')
+  async getAdSlots() {
+    return this.adminService.getAdSlots();
+  }
+
+  @Put('ads/:slotName')
+  @RequirePermission('ads.manage')
+  @AuditAction('ads.update_slot')
+  async updateAdSlot(
+    @Param('slotName') slotName: string,
+    @Body() data: any,
+  ) {
+    return this.adminService.updateAdSlot(slotName, data);
+  }
+
+  // --- SYSTEM HEALTH ---
+  @Get('system/health')
+  @RequirePermission('system.view')
+  async getSystemHealth() {
+    return this.adminService.getSystemHealth();
+  }
+}

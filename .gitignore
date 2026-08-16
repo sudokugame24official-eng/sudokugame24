@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Environment / secrets — never commit real values
+.env
+.env*
+!*.example
+packages/*/.env
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Turbo / caches
+.turbo
+.turbo-clone-temp
+coverage
+
+# Test artifacts & logs
+test-results/
+playwright-report/
+*.log
+
+# Vercel / misc
+.vercel
+.DS_Store
+*.pem
+uploads/

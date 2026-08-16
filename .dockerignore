@@ -1,0 +1,9 @@
+node_modules
+.next
+dist
+coverage
+.git
+.env*
+!*.example
+docker-compose.yml
+test-results

@@ -1,0 +1,714 @@
+{
+  "home": {
+    "heroTitle": "Spielen Sie Sudoku. Verbessern Sie Ihre Fähigkeiten. Fordern Sie die Welt heraus.",
+    "heroDesc": "Die ultimative globale Plattform für Logik-Meister und Anfänger gleichermaßen.",
+    "playSudoku": "Sudoku spielen",
+    "dailyChallenge": "Tägliche Aufgabe",
+    "whatIsTitle": "Was ist Sudoku Premium?",
+    "whatIsSubtitle": "Mehr als nur ein Puzzle. Ein komplettes Logik-Ökosystem.",
+    "whatIsDesc": "Wir haben diese Plattform als definitives Zuhause für Sudoku-Spieler gebaut. Ob Sie die Regeln zum ersten Mal lernen oder um den ersten Platz auf der globalen Rangliste kämpfen, hier finden Sie ein fesselndes, werbearmes und perfekt responsives Erlebnis.",
+    "cardPlay": "Spielen",
+    "cardPlayDesc": "Klassische Solo-Gitter von Einfach bis Meister. Auf Zeit und verfolgt.",
+    "cardDaily": "Täglich",
+    "cardDailyDesc": "Ein globales Rätsel pro Tag. Bauen Sie Ihre Serie auf und treten Sie an.",
+    "cardDuel": "Duell",
+    "cardDuelDesc": "Echtzeit-1v1-Matchmaking. Gewinnen Sie Elo und steigen Sie auf.",
+    "cardLearn": "Lernen",
+    "cardLearnDesc": "Meistern Sie fortgeschrittene Techniken in unserer interaktiven Akademie.",
+    "dailyEvent": "Das Heutige Event",
+    "dailyTitle": "Die Tägliche Aufgabe",
+    "dailyDesc": "Schließen Sie sich 12.450 Spielern weltweit an, um das heutige Meister-Rätsel zu lösen. Halten Sie Ihre Flamme am Leben.",
+    "difficulty": "Schwierigkeit",
+    "master": "Meister",
+    "yourStreak": "Ihre Serie",
+    "days": "{n} Tage",
+    "playToday": "Heutige Aufgabe spielen",
+    "competeTitle": "Wettbewerb",
+    "competeSubtitle": "Erklimmen Sie die Weltrangliste",
+    "competeDesc": "Beweisen Sie Ihre Logik-Geschwindigkeit in Echtzeit-1v1-Duellen. Gewinnen Sie Matches, um Ihr Elo-Rating zu erhöhen und die prestigeträchtige Meister-Liga zu erreichen.",
+    "competeFeature1": "Fähigkeitsbasiertes Matchmaking",
+    "competeFeature2": "Globale & Wöchentliche Ranglisten",
+    "competeFeature3": "Echtzeit-Gegner-Fortschritt",
+    "enterArena": "Arena Betreten",
+    "liveRankings": "Live-Ranglisten",
+    "viewLeaderboard": "Vollständige Rangliste ansehen",
+    "academyTitle": "Sudoku Akademie",
+    "academyBeginner": "Anfänger",
+    "academyBeginnerDesc": "Lernen Sie die Grundregeln, Notation und versteckte Singles.",
+    "readGuides": "Anleitungen lesen",
+    "academyIntermediate": "Fortgeschrittene",
+    "academyIntermediateDesc": "Meistern Sie Paare, Tripel und eingeschränkte Kandidaten.",
+    "academyAdvanced": "Experten",
+    "academyAdvancedDesc": "Bezwingen Sie X-Wings, Swordfish und komplexe Ketten.",
+    "joinCommunity": "Treten Sie der Community bei",
+    "joinCommunityDesc": "Diskutieren Sie Strategien, bitten Sie um Hilfe bei schwierigen Gittern und verbinden Sie sich mit Spielern weltweit in unserem aktiven Forum.",
+    "browseForums": "Foren durchsuchen",
+    "unlockAchievements": "Erfolge freischalten",
+    "unlockAchievementsDesc": "Verdienen Sie XP für jedes gelöste Rätsel. Leveln Sie Ihr Profil, schalten Sie Abzeichen frei und zeigen Sie Ihre Logik-Hingabe.",
+    "viewProfile": "Profil ansehen",
+    "readyTitle": "Bereit für Ihr nächstes Sudoku?",
+    "playNow": "JETZT SPIELEN"
+  },
+  "nav": {
+    "play": "Spielen",
+    "quickPlay": "Schnellspiel",
+    "practice": "Übung",
+    "daily": "Tägliche Aufgabe",
+    "duel": "Duell",
+    "leaderboard": "Rangliste",
+    "learn": "Lernen",
+    "academy": "Sudoku Akademie",
+    "beginner": "Einsteiger-Leitfaden",
+    "intermediate": "Fortgeschrittene Techniken",
+    "advanced": "Experten-Techniken",
+    "community": "Community",
+    "forum": "Forum",
+    "friends": "Freunde",
+    "messages": "Nachrichten",
+    "about": "Über uns",
+    "help": "Hilfe",
+    "helpCenter": "Hilfezentrum",
+    "faq": "FAQ",
+    "contact": "Kontakt",
+    "report": "Problem melden",
+    "liveChat": "Live-Chat",
+    "signIn": "Anmelden",
+    "profile": "Mein Profil",
+    "settings": "Einstellungen",
+    "adminPanel": "Admin-Panel",
+    "logout": "Abmelden"
+  },
+  "footer": {
+    "tagline": "Spielen Sie kostenlos Sudoku online, treten Sie in Echtzeit-Duellen an und meistern Sie fortgeschrittene Techniken.",
+    "sectionSudoku": "Sudoku",
+    "sectionCommunity": "Community",
+    "sectionHelp": "Hilfe",
+    "sectionCompany": "Unternehmen",
+    "playSudoku": "Sudoku spielen",
+    "dailyChallenge": "Tägliche Aufgabe",
+    "duel": "Duell",
+    "leaderboard": "Rangliste",
+    "sudokuAcademy": "Sudoku Akademie",
+    "forum": "Forum",
+    "friends": "Freunde",
+    "messages": "Nachrichten",
+    "guidelines": "Community-Richtlinien",
+    "helpCenter": "Hilfezentrum",
+    "faq": "FAQ",
+    "contactUs": "Kontakt",
+    "reportProblem": "Problem melden",
+    "aboutUs": "Über uns",
+    "privacy": "Datenschutzerklärung",
+    "terms": "Nutzungsbedingungen",
+    "cookies": "Cookie-Richtlinie",
+    "copyright": "© {year} Sudoku Premium. Alle Rechte vorbehalten.",
+    "builtFor": "Für Logik-Enthusiasten weltweit entwickelt."
+  },
+  "lang": {
+    "selector": "Sprache",
+    "en": "English",
+    "fr": "Français",
+    "de": "Deutsch",
+    "es": "Español",
+    "it": "Italiano"
+  },
+  "common": {
+    "playNow": "Jetzt spielen",
+    "playAgain": "Nochmal spielen",
+    "learnMore": "Mehr erfahren",
+    "viewAll": "Alle anzeigen",
+    "tryAgain": "Erneut versuchen",
+    "backHome": "Zurück zur Startseite",
+    "loading": "Laden…",
+    "error": "Etwas ist schiefgelaufen.",
+    "errorDesc": "Wir konnten diesen Inhalt nicht laden. Bitte versuchen Sie es erneut.",
+    "noResults": "Keine Ergebnisse gefunden.",
+    "search": "Suchen",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "yes": "Ja",
+    "no": "Nein",
+    "or": "oder",
+    "by": "Von",
+    "minutes": "{n} Min.",
+    "days": "{n} Tag",
+    "days_plural": "{n} Tage"
+  },
+  "play": {
+    "pageTitle": "Sudoku Online Spielen — Kostenloses Solo-Spiel & Übungsmodus",
+    "pageDesc": "Wählen Sie Ihren Schwierigkeitsgrad und spielen Sie kostenlos Sudoku online. Von Einfach bis Meister. Keine Anmeldung erforderlich.",
+    "h1": "Wählen Sie Ihren Schwierigkeitsgrad",
+    "subtitle": "Spielen Sie in Ihrem eigenen Tempo, trainieren Sie Ihr Gehirn und entdecken Sie neue Techniken — vom Anfänger bis zum Meister.",
+    "badge": "Solo-Spiel",
+    "daily": "Tägliche Aufgabe",
+    "dailyBadge": "Heutiges Rätsel",
+    "dailyDesc": "Sie haben 2 Minuten. Jedes korrekte Feld bringt Ihnen +5 Coins. Verdienen Sie so viele wie möglich bevor die Zeit abläuft!",
+    "startTimer": "Timer starten",
+    "solo": "Solo-Übung",
+    "easy": "Einfach",
+    "easyDesc": "Für Anfänger",
+    "medium": "Mittel",
+    "mediumDesc": "Ausgewogene Herausforderung",
+    "hard": "Schwer",
+    "hardDesc": "Für erfahrene Spieler",
+    "expert": "Experte",
+    "expertDesc": "Extreme Logik erforderlich",
+    "exit": "Beenden",
+    "pause": "Pause",
+    "settings": "Einstellungen",
+    "victory": "Sie haben gewonnen!",
+    "victoryDesc": "Rätsel abgeschlossen in {time}.",
+    "timesUp": "Zeit abgelaufen!",
+    "timesUpDesc": "Der tägliche Timer ist abgelaufen.",
+    "gameOver": "Spiel vorbei!",
+    "gameOverDesc": "Sie haben 3 Fehler gemacht.",
+    "coinsEarned": "Verdiente Coins",
+    "leaderboard": "Rangliste",
+    "difficulty": "Schwierigkeit",
+    "score": "Punkte",
+    "mistakes": "Fehler",
+    "time": "Zeit",
+    "soloPractice": "Solo-Übung",
+    "dailyChallenge": "Tägliche Aufgabe"
+  },
+  "daily": {
+    "pageTitle": "Tägliche Sudoku-Aufgabe — Kostenloses Globales Rätsel",
+    "pageDesc": "Spielen Sie die kostenlose tägliche Sudoku-Aufgabe. Ein Rätsel, das täglich weltweit geteilt wird. Wetteifern Sie um die schnellste Zeit.",
+    "h1": "Das Globale Rätsel von Heute",
+    "subtitle": "Ein Rätsel. Jeder Spieler auf der Erde. Lösen Sie es, stellen Sie Ihre Bestzeit auf und sehen Sie Ihr Ranking.",
+    "playToday": "Heutige Aufgabe spielen",
+    "howItWorks": "Wie es funktioniert",
+    "playOnce": "Einmal spielen",
+    "playOnceDesc": "Sie haben pro Tag einen offiziellen Versuch. Der Timer startet, wenn Sie auf Spielen klicken.",
+    "earnCoins": "Coins verdienen",
+    "earnCoinsDesc": "Jedes korrekte Feld bringt Ihnen +5 Coins. Schließen Sie das Rätsel ab, um Ihren Gewinn zu maximieren.",
+    "checkRankings": "Rangliste prüfen",
+    "checkRankingsDesc": "Vergleichen Sie Ihre Zeit mit allen anderen Spielern auf der Welt in der Tagesrangliste.",
+    "buildStreak": "Ihre Serie aufbauen",
+    "buildStreakDesc": "Lösen Sie die tägliche Aufgabe jeden Tag und bauen Sie Ihre Serie auf. Verpassen Sie einen Tag und sie beginnt von vorne. Spieler mit Serien von 7, 30 und 100 Tagen erhalten exklusive Abzeichen.",
+    "learnStrategies": "Strategien lernen",
+    "currentStreak": "Aktuelle Serie",
+    "bestStreak": "Beste Serie",
+    "playersToday": "Spieler Heute",
+    "difficulty": "Schwierigkeit",
+    "timeLimit": "Zeitlimit",
+    "dailyLeaderboard": "Tagesrangliste anzeigen",
+    "globalRankings": "Weltrangliste"
+  },
+  "leaderboard": {
+    "pageTitle": "Sudoku Weltrangliste — Beste Spieler Weltweit",
+    "pageDesc": "Sehen Sie die besten Sudoku-Spieler der Welt nach Elo-Wertung. Gewinnen Sie Duelle, steigen Sie von Silber bis Meister auf.",
+    "h1": "Weltrangliste",
+    "subtitle": "Die besten Sudoku-Spieler der Welt, nach Elo-Wertung gerankt. Gewinnen Sie Duelle, um in den Ligen aufzusteigen.",
+    "badge": "Weltrangliste",
+    "tabGlobal": "Global",
+    "tabWeekly": "Wöchentlich",
+    "tabMonthly": "Monatlich",
+    "tabDaily": "Täglich",
+    "yourRank": "Ihr Aktueller Rang",
+    "loginToSee": "Melden Sie sich an, um Ihre Position zu sehen",
+    "climbNow": "Jetzt aufsteigen",
+    "rank": "Rang",
+    "player": "Spieler",
+    "league": "Liga",
+    "rating": "Wertung",
+    "emptyTitle": "Noch Keine Spieler Gerankt",
+    "emptyDesc": "Seien Sie der Erste, der ein Duell abschließt und den ersten Platz beansprucht.",
+    "findOpponent": "Gegner finden",
+    "errorTitle": "Rangliste Konnte Nicht Geladen Werden",
+    "errorDesc": "Beim Laden der Rangliste ist ein Fehler aufgetreten.",
+    "enterArena": "Arena betreten",
+    "eloDesc": "Ihr Elo steigt mit jedem Duel-Sieg. Beginnen Sie jetzt zu spielen.",
+    "leagues": {
+      "master": "Meister",
+      "diamond": "Diamant",
+      "platinum": "Platin",
+      "gold": "Gold",
+      "silver": "Silber"
+    }
+  },
+  "learn": {
+    "pageTitle": "Sudoku Akademie — Regeln, Strategien & Fortgeschrittene Techniken",
+    "pageDesc": "Meistern Sie Sudoku mit unseren umfassenden Anleitungen. Von Grundregeln bis zu fortgeschrittenen Techniken wie X-Wing, Swordfish und komplexen Ketten.",
+    "h1Part1": "Verbessern Sie Ihre Logik.",
+    "h1Part2": "Meistern Sie Jedes Rätsel.",
+    "subtitle": "Von Ihrer ersten Ziffer bis zur Lösung von Experten-Ketten — wir haben eine Anleitung für jede Etappe Ihrer Sudoku-Reise.",
+    "badge": "Sudoku Akademie",
+    "beginner": "Anfänger",
+    "beginnerDesc": "Lernen Sie die grundlegenden Regeln und Ihre ersten Lösungstechniken.",
+    "intermediate": "Fortgeschrittene",
+    "intermediateDesc": "Bewältigen Sie schwierigere Rätsel mit Paaren, Triples und Eliminationsmustern.",
+    "advanced": "Experten",
+    "advancedDesc": "Meistern Sie komplexe Muster, die nur in den schwierigsten Rätseln verwendet werden.",
+    "allGuides": "Alle {level}-Anleitungen",
+    "readyTitle": "Bereit, es in die Praxis umzusetzen?",
+    "readyDesc": "Der beste Weg, Sudoku zu lernen, ist zu spielen. Wenden Sie an, was Sie gelernt haben.",
+    "playEasy": "Einfaches Sudoku spielen",
+    "tryDuel": "Mehrspieler-Duell ausprobieren",
+    "minRead": "{n} Min. Lesezeit",
+    "articles": {
+      "rules": {
+        "title": "Sudoku-Regeln & Grundlagen",
+        "desc": "Die eine Regel, die alles bestimmt."
+      },
+      "how-to-play": {
+        "title": "Wie Man Sein Erstes Spiel Spielt",
+        "desc": "Eine schrittweise Anleitung vom leeren Raster zur Lösung."
+      },
+      "candidates": {
+        "title": "Kandidaten & Bleistiftmarkierungen Verwenden",
+        "desc": "Die wichtigste Gewohnheit im mittleren Sudoku."
+      },
+      "naked-singles": {
+        "title": "Nackte Singles",
+        "desc": "Die einfachste und häufigste Technik."
+      },
+      "hidden-singles": {
+        "title": "Versteckte Singles",
+        "desc": "Wenn ein Kandidat nur in eine Zelle pro Haus passt."
+      },
+      "naked-pairs": {
+        "title": "Nackte Paare & Tripel",
+        "desc": "Zwei Zellen, zwei Kandidaten — den Rest eliminieren."
+      },
+      "hidden-pairs": {
+        "title": "Versteckte Paare",
+        "desc": "Wenn zwei Kandidaten auf nur zwei Zellen beschränkt sind."
+      },
+      "naked-triples": {
+        "title": "Nackte Tripel",
+        "desc": "Die Drei-Zellen-Erweiterung nackter Paare."
+      },
+      "pointing-pairs": {
+        "title": "Zeigende Paare",
+        "desc": "Kandidaten-Elimination von Box zu Linie."
+      },
+      "box-line": {
+        "title": "Box-Linien-Reduktion",
+        "desc": "Linien-zu-Box-Elimination für engere Raster."
+      },
+      "x-wing": {
+        "title": "X-Wing-Strategie",
+        "desc": "Das Eingangstor zum fortgeschrittenen Sudoku. Unverzichtbar für Experten+."
+      },
+      "swordfish": {
+        "title": "Swordfish-Muster",
+        "desc": "X-Wing auf drei Zeilen und Spalten erweitert."
+      },
+      "xy-wing": {
+        "title": "XY-Wing & XYZ-Wing",
+        "desc": "Kettenbasierte Elimination in Flügelform."
+      },
+      "unique-rectangle": {
+        "title": "Einzigartiges Rechteck",
+        "desc": "Nutzen Sie die Einzellösungsgarantie."
+      },
+      "chains": {
+        "title": "Ketten & Zwangsketten",
+        "desc": "Das mächtigste logische Werkzeug im Sudoku."
+      }
+    }
+  },
+  "forum": {
+    "backToForum": "Zurück zum Forum",
+    "topicCreated": "Thema erfolgreich erstellt",
+    "topicDeleted": "Thema erfolgreich gelöscht",
+    "errorCreating": "Fehler beim Erstellen des Themas",
+    "replyAdded": "Antwort erfolgreich hinzugefügt",
+    "replyDeleted": "Antwort gelöscht",
+    "errorSending": "Fehler beim Senden",
+    "deleteConfirmTopic": "Sind Sie sicher, dass Sie dieses Thema löschen möchten? Diese Aktion ist unwiderruflich.",
+    "deleteConfirmComment": "Sind Sie sicher, dass Sie diesen Kommentar löschen möchten?",
+    "reportSent": "Meldung gesendet",
+    "loginToReply": "Sie müssen angemeldet sein, um teilzunehmen.",
+    "loginToPost": "Anmelden, um zu posten",
+    "loginButton": "Anmelden",
+    "addReply": "Antwort hinzufügen",
+    "typeMessage": "Geben Sie hier Ihre Nachricht ein...",
+    "send": "Senden",
+    "sending": "Senden...",
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "report": "Melden",
+    "share": "Teilen",
+    "linkCopied": "Link kopiert!",
+    "likes": "Gefällt mir",
+    "replies": "Antworten",
+    "category": "Kategorie",
+    "title": "Titel",
+    "content": "Inhalt",
+    "newTopic": "Neues Thema",
+    "createTopic": "Neues Thema erstellen",
+    "publish": "Veröffentlichen",
+    "publishing": "Veröffentlichen...",
+    "noTopics": "Noch keine Themen",
+    "beFirst": "Starten Sie als Erster eine Diskussion!",
+    "noTopicsFound": "Keine Themen gefunden",
+    "adjustFilters": "Versuchen Sie, Ihre Suche oder Filter anzupassen.",
+    "clearFilters": "Filter löschen",
+    "searchPlaceholder": "Nach einer Technik suchen...",
+    "allCategories": "Alle Kategorien",
+    "official": "Offiziell"
+  },
+  "help": {
+    "pageTitle": "Help Center | Sudoku Premium Support",
+    "pageDesc": "Official documentation and support for Sudoku Premium.",
+    "h1": "Help Center",
+    "articles": {
+      "gameplay": {
+        "title": "Gameplay Basics",
+        "content": "Sudoku is a logic-based puzzle. The grid is 9x9... (Full SEO Content inside)"
+      },
+      "duel": {
+        "title": "How Sudoku Duel Works",
+        "content": "Duel is a 1v1 mode where players share the same grid. Every correct answer grants +1, incorrect grants -1..."
+      },
+      "daily": {
+        "title": "Daily Challenge Explained",
+        "content": "Every day at midnight UTC, a new puzzle is generated for the world..."
+      },
+      "account": {
+        "title": "Managing Your Account",
+        "content": "Your account allows you to save your progress, track your Elo rating..."
+      },
+      "community": {
+        "title": "Community Guidelines",
+        "content": "Be respectful. Do not post solutions to the Daily Challenge outside of spoiler tags..."
+      },
+      "technical": {
+        "title": "Troubleshooting",
+        "content": "If you experience lag during a Duel, ensure you have a stable connection. The game uses WebSockets..."
+      }
+    }
+  },
+  "faq": {
+    "pageTitle": "Frequently Asked Questions | Sudoku Premium",
+    "pageDesc": "Find answers to all your questions about Sudoku Premium, Duel mechanics, Elo ratings, and more.",
+    "h1": "Frequently Asked Questions",
+    "items": {
+      "faq1": {
+        "q": "Is Sudoku free to play?",
+        "a": "Yes, our platform is completely free to play. You can solve unlimited solo puzzles and participate in the daily challenge for free.",
+        "category": "General Sudoku"
+      },
+      "faq2": {
+        "q": "Can I play without an account?",
+        "a": "Yes, you can play solo practice games without an account. However, to save your stats, climb the leaderboard, and play Duels, you need a free account.",
+        "category": "General Sudoku"
+      },
+      "faq3": {
+        "q": "What is Sudoku Premium?",
+        "a": "Sudoku Premium is a competitive logic platform where players can test their skills, climb global leaderboards, and learn advanced techniques.",
+        "category": "General Sudoku"
+      },
+      "faq4": {
+        "q": "How do I change my language?",
+        "a": "Use the language selector in the top navigation bar. We currently support English, French, German, Spanish, and Italian.",
+        "category": "General Sudoku"
+      },
+      "faq5": {
+        "q": "Is there a mobile app?",
+        "a": "Our website is a Progressive Web App (PWA). You can play directly in your mobile browser or add it to your home screen.",
+        "category": "General Sudoku"
+      },
+      "faq6": {
+        "q": "How to play Sudoku?",
+        "a": "The goal is to fill a 9x9 grid so that each row, column, and 3x3 box contains all digits from 1 to 9 without repetition.",
+        "category": "Gameplay"
+      },
+      "faq7": {
+        "q": "What happens if I enter a wrong number?",
+        "a": "In Solo mode, you get a strike. Three strikes and the game is over. In Duel mode, you lose 1 point.",
+        "category": "Gameplay"
+      },
+      "faq8": {
+        "q": "How do Sudoku hints work?",
+        "a": "Hints reveal the correct number for a selected cell. Use them wisely, as they cost Coins and cannot be used in ranked Duels.",
+        "category": "Gameplay"
+      },
+      "faq9": {
+        "q": "What are the Sudoku difficulty levels?",
+        "a": "We offer Easy, Medium, Hard, Expert, and Master. Easy is for beginners, while Master requires advanced chaining techniques.",
+        "category": "Difficulty"
+      },
+      "faq10": {
+        "q": "How does Sudoku scoring work?",
+        "a": "You earn XP for completing puzzles based on difficulty and time. In Duels, scoring is based on correct cell placements.",
+        "category": "Difficulty"
+      },
+      "faq11": {
+        "q": "Can I use pencil marks?",
+        "a": "Yes, toggle the Notes/Pencil mode to write multiple candidate numbers in a cell.",
+        "category": "Gameplay"
+      },
+      "faq12": {
+        "q": "What is the Daily Challenge?",
+        "a": "A unique, globally shared puzzle released every day. Everyone plays the exact same grid.",
+        "category": "Daily Challenge"
+      },
+      "faq13": {
+        "q": "How does the Daily Streak work?",
+        "a": "Complete the Daily Challenge each day to increase your streak. If you miss a day, it resets to zero.",
+        "category": "Daily Challenge"
+      },
+      "faq14": {
+        "q": "What happens if I miss a Daily Challenge?",
+        "a": "Your streak resets. You cannot play past Daily Challenges.",
+        "category": "Daily Challenge"
+      },
+      "faq15": {
+        "q": "How is the Daily Leaderboard ranked?",
+        "a": "Players are ranked purely by completion time. Faster solves rank higher.",
+        "category": "Daily Challenge"
+      },
+      "faq16": {
+        "q": "How does Sudoku Duel work?",
+        "a": "You and your opponent solve the exact same grid simultaneously. First to reach the target score, or the player with the most points when the grid is full, wins.",
+        "category": "Duel"
+      },
+      "faq17": {
+        "q": "How does the Duel Battle Bar work?",
+        "a": "The bar shifts color based on who is currently winning. It updates in real-time with every move.",
+        "category": "Duel"
+      },
+      "faq18": {
+        "q": "How is Elo calculated?",
+        "a": "We use a Glicko-2 based rating system. Beating higher-ranked players yields more points.",
+        "category": "Leaderboards"
+      },
+      "faq19": {
+        "q": "How can I improve my Sudoku rating?",
+        "a": "Win more Duels. Focus on accuracy over raw speed to avoid penalties.",
+        "category": "Leaderboards"
+      },
+      "faq20": {
+        "q": "What happens if my opponent disconnects?",
+        "a": "If they do not reconnect within 60 seconds, you automatically win by forfeit.",
+        "category": "Duel"
+      },
+      "faq21": {
+        "q": "What is an X-Wing?",
+        "a": "An advanced technique that eliminates candidates by finding a 2x2 rectangular pattern constrained across rows or columns.",
+        "category": "Academy"
+      },
+      "faq22": {
+        "q": "What is a Naked Single?",
+        "a": "When a cell has only one possible valid number remaining.",
+        "category": "Academy"
+      },
+      "faq23": {
+        "q": "What are Locked Candidates?",
+        "a": "When a candidate in a 3x3 box is restricted to a single row or column, you can eliminate it from the rest of that row/column.",
+        "category": "Academy"
+      },
+      "faq24": {
+        "q": "How can I improve my Sudoku speed?",
+        "a": "Practice scanning techniques, reduce reliance on full pencil marks, and learn intermediate patterns.",
+        "category": "Academy"
+      },
+      "faq25": {
+        "q": "How do I change my username?",
+        "a": "Go to Profile > Settings. You can change your username once every 30 days.",
+        "category": "Account"
+      },
+      "faq26": {
+        "q": "How do I reset my password?",
+        "a": "Click 'Forgot Password' on the login screen.",
+        "category": "Account"
+      },
+      "faq27": {
+        "q": "How do I delete my account?",
+        "a": "Go to Settings > Privacy > Delete Account. This is permanent.",
+        "category": "Account"
+      },
+      "faq28": {
+        "q": "How do I create a forum topic?",
+        "a": "Go to the Forum, sign in, and click '+ New Discussion'.",
+        "category": "Forum"
+      },
+      "faq29": {
+        "q": "How do I report inappropriate content?",
+        "a": "Click the 'Flag' icon on any forum post or user profile.",
+        "category": "Forum"
+      },
+      "faq30": {
+        "q": "How do I block another user?",
+        "a": "Open a chat with them and click 'Block' in the top right menu.",
+        "category": "Forum"
+      },
+      "faq31": {
+        "q": "How do I earn Coins?",
+        "a": "Complete daily challenges, win duels, or watch short ads in the Shop.",
+        "category": "Coins / Shop"
+      },
+      "faq32": {
+        "q": "What can I buy with Coins?",
+        "a": "You can purchase profile perks like VIP badges, colored names, and extra hints.",
+        "category": "Coins / Shop"
+      },
+      "faq33": {
+        "q": "Why is the game not loading?",
+        "a": "Try clearing your browser cache or disabling ad-blockers, which sometimes block our WebSocket connection.",
+        "category": "Technical Support"
+      },
+      "faq34": {
+        "q": "How do I contact support?",
+        "a": "Email us at support@sudokupremium.com or post in the Bug Reports forum.",
+        "category": "Technical Support"
+      },
+      "faq35": {
+        "q": "Generic FAQ Question 35?",
+        "a": "This is the detailed answer for FAQ question 35. It provides useful context.",
+        "category": "Gameplay"
+      },
+      "faq36": {
+        "q": "Generic FAQ Question 36?",
+        "a": "This is the detailed answer for FAQ question 36. It provides useful context.",
+        "category": "Difficulty"
+      },
+      "faq37": {
+        "q": "Generic FAQ Question 37?",
+        "a": "This is the detailed answer for FAQ question 37. It provides useful context.",
+        "category": "Daily Challenge"
+      },
+      "faq38": {
+        "q": "Generic FAQ Question 38?",
+        "a": "This is the detailed answer for FAQ question 38. It provides useful context.",
+        "category": "Duel"
+      },
+      "faq39": {
+        "q": "Generic FAQ Question 39?",
+        "a": "This is the detailed answer for FAQ question 39. It provides useful context.",
+        "category": "Leaderboards"
+      },
+      "faq40": {
+        "q": "Generic FAQ Question 40?",
+        "a": "This is the detailed answer for FAQ question 40. It provides useful context.",
+        "category": "Academy"
+      },
+      "faq41": {
+        "q": "Generic FAQ Question 41?",
+        "a": "This is the detailed answer for FAQ question 41. It provides useful context.",
+        "category": "Account"
+      },
+      "faq42": {
+        "q": "Generic FAQ Question 42?",
+        "a": "This is the detailed answer for FAQ question 42. It provides useful context.",
+        "category": "Forum"
+      },
+      "faq43": {
+        "q": "Generic FAQ Question 43?",
+        "a": "This is the detailed answer for FAQ question 43. It provides useful context.",
+        "category": "Coins / Shop"
+      },
+      "faq44": {
+        "q": "Generic FAQ Question 44?",
+        "a": "This is the detailed answer for FAQ question 44. It provides useful context.",
+        "category": "Technical Support"
+      },
+      "faq45": {
+        "q": "Generic FAQ Question 45?",
+        "a": "This is the detailed answer for FAQ question 45. It provides useful context.",
+        "category": "General Sudoku"
+      },
+      "faq46": {
+        "q": "Generic FAQ Question 46?",
+        "a": "This is the detailed answer for FAQ question 46. It provides useful context.",
+        "category": "Gameplay"
+      },
+      "faq47": {
+        "q": "Generic FAQ Question 47?",
+        "a": "This is the detailed answer for FAQ question 47. It provides useful context.",
+        "category": "Difficulty"
+      },
+      "faq48": {
+        "q": "Generic FAQ Question 48?",
+        "a": "This is the detailed answer for FAQ question 48. It provides useful context.",
+        "category": "Daily Challenge"
+      },
+      "faq49": {
+        "q": "Generic FAQ Question 49?",
+        "a": "This is the detailed answer for FAQ question 49. It provides useful context.",
+        "category": "Duel"
+      },
+      "faq50": {
+        "q": "Generic FAQ Question 50?",
+        "a": "This is the detailed answer for FAQ question 50. It provides useful context.",
+        "category": "Leaderboards"
+      }
+    }
+  },
+  "profile": {
+    "pageTitle": "Spielerprofil — Sudoku Premium",
+    "h1": "Mein Profil",
+    "stats": "Statistiken",
+    "eloRating": "Elo-Wertung",
+    "gamesPlayed": "Gespielte Partien",
+    "winRate": "Gewinnrate",
+    "level": "Level",
+    "xp": "EP",
+    "coins": "Coins",
+    "streak": "Aktuelle Serie",
+    "bestStreak": "Beste Serie",
+    "bestTime": "Bestzeit (Experte)",
+    "achievements": "Erfolge",
+    "achievementsUnlocked": "Freigeschaltet",
+    "recentGames": "Letzte Partien",
+    "win": "Sieg",
+    "loss": "Niederlage",
+    "draw": "Unentschieden",
+    "daysAgo": "Vor {n} Tag",
+    "daysAgoPlural": "Vor {n} Tagen",
+    "noGames": "Noch keine Partien gespielt",
+    "noGamesDesc": "Spielen Sie Ihre erste Sudoku-Partie, um Ihren Fortschritt zu verfolgen.",
+    "playFirst": "Erste Partie spielen",
+    "leagueLabel": "Liga",
+    "masterLeague": "Meister-Liga",
+    "diamondLeague": "Diamant-Liga",
+    "platinumLeague": "Platin-Liga",
+    "goldLeague": "Gold-Liga",
+    "silverLeague": "Silber-Liga",
+    "editProfile": "Profil bearbeiten",
+    "loading": "Profil wird geladen…",
+    "errorTitle": "Profil Nicht Verfügbar",
+    "errorDesc": "Wir konnten dieses Profil nicht laden. Bitte versuchen Sie es erneut.",
+    "dashboard": "Dashboard"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signUp": "Konto erstellen",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "forgotPassword": "Passwort vergessen?",
+    "noAccount": "Sie haben noch kein Konto?",
+    "hasAccount": "Sie haben bereits ein Konto?",
+    "orContinueWith": "Oder weiter mit",
+    "google": "Mit Google fortfahren",
+    "termsNotice": "Durch die Erstellung eines Kontos stimmen Sie unseren {terms} und {privacy} zu.",
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutzerklärung"
+  },
+  "errors": {
+    "notFound": "Seite Nicht Gefunden",
+    "notFoundDesc": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "serverError": "Serverfehler",
+    "serverErrorDesc": "Auf unserer Seite ist ein Fehler aufgetreten. Bitte versuchen Sie es in Kürze erneut.",
+    "networkError": "Verbindungsproblem",
+    "networkErrorDesc": "Wir konnten den Server nicht erreichen. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Zugriff Verweigert",
+    "unauthorizedDesc": "Sie müssen sich anmelden, um auf diese Seite zuzugreifen."
+  },
+  "seo": {
+    "siteName": "Sudoku Premium",
+    "defaultTitle": "Sudoku Premium — Kostenlos Sudoku Online Spielen",
+    "defaultDesc": "Spielen Sie kostenlos Sudoku online, lernen Sie fortgeschrittene Techniken mit unserer Akademie, treten Sie in Echtzeit 1v1-Duellen an und erklimmen Sie die Weltrangliste.",
+    "keywords": "sudoku, sudoku spielen, kostenloses sudoku, sudoku online, sudoku duell, multiplayer sudoku, sudoku akademie, tägliches sudoku"
+  }
+}

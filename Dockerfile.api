@@ -1,0 +1,70 @@
+# --- STAGE 1: Prune ---
+FROM node:20-alpine AS pruner
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+RUN npm i -g turbo
+COPY . .
+RUN turbo prune --scope=api --docker
+
+# --- STAGE 2: Installer & Builder ---
+FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/package-lock.json ./package-lock.json
+RUN npm ci
+
+COPY --from=pruner /app/out/full/ .
+# Generate Prisma Client
+RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
+
+# Build the project
+RUN npm run build --workspace=apps/api
+
+# --- STAGE 3: Production Dependencies ---
+FROM node:20-alpine AS prod-deps
+WORKDIR /app
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/package-lock.json ./package-lock.json
+# Install ONLY production dependencies
+RUN npm ci --omit=dev
+# Generate Prisma Client for production runtime
+COPY packages/database/prisma packages/database/prisma
+RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
+
+# --- STAGE 4: Runner ---
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+# Copy production node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/packages/database/node_modules ./packages/database/node_modules
+
+# Copy built application
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
+COPY --from=builder /app/packages/sudoku-engine/dist ./packages/sudoku-engine/dist
+
+# Necessary config files
+COPY package.json ./
+COPY apps/api/package.json ./apps/api/package.json
+
+USER nestjs
+
+# Graceful shutdown support via tini is often built-in to modern node, 
+# but we ensure the app listens to SIGTERM
+ENV NODE_ENV=production
+ENV PORT=3001
+
+EXPOSE 3001
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+
+# Start server
+CMD ["node", "apps/api/dist/main"]
