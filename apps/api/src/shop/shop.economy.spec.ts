@@ -136,4 +136,48 @@ describe('P0-G: shop economy integrity', () => {
     expect(failedCall.data.status).toBe('FAILED');
     expect(failedCall.data.status).not.toBe('PENDING');
   });
+
+  describe('P1-H: server-authoritative Stripe verification', () => {
+    it('rejects a session owned by ANOTHER user (no cross-user completion)', async () => {
+      (prisma.purchase.findUnique as jest.Mock).mockResolvedValue({
+        id: 'po1', userId: 'someone-else', status: 'PENDING', coinsGranted: 100,
+      });
+
+      await expect(service.verifyAndCompleteSession('u1', 'sess_1')).rejects.toThrow(
+        'ne vous appartient pas',
+      );
+    });
+
+    it('returns COMPLETED immediately for an already-completed purchase (idempotent)', async () => {
+      (prisma.purchase.findUnique as jest.Mock).mockResolvedValue({
+        id: 'po1', userId: 'u1', status: 'COMPLETED', coinsGranted: 500,
+      });
+
+      const res = await service.verifyAndCompleteSession('u1', 'sess_1');
+      expect(res.status).toBe('COMPLETED');
+      expect(coinLedger.credit).not.toHaveBeenCalled(); // no double credit
+    });
+
+    it('refuses to process webhooks when STRIPE_WEBHOOK_SECRET is missing (fail closed)', async () => {
+      const prev = process.env.STRIPE_WEBHOOK_SECRET;
+      delete process.env.STRIPE_WEBHOOK_SECRET;
+      try {
+        await expect(
+          service.verifyStripeWebhook('sig', Buffer.from('{}')),
+        ).rejects.toThrow('Webhook non configuré');
+      } finally {
+        if (prev) process.env.STRIPE_WEBHOOK_SECRET = prev;
+      }
+    });
+
+    it('refuses payments when STRIPE_SECRET_KEY is missing (no dummy key fallback)', () => {
+      const prev = process.env.STRIPE_SECRET_KEY;
+      delete process.env.STRIPE_SECRET_KEY;
+      try {
+        expect(() => (service as any).getStripe()).toThrow('STRIPE_SECRET_KEY');
+      } finally {
+        if (prev) process.env.STRIPE_SECRET_KEY = prev;
+      }
+    });
+  });
 });

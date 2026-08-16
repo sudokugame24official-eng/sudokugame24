@@ -7,6 +7,7 @@ import {
   Request,
   Req,
   Headers,
+  Query,
   BadRequestException,
   ForbiddenException,
   UseInterceptors,
@@ -83,6 +84,16 @@ export class ShopController {
     return this.shopService.rewardAdWatch(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('purchase/status')
+  async getPurchaseStatus(
+    @Request() req,
+    @Query('sessionId') sessionId: string,
+  ) {
+    if (!sessionId) throw new BadRequestException('sessionId requis');
+    return this.shopService.verifyAndCompleteSession(req.user.id, sessionId);
+  }
+
   @Post('webhook')
   async stripeWebhook(
     @Req() req: any,
@@ -92,12 +103,8 @@ export class ShopController {
       throw new BadRequestException('Missing stripe-signature header');
     }
 
-    let event;
-    if (process.env.NODE_ENV !== 'test') {
-      event = await this.shopService.verifyStripeWebhook(signature, req.rawBody);
-    } else {
-      event = req.body;
-    }
+    // P1-H: signature verification is ALWAYS enforced (no test bypass).
+    const event = await this.shopService.verifyStripeWebhook(signature, req.rawBody);
 
     if (event.type === 'checkout.session.completed') {
       await this.shopService.handleSuccessfulPayment(

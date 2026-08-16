@@ -1,6 +1,6 @@
 "use client";
 import { API_URL } from "@/lib/api";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Link } from "@/navigation";
@@ -9,19 +9,23 @@ import { useSearchParams } from "next/navigation";
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const [verifyState, setVerifyState] = useState<"pending" | "ok" | "error">("pending");
 
   useEffect(() => {
-    if (sessionId) {
-      // Confirm the mock transaction with backend
-      fetch(`${API_URL}/shop/webhook`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "checkout.session.completed",
-          data: { object: { id: sessionId } },
-        }),
-      }).catch(console.error);
-    }
+    if (!sessionId) return;
+    // P1-H: the browser NEVER declares a payment successful and never forges
+    // webhooks. We only ask the server to verify the session with Stripe;
+    // coins are credited exclusively from Stripe's own answer (server-side).
+    fetch(
+      `${API_URL}/shop/purchase/status?sessionId=${encodeURIComponent(sessionId)}`,
+      { credentials: "include" },
+    )
+      .then(async (res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        setVerifyState(data.status === "COMPLETED" ? "ok" : "error");
+      })
+      .catch(() => setVerifyState("error"));
   }, [sessionId]);
 
   return (
@@ -64,10 +68,15 @@ export default function CheckoutSuccessPage() {
           <CheckCircle className="w-12 h-12 text-green-500" />
         </motion.div>
 
-        <h1 className="text-3xl font-black mb-2">Paiement Réussi !</h1>
+        <h1 className="text-3xl font-black mb-2">
+          {verifyState === "ok" ? "Paiement Réussi !" : "Vérification du paiement..."}
+        </h1>
         <p className="text-muted-foreground mb-8">
-          Vos pièces ont été ajoutées à votre compte avec succès. Merci pour
-          votre soutien !
+          {verifyState === "ok"
+            ? "Vos pièces ont été ajoutées à votre compte avec succès. Merci pour votre soutien !"
+            : verifyState === "error"
+              ? "La vérification du paiement est en cours ou a échoué. Vos pièces seront créditées automatiquement dès confirmation par Stripe."
+              : "Nous confirmons votre paiement auprès de Stripe..."}
         </p>
 
         <Link href="/shop">

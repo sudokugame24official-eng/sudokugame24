@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Logger,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { prisma, PerkType, CoinTransactionType } from '@repo/database';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
@@ -19,16 +20,65 @@ const COIN_PACKS = [
 @Injectable()
 export class ShopService {
   private readonly logger = new Logger(ShopService.name);
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
 
   constructor(
     private readonly coinLedger: CoinLedgerService,
     private readonly featureFlags: FeatureFlagService,
-  ) {
-    this.stripe = new Stripe(
-      process.env.STRIPE_SECRET_KEY || 'sk_test_mock',
-      {},
-    );
+  ) {}
+
+  /**
+   * Lazy Stripe client. No dummy fallback key: if payments are requested but
+   * STRIPE_SECRET_KEY is not configured, we fail fast instead of silently
+   * talking to Stripe with a bogus key.
+   */
+  private getStripe(): Stripe {
+    if (!this.stripe) {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new ForbiddenException(
+          'Les paiements ne sont pas configurés (STRIPE_SECRET_KEY manquante).',
+        );
+      }
+      this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {});
+    }
+    return this.stripe;
+  }
+
+  /**
+   * P1-H: server-authoritative verification for a checkout session.
+   * The WEB BROWSER can trigger this check after redirect, but only the
+   * server talks to Stripe: coins are credited only if Stripe itself says
+   * the session is paid. Idempotent (purchase claim + ledger key), so it is
+   * a safe catch-up path when the webhook is delayed or lost.
+   */
+  async verifyAndCompleteSession(userId: string, sessionId: string) {
+    const isStripeEnabled = await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
+    if (!isStripeEnabled) throw new ForbiddenException('Les paiements sont désactivés.');
+
+    const purchase = await prisma.purchase.findUnique({
+      where: { stripeSessionId: sessionId },
+    });
+    if (!purchase) throw new NotFoundException('Achat introuvable.');
+    if (purchase.userId !== userId) throw new ForbiddenException('Cet achat ne vous appartient pas.');
+
+    if (purchase.status === 'COMPLETED') {
+      return { status: 'COMPLETED', coinsGranted: purchase.coinsGranted };
+    }
+
+    // Retrieve the session FROM STRIPE (never trust client claims).
+    const session = await this.getStripe().checkout.sessions.retrieve(sessionId);
+    if (session.payment_status === 'paid') {
+      await this.handleSuccessfulPayment(sessionId, `verify_${sessionId}`);
+      const updated = await prisma.purchase.findUnique({
+        where: { stripeSessionId: sessionId },
+      });
+      return {
+        status: updated?.status ?? 'PENDING',
+        coinsGranted: updated?.coinsGranted ?? 0,
+      };
+    }
+
+    return { status: session.payment_status, coinsGranted: 0 };
   }
 
   getCoinPacks() {
@@ -75,39 +125,36 @@ export class ShopService {
     const pack = COIN_PACKS.find((p) => p.id === packId);
     if (!pack) throw new BadRequestException('Pack introuvable');
 
+    // P1-H: always a REAL Stripe session — no mock/local shortcut paths.
     let session;
-    if (process.env.NODE_ENV !== 'test') {
-      try {
-        session = await this.stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          mode: 'payment',
-          line_items: [
-            {
-              price_data: {
-                currency: 'eur',
-                product_data: { name: pack.name },
-                unit_amount: Math.round(pack.priceEur * 100),
-              },
-              quantity: 1,
+    try {
+      session = await this.getStripe().checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: { name: pack.name },
+              unit_amount: Math.round(pack.priceEur * 100),
             },
-          ],
-          client_reference_id: userId,
-          metadata: { packId: pack.id, coinsGranted: pack.coins },
-          success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shop?success=true`,
-          cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shop?canceled=true`,
-        });
-      } catch (e) {
-        this.logger.error('Erreur de création de session Stripe', e);
-        throw new BadRequestException('Erreur de création de paiement');
-      }
+            quantity: 1,
+          },
+        ],
+        client_reference_id: userId,
+        metadata: { packId: pack.id, coinsGranted: pack.coins },
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shop/checkout?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shop?canceled=true`,
+      });
+    } catch (e) {
+      this.logger.error('Erreur de création de session Stripe', e);
+      throw new BadRequestException('Erreur de création de paiement');
     }
-
-    const mockSessionId = session?.id || `mock_sess_${Date.now()}`;
 
     await prisma.purchase.create({
       data: {
         userId,
-        stripeSessionId: mockSessionId,
+        stripeSessionId: session.id,
         amount: pack.priceEur,
         currency: 'EUR',
         coinsGranted: pack.coins,
@@ -115,13 +162,19 @@ export class ShopService {
       },
     });
 
-    return { url: session?.url || `http://localhost:3000/shop/checkout?session_id=${mockSessionId}` };
+    return { url: session.url };
   }
 
   async verifyStripeWebhook(signature: string, payload: Buffer): Promise<Stripe.Event> {
+    // P1-H: signature verification is ALWAYS active — including test env.
+    // No 'whsec_test' fallback: a missing secret must fail closed.
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!endpointSecret) {
+      this.logger.error('STRIPE_WEBHOOK_SECRET is not configured — refusing to process webhook');
+      throw new BadRequestException('Webhook non configuré');
+    }
     try {
-      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
-      return this.stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+      return this.getStripe().webhooks.constructEvent(payload, signature, endpointSecret);
     } catch (err) {
       this.logger.error(`⚠️  Webhook signature failed.`, err.message);
       throw new BadRequestException(`Webhook Error: ${err.message}`);
