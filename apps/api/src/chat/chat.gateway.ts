@@ -12,7 +12,16 @@ import { UseGuards, Logger } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
 import { WsThrottlerGuard } from '../auth/ws-throttler.guard';
 import { ChatService } from './chat.service';
+import { RedisService } from '../redis/redis.service';
 
+/**
+ * P1-M: multi-instance chat.
+ *
+ * NO in-memory user maps: delivery targets the Redis-adapter-backed room
+ * `user_{userId}`, so a message reaches its recipient on ANY API instance.
+ * Offline recipients get the message through DB persistence in
+ * ChatService.sendMessage (fetched on next conversation load).
+ */
 @WebSocketGateway({
   cors: { origin: '*' },
   namespace: '/chat',
@@ -23,34 +32,32 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private logger = new Logger('ChatGateway');
-  // Store userId -> SocketId
-  private activeUsers = new Map<string, string>();
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly redisService: RedisService,
+  ) {}
 
   handleConnection(client: Socket) {
-    // Connection will be validated by WsJwtGuard on specific events,
-    // but typically guards don't run on handleConnection automatically unless explicitly checked.
-    // In our case, we will extract userId on the first authenticated message or we can parse token here.
+    // Authentication happens on the first guarded message ('authenticate').
   }
 
   handleDisconnect(client: Socket) {
-    const userId = [...this.activeUsers.entries()].find(
-      ([_, sid]) => sid === client.id,
-    )?.[0];
+    const userId = client.data?.user?.id;
     if (userId) {
-      this.activeUsers.delete(userId);
-      this.server.emit('user_offline', { userId });
+      this.server
+        .to(`user_${userId}`)
+        .emit('user_offline', { userId }); // room-scoped, cluster-wide via adapter
     }
   }
 
   @SubscribeMessage('authenticate')
-  handleAuthenticate(@ConnectedSocket() client: Socket) {
+  async handleAuthenticate(@ConnectedSocket() client: Socket) {
     const user = client.data?.user;
-    if (user) {
-      this.activeUsers.set(user.id, client.id);
-      this.server.emit('user_online', { userId: user.id });
-    }
+    if (!user) return;
+    // Join the cluster-wide personal room (Redis adapter broadcasts joins).
+    await client.join(`user_${user.id}`);
+    this.server.to(`user_${user.id}`).emit('user_online', { userId: user.id });
   }
 
   @SubscribeMessage('send_message')
@@ -62,23 +69,49 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!user) return;
 
     try {
+      // Persist first (source of truth) — offline users get it on next load.
       const message = await this.chatService.sendMessage(
         user.id,
         data.receiverId,
         data.content,
       );
 
-      // Emit to receiver if online
-      const receiverSocketId = this.activeUsers.get(data.receiverId);
-      if (receiverSocketId) {
-        this.server.to(receiverSocketId).emit('receive_message', message);
-      }
+      // Deliver to the recipient's personal room: works across instances.
+      this.server.to(`user_${data.receiverId}`).emit('receive_message', message);
 
-      // Emit back to sender (for confirmation/UI update)
+      // Confirm to the sender.
       client.emit('message_sent', message);
     } catch (error) {
-      // Send error specifically to sender (e.g. "User blocked you")
       client.emit('chat_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('typing')
+  handleTyping(
+    @MessageBody() data: { receiverId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = client.data?.user;
+    if (!user) return;
+    this.server.to(`user_${data.receiverId}`).emit('typing', {
+      userId: user.id,
+    });
+  }
+
+  @SubscribeMessage('mark_read')
+  async handleMarkRead(
+    @MessageBody() data: { conversationWith: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = client.data?.user;
+    if (!user) return;
+    try {
+      await this.chatService.markConversationRead(user.id, data.conversationWith);
+      this.server
+        .to(`user_${data.conversationWith}`)
+        .emit('messages_read', { byUserId: user.id });
+    } catch (e) {
+      this.logger.warn(`mark_read failed: ${(e as Error).message}`);
     }
   }
 }

@@ -2,19 +2,37 @@ import {
   WebSocketGateway,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   WebSocketServer,
   SubscribeMessage,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UseGuards, Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Cron } from '@nestjs/schedule';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
 import { RedisService } from '../redis/redis.service';
 import { FriendsService } from '../friends/friends.service';
 
+const PRESENCE_KEY = 'presence:online_zset';
+const HEARTBEAT_TTL_SEC = 90; // a user is offline after 90s without heartbeat
+
+/**
+ * P1-M: cluster-safe presence.
+ *
+ * - Sockets are authenticated AT CONNECTION TIME via a handshake middleware
+ *   (the old code never populated client.data.user on connect, so the
+ *   disconnect cleanup was dead code and ghost users stayed "online").
+ * - Online state lives in a Redis ZSET scored by last-heartbeat timestamp:
+ *   shared by all instances, expiring by score, swept by a distributed-locked
+ *   cron (no per-instance in-memory truth).
+ */
 @UseGuards(WsJwtGuard)
 @WebSocketGateway({ namespace: '/presence', cors: { origin: '*' } })
 export class PresenceGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
   server: Server;
@@ -24,92 +42,170 @@ export class PresenceGateway
   constructor(
     private redisService: RedisService,
     private friendsService: FriendsService,
+    private jwtService: JwtService,
   ) {}
 
-  async handleConnection(client: Socket) {
-    try {
-      // WsJwtGuard populates client.data.user (assuming it runs on connect or via middleware)
-      // Actually, guards don't run on connection lifecycle hooks automatically in NestJS.
-      // We must authenticate the socket manually on connect if we need user data immediately.
-      // Let's assume the client sends token in handshake.auth.token and we verified it.
-      // For now, we will rely on a dedicated "identify" event to mark as online.
-    } catch (e) {
-      client.disconnect();
-    }
+  afterInit(server: Server) {
+    // Authenticate the socket at handshake time so connect/disconnect
+    // lifecycle hooks have the real userId.
+    server.use((socket: Socket, next: (err?: Error) => void) => {
+      try {
+        let token = socket.handshake.auth?.token;
+        if (!token && socket.handshake.headers.cookie) {
+          const cookies = socket.handshake.headers.cookie
+            .split(';')
+            .reduce((res: Record<string, string>, c) => {
+              const [key, val] = c.trim().split('=');
+              res[key] = decodeURIComponent(val || '');
+              return res;
+            }, {});
+          token = cookies['access_token'];
+        }
+        if (!token) return next(new Error('unauthorized'));
+        const payload = this.jwtService.verify(token, {
+          secret: process.env.JWT_SECRET as string,
+        });
+        socket.data.userId = payload.sub;
+        next();
+      } catch {
+        next(new Error('unauthorized'));
+      }
+    });
   }
 
-  handleDisconnect(client: Socket) {
-    const userId = client.data?.user?.id;
-    if (userId) {
-      this.markUserOffline(userId);
+  async handleConnection(client: Socket) {
+    const userId = client.data?.userId;
+    if (!userId) {
+      client.disconnect();
+      return;
     }
+    await client.join(`user_${userId}`);
+    await this.touchHeartbeat(userId);
+    await this.broadcastOnlineToFriends(userId);
+    this.logger.debug(`presence: ${userId} connected`);
+  }
+
+  async handleDisconnect(client: Socket) {
+    const userId = client.data?.userId;
+    if (!userId) return;
+
+    // Only mark offline if this was the user's LAST socket. Sockets of the
+    // same user on other devices/instances keep them online. Room occupancy
+    // is adapter-backed (cluster-wide) via the Redis adapter.
+    const roomSockets = await this.server.in(`user_${userId}`).fetchSockets();
+    const stillConnected = roomSockets.some((s) => s.id !== client.id);
+    if (stillConnected) return;
+
+    await this.markUserOffline(userId);
+    this.logger.debug(`presence: ${userId} disconnected`);
+  }
+
+  @SubscribeMessage('heartbeat')
+  async handleHeartbeat(@ConnectedSocket() client: Socket) {
+    const userId = client.data?.userId;
+    if (userId) await this.touchHeartbeat(userId);
+    return { ok: true };
   }
 
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('identify')
-  async handleIdentify(client: Socket) {
-    const userId = client.data.user.id;
-    client.join(`user_${userId}`);
-    await this.markUserOnline(userId);
+  async handleIdentify(@ConnectedSocket() client: Socket) {
+    const userId = client.data.userId || client.data?.user?.id;
+    if (!userId) return { error: 'unidentified' };
+    client.data.userId = userId;
+    await client.join(`user_${userId}`);
+    await this.touchHeartbeat(userId);
 
-    // Notify friends
     const friends = await this.friendsService.getFriends(userId);
     const friendIds = friends.map((f) => f.id);
-
-    // Broadcast only to friends who are online (they are in their own rooms)
     for (const friendId of friendIds) {
       this.server.to(`user_${friendId}`).emit('friend_online', { userId });
     }
 
-    // Get currently online friends to return to the client
-    const redis = this.redisService.getClient();
     const onlineStatuses = await Promise.all(
-      friendIds.map((fId) => redis.sismember('presence:online_users', fId)),
+      friendIds.map((fId) => this.isOnline(fId)),
     );
-
     const onlineFriends = friendIds.filter(
-      (_, idx) => onlineStatuses[idx] === 1,
+      (_, idx) => onlineStatuses[idx] === true,
     );
-
     return { status: 'identified', onlineFriends };
   }
 
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('challenge_friend')
   async handleChallenge(
-    client: Socket,
-    payload: { friendId: string; difficulty: string },
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { friendId: string; difficulty: string },
   ) {
     const userId = client.data.user.id;
     const username = client.data.user.username;
 
-    // Verify they are actually friends
     const friends = await this.friendsService.getFriends(userId);
     if (!friends.find((f) => f.id === payload.friendId)) {
       return { error: 'Not friends' };
     }
 
-    // Emit challenge to friend's room
     this.server.to(`user_${payload.friendId}`).emit('duel_challenge_received', {
       challengerId: userId,
       challengerUsername: username,
       difficulty: payload.difficulty,
     });
-
     return { success: true };
   }
 
-  private async markUserOnline(userId: string) {
+  // --- Redis presence primitives ---
+
+  private async touchHeartbeat(userId: string) {
     const redis = this.redisService.getClient();
+    await redis.zadd(PRESENCE_KEY, Date.now(), userId);
+    // migrate legacy plain-set readers if present
     await redis.sadd('presence:online_users', userId);
+  }
+
+  private async isOnline(userId: string): Promise<boolean> {
+    const redis = this.redisService.getClient();
+    const ts = await redis.zscore(PRESENCE_KEY, userId);
+    if (ts === null) return false;
+    return Date.now() - Number(ts) < HEARTBEAT_TTL_SEC * 1000;
   }
 
   private async markUserOffline(userId: string) {
     const redis = this.redisService.getClient();
+    await redis.zrem(PRESENCE_KEY, userId);
     await redis.srem('presence:online_users', userId);
+  }
 
-    // We could notify friends here too, but to avoid O(N) DB calls on every disconnect,
-    // we could rely on clients polling or only broadcasting if we cached the friend list.
-    // For now, simple SREM is fine.
+  private async broadcastOnlineToFriends(userId: string) {
+    try {
+      const friends = await this.friendsService.getFriends(userId);
+      for (const f of friends) {
+        this.server.to(`user_${f.id}`).emit('friend_online', { userId });
+      }
+    } catch (e) {
+      this.logger.warn(`friend broadcast failed: ${(e as Error).message}`);
+    }
+  }
+
+  /**
+   * Distributed-locked sweep (every minute, one instance at a time):
+   * removes users whose heartbeat is older than the TTL.
+   */
+  @Cron('* * * * *')
+  async sweepStalePresence() {
+    const redis = this.redisService.getClient();
+    const lockKey = 'presence:sweep_lock';
+    const token = Math.random().toString(36).slice(2);
+    const acquired = await redis.set(lockKey, token, 'PX', 50000, 'NX');
+    if (!acquired) return;
+    try {
+      const cutoff = Date.now() - HEARTBEAT_TTL_SEC * 1000;
+      const removed = await redis.zremrangebyscore(PRESENCE_KEY, '-inf', cutoff);
+      if (removed > 0) {
+        this.logger.log(`presence sweep: removed ${removed} stale users`);
+      }
+    } finally {
+      const current = await redis.get(lockKey);
+      if (current === token) await redis.del(lockKey);
+    }
   }
 }

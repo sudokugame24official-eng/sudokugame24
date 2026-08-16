@@ -81,6 +81,14 @@ export class ChatService {
     return messages;
   }
 
+  /** P1-M: explicit read-state update (called from the WS gateway). */
+  async markConversationRead(userId: string, otherUserId: string) {
+    await prisma.privateMessage.updateMany({
+      where: { senderId: otherUserId, receiverId: userId, read: false },
+      data: { read: true },
+    });
+  }
+
   async sendMessage(senderId: string, receiverId: string, content: string) {
     if (content.length > 2000) {
       throw new BadRequestException(

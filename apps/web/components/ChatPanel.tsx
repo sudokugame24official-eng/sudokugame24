@@ -51,9 +51,20 @@ export const ChatPanel = () => {
   useEffect(() => {
     if (user) {
       const newSocket = io(`${WS_URL}/chat`, { withCredentials: true });
+      // Presence socket: identify + heartbeat so online status stays fresh
+      // (Redis ZSET with TTL — a closed tab expires after ~90s).
+      const presence = io(`${WS_URL}/presence`, { withCredentials: true });
+      const hb = setInterval(() => {
+        if (presence.connected) presence.emit("heartbeat");
+      }, 30000);
 
       newSocket.on("connect", () => {
         newSocket.emit("authenticate");
+      });
+
+      presence.on("connect", () => {
+        presence.emit("identify");
+        presence.emit("heartbeat");
       });
 
       newSocket.on("receive_message", (msg) => {
@@ -120,10 +131,13 @@ export const ChatPanel = () => {
       fetchConversations();
 
       return () => {
+        clearInterval(hb);
+        presence.disconnect();
         newSocket.close();
       };
     }
-  }, [user, selectedUser]); // Re-run effect if selectedUser changes to update receive logic properly (or use a ref for selectedUser)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, selectedUser]);
 
   const fetchConversations = async () => {
     try {
