@@ -961,7 +961,7 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
   ) {
     const now = Date.now();
     try {
-      const result = await this.fallbackHandleMove(matchId, userId, row, col, value, now);
+      const result = await this.atomicHandleMove(matchId, userId, row, col, value, now);
       if (result.error) return;
       if (result.isSus) this.logger.warn('Suspicious move');
       
@@ -1000,40 +1000,124 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async fallbackHandleMove(matchId: string, userId: string, r: number, c: number, val: number, now: number): Promise<any> {
-    const duelStr = await this.redisService.getClient().get('duel:active:' + matchId);
-    if (!duelStr) return { error: 'not_found' };
-    const duel = JSON.parse(duelStr);
-    
-    if (now < duel.startTime) return { error: 'match_not_started' };
+  /**
+   * Atomically applies a move to the duel state in Redis (P0-E).
+   *
+   * The previous implementation (plain GET -> JS mutate -> SET, introduced by a
+   * regex hot-patch) lost concurrent updates and dropped the 3600s TTL.
+   * This version uses a WATCH/MULTI optimistic transaction on a dedicated
+   * connection: if another writer (opponent, bot loop, other instance) touched
+   * the key between our read and write, EXEC aborts and we retry with fresh
+   * state. The original TTL is preserved.
+   */
+  private async atomicHandleMove(
+    matchId: string,
+    userId: string,
+    r: number,
+    c: number,
+    val: number,
+    now: number,
+  ): Promise<any> {
+    const redis = this.redisService.getClient();
+    const key = 'duel:active:' + matchId;
+    const MAX_MOVE_ATTEMPTS = 10;
 
-    if (userId !== duel.player1Id && userId !== duel.player2Id) return { error: 'spectator' };
-    if (duel.currentBoard[r][c] !== 0 || val === 0) return { error: 'invalid_move' };
-    
-    let isSus = false;
-    if (userId === duel.player1Id) {
-      if (duel.lastMoveTimeP1 > 0 && now - duel.lastMoveTimeP1 < 300) { duel.riskScoreP1++; isSus = true; }
-      duel.lastMoveTimeP1 = now;
-    } else if (userId === duel.player2Id) {
-      if (duel.lastMoveTimeP2 > 0 && now - duel.lastMoveTimeP2 < 300) { duel.riskScoreP2++; isSus = true; }
-      duel.lastMoveTimeP2 = now;
+    for (let attempt = 0; attempt < MAX_MOVE_ATTEMPTS; attempt++) {
+      if (attempt > 0) {
+        // Jittered backoff: reduce retry storms under contention
+        // (2 players + bot loop can conflict on the same key).
+        await new Promise((res) => setTimeout(res, Math.floor(Math.random() * 8) + 1));
+      }
+      // Dedicated connection: WATCH is connection-scoped and must not be
+      // shared with other in-flight commands on the pool client.
+      const tx = redis.duplicate();
+      try {
+        await tx.watch(key);
+        const duelStr = await tx.get(key);
+        if (!duelStr) {
+          await tx.unwatch();
+          return { error: 'not_found' };
+        }
+        const duel = JSON.parse(duelStr);
+
+        if (now < duel.startTime) {
+          await tx.unwatch();
+          return { error: 'match_not_started' };
+        }
+        if (userId !== duel.player1Id && userId !== duel.player2Id) {
+          await tx.unwatch();
+          return { error: 'spectator' };
+        }
+        if (duel.currentBoard[r]?.[c] !== 0 || val === 0) {
+          await tx.unwatch();
+          return { error: 'invalid_move' };
+        }
+
+        let isSus = false;
+        if (userId === duel.player1Id) {
+          if (duel.lastMoveTimeP1 > 0 && now - duel.lastMoveTimeP1 < 300) {
+            duel.riskScoreP1++;
+            isSus = true;
+          }
+          duel.lastMoveTimeP1 = now;
+        } else {
+          if (duel.lastMoveTimeP2 > 0 && now - duel.lastMoveTimeP2 < 300) {
+            duel.riskScoreP2++;
+            isSus = true;
+          }
+          duel.lastMoveTimeP2 = now;
+        }
+
+        const isCorrect = duel.solvedBoard[r][c] === val;
+        let currentCombo = 0;
+
+        if (isCorrect) {
+          duel.currentBoard[r][c] = val;
+          duel.ownersBoard[r][c] = userId;
+          if (userId === duel.player1Id) {
+            duel.scoreP1++;
+            duel.comboP1++;
+            currentCombo = duel.comboP1;
+          } else {
+            duel.scoreP2++;
+            duel.comboP2++;
+            currentCombo = duel.comboP2;
+          }
+        } else {
+          if (userId === duel.player1Id) {
+            duel.scoreP1--;
+            duel.comboP1 = 0;
+          } else {
+            duel.scoreP2--;
+            duel.comboP2 = 0;
+          }
+        }
+
+        // Preserve the duel TTL (default 3600s set by saveActiveDuel).
+        const ttl = await tx.ttl(key);
+        const ttlSec = ttl > 0 ? ttl : 3600;
+        const results = await tx
+          .multi()
+          .set(key, JSON.stringify(duel), 'EX', ttlSec)
+          .exec();
+
+        if (!results || results.length === 0) {
+          continue; // WATCH aborted: another writer won, retry with fresh state
+        }
+        return {
+          success: true,
+          isSus,
+          isCorrect,
+          currentBoard: duel.currentBoard,
+          scoreP1: duel.scoreP1,
+          scoreP2: duel.scoreP2,
+          combo: currentCombo,
+        };
+      } finally {
+        tx.disconnect();
+      }
     }
-    
-    const isCorrect = duel.solvedBoard[r][c] === val;
-    let currentCombo = 0;
-    
-    if (isCorrect) {
-      duel.currentBoard[r][c] = val;
-      duel.ownersBoard[r][c] = userId;
-      if (userId === duel.player1Id) { duel.scoreP1++; duel.comboP1++; currentCombo = duel.comboP1; }
-      else { duel.scoreP2++; duel.comboP2++; currentCombo = duel.comboP2; }
-    } else {
-      if (userId === duel.player1Id) { duel.scoreP1--; duel.comboP1 = 0; }
-      else { duel.scoreP2--; duel.comboP2 = 0; }
-    }
-    
-    await this.redisService.getClient().set('duel:active:' + matchId, JSON.stringify(duel));
-    return { success: true, isSus, isCorrect, currentBoard: duel.currentBoard, scoreP1: duel.scoreP1, scoreP2: duel.scoreP2, combo: currentCombo };
+    return { error: 'conflict' };
   }
 
   private async checkWinCondition(duel: ActiveDuel) {

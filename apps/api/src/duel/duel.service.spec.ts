@@ -3,68 +3,70 @@ import { DuelService } from './duel.service';
 import { RedisService } from '../redis/redis.service';
 import { ProgressionService } from '../progression/progression.service';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const RedisMock = require('ioredis-mock');
 
 jest.mock('@repo/database', () => ({
   prisma: {
     matchHistory: { create: jest.fn() },
+    duelMatch: { update: jest.fn(), create: jest.fn() },
     user: { update: jest.fn() },
     $transaction: jest.fn(),
   },
-  Difficulty: { EASY: 'EASY' },
+  Difficulty: { EASY: 'EASY', MEDIUM: 'MEDIUM' },
   GameStatus: { ONGOING: 'ONGOING' },
   SpectatorMode: { PUBLIC: 'PUBLIC' },
+  CoinTransactionType: { DUEL_WAGER: 'DUEL_WAGER', DUEL_WIN: 'DUEL_WIN' },
 }));
 
-describe('DuelService', () => {
+function makeDuel(): any {
+  const empty = () => Array.from({ length: 9 }, () => Array(9).fill(0));
+  const ones = () => Array.from({ length: 9 }, () => Array(9).fill(1));
+  return {
+    id: 'm1',
+    player1Id: 'p1',
+    player2Id: 'p2',
+    startTime: Date.now() - 1000,
+    scoreP1: 0,
+    scoreP2: 0,
+    comboP1: 0,
+    comboP2: 0,
+    riskScoreP1: 0,
+    riskScoreP2: 0,
+    lastMoveTimeP1: 0,
+    lastMoveTimeP2: 0,
+    currentBoard: empty(),
+    solvedBoard: ones(),
+    ownersBoard: empty(),
+    isBotMatch: false,
+    difficulty: 'EASY',
+    betAmount: 10,
+  };
+}
+
+describe('DuelService.atomicHandleMove — P0-E concurrency regression', () => {
   let service: DuelService;
-  let redisService: any;
-  let progressionService: any;
+  let redis: any;
 
   beforeEach(async () => {
-    redisService = {
-      getClient: jest.fn().mockReturnValue({
-        hgetall: jest.fn().mockResolvedValue({}),
-        hget: jest.fn().mockResolvedValue(null),
-        hset: jest.fn().mockResolvedValue('OK'),
-        del: jest.fn().mockResolvedValue(1),
-        set: jest.fn().mockResolvedValue('OK'),
-        get: jest.fn().mockResolvedValue(null),
-        keys: jest.fn().mockResolvedValue([]),
-        mget: jest.fn().mockResolvedValue([]),
-        eval: jest
-          .fn()
-          .mockImplementation(
-            (script, numkeys, key, arg1, arg2, arg3, arg4, arg5) => {
-              return Promise.resolve(
-                JSON.stringify({
-                  success: true,
-                  isSus: false,
-                  isCorrect: true,
-                  scoreP1: 1,
-                  scoreP2: 0,
-                  combo: 1,
-                  currentBoard: [],
-                }),
-              );
-            },
-          ),
-      }),
-    };
-    progressionService = {
-      processDuelProgression: jest.fn().mockResolvedValue({}),
-    };
+    redis = new RedisMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DuelService,
-        { provide: RedisService, useValue: redisService },
-        { provide: ProgressionService, useValue: progressionService },
-        { provide: CoinLedgerService, useValue: { credit: jest.fn(), debit: jest.fn() } },
+        { provide: RedisService, useValue: { getClient: () => redis } },
+        {
+          provide: ProgressionService,
+          useValue: { processDuelProgression: jest.fn() },
+        },
+        {
+          provide: CoinLedgerService,
+          useValue: { credit: jest.fn(), debit: jest.fn() },
+        },
       ],
     }).compile();
 
     service = module.get<DuelService>(DuelService);
-    // Mock the setServer to prevent issues
     service.setServer({
       to: jest.fn().mockReturnThis(),
       emit: jest.fn(),
@@ -73,67 +75,88 @@ describe('DuelService', () => {
     } as any);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  const key = 'duel:active:m1';
+  const move = (userId: string, r: number, c: number, val = 1) =>
+    (service as any).atomicHandleMove('m1', userId, r, c, val, Date.now());
+
+  const loadState = async () => JSON.parse(await redis.get(key));
+
+  it('rejects spectator and invalid moves without touching state', async () => {
+    await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
+
+    const spectator = await move('intruder', 0, 0, 1);
+    const zero = await move('p1', 0, 0, 0);
+    const occupiedLater = await move('p1', 0, 0, 1);
+    expect(spectator.error).toBe('spectator');
+    expect(zero.error).toBe('invalid_move');
+    expect(occupiedLater.success).toBe(true);
+
+    const state = await loadState();
+    expect(state.currentBoard[0][0]).toBe(1);
   });
 
-  describe('Concurrency & Race Conditions (Phase C)', () => {
-    it('should process concurrent moves on DIFFERENT cells', async () => {
-      // Mock getActiveDuel
-      const mockDuel = {
-        id: 'match1',
-        player1Id: 'p1',
-        player2Id: 'p2',
-        scoreP1: 0,
-        scoreP2: 0,
-        currentBoard: Array(9).fill(Array(9).fill(0)),
-        solvedBoard: Array(9).fill(Array(9).fill(1)), // All 1s for test
-        ownersBoard: Array(9).fill(Array(9).fill(null)),
-      };
-      // We need to return a deep copy so we don't share reference across concurrent getActiveDuel calls
-      redisService
-        .getClient()
-        .get.mockImplementation(async () => JSON.stringify(mockDuel));
+  it('applies exactly ONE move when both players hit the SAME cell concurrently', async () => {
+    await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
 
-      const p1Move = service.handleMove('match1', 'p1', 0, 0, 1);
-      const p2Move = service.handleMove('match1', 'p2', 8, 8, 1);
+    const results = await Promise.all([move('p1', 0, 0, 1), move('p2', 0, 0, 1)]);
 
-      await Promise.all([p1Move, p2Move]);
+    const state = await loadState();
+    // The cell is owned by exactly one player and scores sum to 1
+    const succeeded = results.filter((r: any) => r.success);
+    expect(state.scoreP1 + state.scoreP2).toBe(1);
+    expect(state.currentBoard[0][0]).toBe(1);
+    expect(succeeded.length).toBeGreaterThanOrEqual(1);
+  });
 
-      // We expect set to be called (for both moves since they are on different cells)
-      expect(redisService.getClient().set).toHaveBeenCalled();
-    });
+  it('loses NO update when 10 concurrent moves target 10 DISTINCT cells', async () => {
+    await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
 
-    it('should ignore the second move if same cell is hit concurrently', async () => {
-      let readCount = 0;
-      const mockDuel = {
-        id: 'match1',
-        player1Id: 'p1',
-        player2Id: 'p2',
-        currentBoard: Array(9).fill(Array(9).fill(0)),
-        solvedBoard: Array(9).fill(Array(9).fill(1)),
-        ownersBoard: Array(9).fill(Array(9).fill(null)),
-      };
+    const moves = [];
+    for (let i = 0; i < 10; i++) {
+      moves.push(move(i % 2 === 0 ? 'p1' : 'p2', 0, i, 1));
+    }
+    const results = await Promise.all(moves);
 
-      redisService.getClient().get.mockImplementation(async () => {
-        readCount++;
-        if (readCount === 1) return JSON.stringify(mockDuel);
-        // For the second read (after spinlock), the first move has updated the cell!
-        const modifiedDuel = {
-          ...mockDuel,
-          currentBoard: [...mockDuel.currentBoard],
-        };
-        modifiedDuel.currentBoard[0] = [...modifiedDuel.currentBoard[0]];
-        modifiedDuel.currentBoard[0][0] = 1; // P1 filled it
-        return JSON.stringify(modifiedDuel);
-      });
+    const state = await loadState();
+    const applied = results.filter((r: any) => r.success).length;
+    let filled = 0;
+    for (let c = 0; c < 10 && c < 9; c++) if (state.currentBoard[0][c] === 1) filled++;
 
-      const p1Move = service.handleMove('match1', 'p1', 0, 0, 1);
-      const p2Move = service.handleMove('match1', 'p2', 0, 0, 1); // Same cell!
+    expect(filled).toBe(9); // 9 columns max
+    expect(applied).toBe(9);
+    expect(state.scoreP1 + state.scoreP2).toBe(9);
+  });
 
-      await Promise.all([p1Move, p2Move]);
-      // We expect set to be called at least once
-      expect(redisService.getClient().set).toHaveBeenCalled();
-    });
+  it('rejects a replayed/duplicate move on an already-filled cell', async () => {
+    await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
+
+    const first = await move('p1', 4, 4, 1);
+    const replay = await move('p1', 4, 4, 1);
+
+    expect(first.success).toBe(true);
+    expect(replay.error).toBe('invalid_move');
+  });
+
+  it('PRESERVES the duel TTL after a move (regression: plain SET dropped it)', async () => {
+    await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
+
+    await move('p1', 1, 1, 1);
+
+    const ttl = await redis.ttl(key);
+    expect(ttl).toBeGreaterThan(3000);
+    expect(ttl).toBeLessThanOrEqual(3600);
+  });
+
+  it('decrements score and resets combo on a WRONG value', async () => {
+    await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
+
+    await move('p1', 0, 0, 1); // correct (+1, combo 1)
+    const wrong = await move('p1', 0, 1, 5); // wrong (solvedBoard is all 1s)
+
+    expect(wrong.isCorrect).toBe(false);
+    const state = await loadState();
+    expect(state.scoreP1).toBe(0);
+    expect(state.comboP1).toBe(0);
+    expect(state.currentBoard[0][1]).toBe(0);
   });
 });
