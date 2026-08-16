@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MinLength, MaxLength, IsEnum, IsBoolean, IsArray } from 'class-validator';
+import { IsString, IsOptional, MinLength, MaxLength, IsEnum, IsBoolean, IsArray, IsIn } from 'class-validator';
 
 export class ContentCreateArticleDto {
   @IsString()
@@ -42,6 +42,29 @@ export class ContentCreateArticleDto {
   @IsOptional()
   @IsBoolean()
   noIndex?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  ogTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  ogDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  coverImage?: string;
+
+  @IsOptional()
+  @IsIn(['Article', 'BlogPosting', 'FAQPage', 'WebPage'])
+  schemaType?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  excerpt?: string;
 
   @IsOptional()
   @IsArray()

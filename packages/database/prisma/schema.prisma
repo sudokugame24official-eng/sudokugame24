@@ -123,6 +123,23 @@ model Profile {
   lastPlayedDate DateTime?
 }
 
+
+model ContentRevision {
+  id         String   @id @default(cuid())
+  articleId  String
+  article    ContentArticle @relation("ArticleRevisions", fields: [articleId], references: [id], onDelete: Cascade)
+  editorId   String
+  title      String
+  content    String  @db.Text
+  excerpt    String? @db.Text
+  metaTitle  String?
+  metaDescription String? @db.Text
+  revisionNumber Int
+  createdAt  DateTime @default(now())
+
+  @@unique([articleId, revisionNumber])
+  @@index([articleId])
+}
 model SudokuPuzzle {
   id             String     @id @default(cuid())
   initialBoard   Json // Stored as 2D array or string
@@ -196,10 +213,16 @@ model ContentArticle {
   openGraphImage  String?
   noIndex         Boolean @default(false)
 
+  ogTitle       String?
+  ogDescription String? @db.Text
+  schemaType    String? // e.g. Article, BlogPosting, FAQPage
+  coverImage    String?
+  scheduledAt   DateTime?
+
   excerpt String? @db.Text
   content String  @db.Text
-  status  String  @default("DRAFT") // DRAFT, REVIEW, PUBLISHED, ARCHIVED
-  type    String  @default("BLOG") // BLOG, PAGE, FAQ, HELP
+  status  String  @default("DRAFT") // DRAFT, IN_REVIEW, SCHEDULED, PUBLISHED, UNPUBLISHED, ARCHIVED
+  type    String  @default("BLOG") // BLOG, PAGE, FAQ, HELP, ACADEMY
 
   authorId    String
   author      User      @relation("WrittenArticles", fields: [authorId], references: [id])
@@ -210,6 +233,8 @@ model ContentArticle {
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  revisions ContentRevision[] @relation("ArticleRevisions")
 
   @@index([authorId])
   @@index([status])
