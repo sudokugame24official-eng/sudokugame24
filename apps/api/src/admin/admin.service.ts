@@ -13,6 +13,48 @@ export class AdminService {
 
   constructor(private readonly coinLedger: CoinLedgerService) {}
 
+  // --- AUDIT LOGS ---
+  /**
+   * Real audit trail: merges AdminActionLog (interceptor) and AuditLog
+   * (explicit writes), newest first. Replaces the fake data previously
+   * hardcoded in the frontend audit page.
+   */
+  async getAuditLogs(limit = 200) {
+    const [actionLogs, auditLogs] = await Promise.all([
+      prisma.adminActionLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: Math.min(limit, 500),
+      }),
+      prisma.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: Math.min(limit, 500),
+      }),
+    ]);
+
+    const merged = [
+      ...actionLogs.map((l) => ({
+        id: l.id,
+        source: 'action' as const,
+        actorId: l.adminId,
+        action: l.action,
+        target: null,
+        details: l.details,
+        createdAt: l.createdAt,
+      })),
+      ...auditLogs.map((l) => ({
+        id: l.id,
+        source: 'audit' as const,
+        actorId: l.actorId,
+        action: l.action,
+        target: l.target,
+        details: { oldValue: l.oldValue, newValue: l.newValue },
+        createdAt: l.createdAt,
+      })),
+    ];
+    merged.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return merged.slice(0, Math.min(limit, 500));
+  }
+
   // --- USERS MANAGEMENT ---
   async getAllUsers() {
     return prisma.user.findMany({

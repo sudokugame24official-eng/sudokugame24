@@ -43,6 +43,13 @@ export class AdminController {
     return this.adminService.getAllUsers();
   }
 
+  @Get('audit')
+  @RequirePermission('system.view')
+  async getAuditLogs(@Query('limit') limit?: string) {
+    const n = parseInt(limit || '200', 10);
+    return this.adminService.getAuditLogs(Number.isFinite(n) ? n : 200);
+  }
+
   @Patch('users/:id/role')
   @RequirePermission('users.manage_roles')
   @AuditAction('users.update_role')

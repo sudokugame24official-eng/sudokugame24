@@ -44,12 +44,9 @@ export default function RewardVideoModal({
 
   const handleReward = async () => {
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/shop/watch-ad`, {
+        credentials: "include",
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
       if (res.ok) {
         setStage("rewarded");

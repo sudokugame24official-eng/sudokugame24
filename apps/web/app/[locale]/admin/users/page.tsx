@@ -10,7 +10,8 @@ export default function UsersAdmin() {
   const fetchUsers = async () => {
     try {
       const res = await fetch(`${API_URL}/admin/users`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        credentials: "include",
+        headers: { },
       });
       if (res.ok) setUsers(await res.json());
     } catch (e) {
@@ -26,10 +27,10 @@ export default function UsersAdmin() {
 
   const handleRoleChange = async (id: string, role: string) => {
     await fetch(`${API_URL}/admin/users/${id}/role`, {
+        credentials: "include",
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({ role }),
     });
@@ -41,10 +42,10 @@ export default function UsersAdmin() {
     const body = isBanned ? {} : { reason: "Banni par un administrateur" };
     
     await fetch(`${API_URL}/admin/users/${id}/${action}`, {
+        credentials: "include",
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify(body),
     });

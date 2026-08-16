@@ -10,7 +10,8 @@ export default function SystemHealthAdmin() {
   const fetchHealth = async () => {
     try {
       const res = await fetch(`${API_URL}/admin/system/health`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        credentials: "include",
+        headers: { },
       });
       if (res.ok) setHealth(await res.json());
     } catch (e) {

@@ -37,9 +37,9 @@ export default function ForumAdmin() {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce sujet définitivement ?")) return;
     
     await fetch(`${API_URL}/admin/forum/posts/${id}`, {
+        credentials: "include",
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
     fetchPosts();
