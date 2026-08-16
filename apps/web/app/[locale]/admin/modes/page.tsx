@@ -64,8 +64,8 @@ export default function AdminModesPage() {
     }
   };
 
-  const setMode = (mode: string, patch: Partial<ModeConfig>) =>
-    setModes((prev) => ({ ...prev, [mode]: { ...prev[mode], ...patch } }));
+  const setMode = (mode: string, patch: Partial<ModeConfig>): void =>
+    setModes((prev) => ({ ...prev, [mode]: { ...prev[mode]!, ...patch } }));
 
   return (
     <div className="space-y-6">
