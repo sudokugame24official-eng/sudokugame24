@@ -56,27 +56,133 @@ export class AdminService {
   }
 
   // --- USERS MANAGEMENT ---
-  async getAllUsers() {
-    return prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        isBanned: true,
-        createdAt: true,
-        profile: {
+  /**
+   * Search + filter + paginate users (P1-D). Replaces the unbounded take:100.
+   */
+  async getUsers(params: {
+    search?: string;
+    role?: string;
+    banned?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const page = Math.max(1, params.page ?? 1);
+    const pageSize = Math.min(50, Math.max(5, params.pageSize ?? 20));
+
+    const where: any = {};
+    if (params.search) {
+      const q = params.search.trim();
+      where.OR = [
+        { email: { contains: q, mode: 'insensitive' } },
+        { profile: { username: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+    if (params.role) where.role = params.role;
+    if (params.banned !== undefined) where.isBanned = params.banned;
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isBanned: true,
+          banReason: true,
+          createdAt: true,
+          profile: {
+            select: {
+              username: true,
+              level: true,
+              xp: true,
+              coins: true,
+              rating: true,
+              currentStreak: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return { users, total, page, pageSize, pageCount: Math.ceil(total / pageSize) };
+  }
+
+  /**
+   * Full owner-facing user detail (P1-D): profile, aggregates, purchases,
+   * recent activity. Read-only; every mutation goes through audited endpoints.
+   */
+  async getUserDetail(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: true,
+        _count: {
           select: {
-            username: true,
-            level: true,
-            xp: true,
-            coins: true,
-            currentStreak: true,
+            gameSessions: true,
+            forumPosts: true,
+            forumComments: true,
+            sentMessages: true,
+            purchases: true,
+            reportsMade: true,
+            coinTransactions: true,
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
-      take: 100, // MVP limit
     });
+    if (!user) throw new NotFoundException('User not found');
+
+    const [purchases, recentTransactions, recentReports, auditTrail] =
+      await Promise.all([
+        prisma.purchase.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            amount: true,
+            currency: true,
+            coinsGranted: true,
+            status: true,
+            createdAt: true,
+          },
+        }),
+        prisma.coinTransaction.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            type: true,
+            amount: true,
+            balanceAfter: true,
+            createdAt: true,
+          },
+        }),
+        prisma.report.findMany({
+          where: { reporter: { id: userId } },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        }),
+        prisma.auditLog.findMany({
+          where: { OR: [{ actorId: userId }, { target: userId }] },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        }),
+      ]);
+
+    const { passwordHash, ...safeUser } = user as any;
+    return {
+      user: safeUser,
+      purchases,
+      recentTransactions,
+      recentReports,
+      auditTrail,
+      aggregates: user._count,
+    };
   }
 
   async updateUserRole(admin: { id: string; role: Role }, targetUserId: string, newRole: Role) {

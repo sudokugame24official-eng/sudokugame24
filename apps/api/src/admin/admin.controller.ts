@@ -39,8 +39,26 @@ export class AdminController {
   // --- USERS ---
   @Get('users')
   @RequirePermission('users.view')
-  async getUsers() {
-    return this.adminService.getAllUsers();
+  async getUsers(
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+    @Query('banned') banned?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.adminService.getUsers({
+      search,
+      role,
+      banned: banned === undefined ? undefined : banned === 'true',
+      page: page ? parseInt(page, 10) : 1,
+      pageSize: pageSize ? parseInt(pageSize, 10) : 20,
+    });
+  }
+
+  @Get('users/:id')
+  @RequirePermission('users.view')
+  async getUserDetail(@Param('id') id: string) {
+    return this.adminService.getUserDetail(id);
   }
 
   @Get('audit')

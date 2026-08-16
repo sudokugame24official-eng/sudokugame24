@@ -73,6 +73,10 @@ describe('P0-G: shop economy integrity', () => {
       entitlement: 'EXTRA_HINTS',
       quantity: 5,
       durationDays: null,
+      stock: null,
+      maxPerUser: null,
+      startDate: null,
+      endDate: null,
     });
 
     await service.buyProduct('u1', 'p1');
@@ -80,6 +84,38 @@ describe('P0-G: shop economy integrity', () => {
     const key = (coinLedger.debit as jest.Mock).mock.calls[0][5];
     expect(key).toBeUndefined(); // no fake timestamp-based dedup key
     expect(String((coinLedger.debit as jest.Mock).mock.calls[0][5])).not.toContain('Date');
+  });
+
+  it('buyProduct REJECTS when stock is exhausted (P1-E constraint)', async () => {
+    (prisma.shopProduct.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', isActive: true, priceCoins: 100, type: 'consumable',
+      entitlement: 'EXTRA_HINTS', stock: 0, maxPerUser: null, startDate: null, endDate: null,
+    });
+
+    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow('Rupture de stock');
+    expect(coinLedger.debit).not.toHaveBeenCalled();
+  });
+
+  it('buyProduct REJECTS when maxPerUser is reached (P1-E constraint)', async () => {
+    (prisma.shopProduct.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', isActive: true, priceCoins: 100, type: 'consumable',
+      entitlement: 'EXTRA_HINTS', stock: 10, maxPerUser: 2, startDate: null, endDate: null,
+    });
+    (prisma.coinTransaction.count as jest.Mock).mockResolvedValue(2); // already bought twice
+
+    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow('Limite de 2');
+    expect(coinLedger.debit).not.toHaveBeenCalled();
+  });
+
+  it('buyProduct REJECTS outside the availability window (P1-E constraint)', async () => {
+    const past = new Date(Date.now() - 86400000);
+    (prisma.shopProduct.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', isActive: true, priceCoins: 100, type: 'consumable',
+      entitlement: 'EXTRA_HINTS', stock: 10, maxPerUser: null,
+      startDate: null, endDate: past,
+    });
+
+    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow('nest plus disponible');
   });
 
   it('webhook failure marks the purchase FAILED (never back to PENDING)', async () => {

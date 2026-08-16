@@ -21,6 +21,7 @@ import {
   ScrollText,
   Megaphone,
   DollarSign,
+  ShoppingCart,
 } from "lucide-react";
 
 // Staff roles allowed into the admin panel. The API enforces permissions
@@ -81,6 +82,7 @@ export default function AdminLayout({
     {
       title: "Monetization",
       items: [
+        { name: "Shop Products", path: "/shop", icon: ShoppingCart },
         { name: "Flags & Ads", path: "/monetization", icon: DollarSign },
         { name: "Ad Slots", path: "/monetization/ad-slots", icon: DollarSign },
       ],

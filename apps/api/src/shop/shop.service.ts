@@ -169,6 +169,33 @@ export class ShopService {
     const product = await prisma.shopProduct.findUnique({ where: { id: productId } });
     if (!product || !product.isActive) throw new BadRequestException('Produit indisponible.');
 
+    // P1-E: enforce product constraints that used to be dead schema columns.
+    const now = new Date();
+    if (product.startDate && product.startDate > now) {
+      throw new BadRequestException('Ce produit nest pas encore disponible.');
+    }
+    if (product.endDate && product.endDate < now) {
+      throw new BadRequestException('Ce produit nest plus disponible.');
+    }
+    if (product.stock !== null && product.stock !== undefined && product.stock <= 0) {
+      throw new BadRequestException('Rupture de stock.');
+    }
+    if (product.maxPerUser !== null && product.maxPerUser !== undefined) {
+      const bought = await prisma.coinTransaction.count({
+        where: {
+          userId,
+          type: CoinTransactionType.SHOP_PURCHASE,
+          referenceId: productId,
+          amount: { lt: 0 }, // debits are purchases
+        },
+      });
+      if (bought >= product.maxPerUser) {
+        throw new BadRequestException(
+          `Limite de ${product.maxPerUser} achat(s) par utilisateur atteinte.`,
+        );
+      }
+    }
+
     let expiresAt: Date | null = null;
     if (product.durationDays) {
       expiresAt = new Date();
@@ -215,6 +242,17 @@ export class ShopService {
               where: { userId },
               data: { hints: { increment: product.quantity || 1 } }
             });
+        }
+
+        // Decrement stock inside the same transaction (atomic with the debit).
+        if (product.stock !== null && product.stock !== undefined) {
+          const updated = await tx.shopProduct.updateMany({
+            where: { id: product.id, stock: { gte: 1 } },
+            data: { stock: { decrement: 1 } },
+          });
+          if (updated.count === 0) {
+            throw new BadRequestException('Rupture de stock.');
+          }
         }
       });
     } catch (error) {
