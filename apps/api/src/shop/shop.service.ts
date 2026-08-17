@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { prisma, PerkType, CoinTransactionType } from '@repo/database';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
+import { trackEvent } from '../analytics/track-event';
 import { FeatureFlagService } from '../config/feature-flag.service';
 import Stripe from 'stripe';
 
@@ -195,6 +196,12 @@ export class ShopService {
       });
 
       if (updatedPurchase.count === 0) throw new Error('Already processed');
+
+      void trackEvent({
+        name: 'purchase',
+        userId: purchase.userId,
+        metadata: { coins: purchase.coinsGranted, sessionId },
+      });
 
       await this.coinLedger.credit(
         purchase.userId,

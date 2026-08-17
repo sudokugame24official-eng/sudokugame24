@@ -30,6 +30,7 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
 import { MediaModule } from './media/media.module';
 import { QuestionsModule } from './questions/questions.module';
 import { GameModesModule } from './gamemodes/game-modes.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { GameModesModule } from './gamemodes/game-modes.module';
     MediaModule,
     QuestionsModule,
     GameModesModule,
+    AnalyticsModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { prisma } from '@repo/database';
 import * as bcrypt from 'bcryptjs';
 import { EmailService } from '../email/email.service';
+import { trackEvent } from '../analytics/track-event';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +30,7 @@ export class AuthService {
   }
 
   async login(user: any) {
+    void trackEvent({ name: 'login', userId: user?.id, metadata: { via: 'credentials' } });
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
@@ -37,6 +39,7 @@ export class AuthService {
   }
 
   async register(email: string, pass: string, username: string) {
+    // analytics fired by caller at the end of register (needs created user id)
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       throw new ConflictException('Email already exists');
@@ -122,6 +125,7 @@ export class AuthService {
       });
     }
 
+    void trackEvent({ name: 'registration', userId: user.id });
     return this.login(user);
   }
 }

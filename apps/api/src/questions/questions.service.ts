@@ -1,3 +1,4 @@
+import { trackEvent } from '../analytics/track-event';
 import {
   Injectable,
   NotFoundException,
@@ -108,6 +109,7 @@ export class QuestionsService {
   // --- Authenticated ---
 
   async createQuestion(userId: string, data: { title: string; body: string; tags: string[] }) {
+    void trackEvent({ name: 'question_ask', userId, metadata: { tags: data.tags } });
     if (data.title.length < 10 || data.title.length > 180) {
       throw new BadRequestException('Le titre doit contenir entre 10 et 180 caractères.');
     }
@@ -152,6 +154,7 @@ export class QuestionsService {
   }
 
   async createAnswer(userId: string, questionId: string, body: string) {
+    void trackEvent({ name: 'question_answer', userId, metadata: { questionId } });
     const q = await prisma.question.findUnique({ where: { id: questionId } });
     if (!q) throw new NotFoundException('Question introuvable');
     if (q.isClosed || q.isLocked) throw new ForbiddenException('Question fermée ou verrouillée.');

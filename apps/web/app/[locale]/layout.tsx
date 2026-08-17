@@ -70,6 +70,7 @@ export async function generateMetadata({
 }
 
 import { Header } from "@/components/Header";
+import TrackPageView from "@/components/analytics/TrackPageView";
 import { Footer } from "@/components/Footer";
 import { ChatPanel } from "@/components/ChatPanel";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -122,6 +123,8 @@ export default async function RootLayout({
                 <Header />
                 <LiveStatsTicker />
                 <main className="flex-1 w-full max-w-[1400px] mx-auto min-h-screen pb-16 md:pb-0 relative z-10">
+                  {/* P1-V: page_view analytics (client, fire-and-forget) */}
+                  <TrackPageView locale={locale} />
                   {children}
                 </main>
                 <Footer />

@@ -631,6 +631,42 @@ model DailyChallengeEntry {
   @@unique([challengeId, userId]) // User can only have one final entry per challenge
 }
 
+// P1-V: analytics engine — raw events + pre-aggregated rollups.
+// Raw events are append-only; dashboards read the rollup tables so a year of
+// history is never loaded into memory.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String?
+  sessionId String?
+  locale    String?
+  country   String?
+  device    String?
+  page      String?
+  referrer  String?
+  source    String?
+  medium    String?
+  campaign  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+model AnalyticsDaily {
+  // One row per (day, metric)
+  id        String   @id @default(cuid())
+  day       DateTime // UTC midnight
+  metric    String // e.g. 'page_view', 'dau', 'duel_complete'
+  dimension String? // optional split (locale, device, country)
+  value     Int      @default(0)
+
+  @@unique([day, metric, dimension])
+  @@index([metric, day])
+}
+
 model SiteSettings {
   key       String   @id // e.g., 'homepage_carousel'
   value     Json // Storing an array of image URLs or other structured data

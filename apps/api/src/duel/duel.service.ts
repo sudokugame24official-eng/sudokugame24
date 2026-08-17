@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { SudokuGenerator } from '@repo/sudoku-engine';
 import glicko2 from 'glicko2';
 import { RedisService } from '../redis/redis.service';
+import { trackEvent } from '../analytics/track-event';
 import { ProgressionService } from '../progression/progression.service';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
 import { CoinTransactionType } from '@repo/database';
@@ -1322,6 +1323,7 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    void trackEvent({ name: 'duel_complete', userId: winnerId && winnerId !== 'BOT' ? winnerId : duel.player1Id, metadata: { matchId: duel.id, isBot: winnerId === 'BOT' } });
     await prisma.duelMatch.update({
       where: { id: duel.id },
       data: {

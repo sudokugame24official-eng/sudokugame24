@@ -1,3 +1,4 @@
+import { trackEvent } from '../analytics/track-event';
 import {
   Injectable,
   NotFoundException,
@@ -145,6 +146,7 @@ export class ForumService {
     content: string,
     categoryId: string,
   ) {
+    void trackEvent({ name: 'forum_post', userId, metadata: { categoryId } });
     if (title.length > 200) {
       throw new BadRequestException('Title is too long (max 200 characters).');
     }
@@ -180,6 +182,7 @@ export class ForumService {
   }
 
   async createComment(userId: string, postId: string, content: string) {
+    void trackEvent({ name: 'forum_reply', userId, metadata: { postId } });
     const post = await prisma.forumPost.findUnique({ where: { id: postId }, select: { isClosed: true, isLocked: true } });
     if (!post) throw new NotFoundException('Post not found');
     if (post.isClosed || post.isLocked) {

@@ -2,6 +2,7 @@ import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import { prisma, Difficulty, CoinTransactionType } from '@repo/database';
 import { SudokuGenerator } from '@repo/sudoku-engine';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
+import { trackEvent } from '../analytics/track-event';
 
 export interface DailyConfig {
   enabled: boolean;
@@ -252,6 +253,7 @@ export class DailyService {
     // If they took more than 5 minutes (300s), they might have cheated or left the app.
     // We record the real time. If it's too long, they naturally rank at the bottom of the leaderboard.
 
+    void trackEvent({ name: 'daily_complete', userId, metadata: { score: trueScore } });
     return prisma.dailyChallengeEntry.update({
       where: {
         challengeId_userId: {
