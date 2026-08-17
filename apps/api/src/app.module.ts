@@ -31,6 +31,7 @@ import { MediaModule } from './media/media.module';
 import { QuestionsModule } from './questions/questions.module';
 import { GameModesModule } from './gamemodes/game-modes.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ThemeModule } from './theme/theme.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     QuestionsModule,
     GameModesModule,
     AnalyticsModule,
+    ThemeModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

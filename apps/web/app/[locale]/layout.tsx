@@ -92,9 +92,25 @@ export default async function RootLayout({
   const { locale } = await params;
   const messages = await getMessages({ locale: locale });
 
+  // P1-X: DB-driven theme — published theme overrides the CSS variables.
+  // No stored theme = defaults identical to globals.css (zero visual change).
+  let themeVars = "";
+  try {
+    const themeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/config/theme`, {
+      next: { revalidate: 60 },
+    });
+    if (themeRes.ok) {
+      const theme = await themeRes.json();
+      themeVars = `:root{--primary:${theme.colors.primary};--primary-foreground:${theme.colors.primaryForeground};--background:${theme.colors.background};--accent:${theme.colors.accent};--radius:${theme.radius};}`;
+    }
+  } catch {
+    // API unreachable -> keep hardcoded defaults
+  }
+
   return (
     <html lang={locale}>
       <head>
+        {themeVars && <style dangerouslySetInnerHTML={{ __html: themeVars }} />}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
