@@ -141,7 +141,7 @@ export class ThemeService {
       faviconUrl: typeof input?.faviconUrl === 'string' && /^https?:\/\//.test(input.faviconUrl) ? input.faviconUrl.slice(0, 500) : null,
       colors: {
         primary: cssSafe(input?.colors?.primary, DEFAULT_THEME.colors.primary),
-        primaryForeground: cssSafe(input?.colors.primaryForeground, DEFAULT_THEME.colors.primaryForeground),
+        primaryForeground: cssSafe(input?.colors?.primaryForeground, DEFAULT_THEME.colors.primaryForeground),
         background: cssSafe(input?.colors?.background, DEFAULT_THEME.colors.background),
         surface: cssSafe(input?.colors?.surface, DEFAULT_THEME.colors.surface),
         text: cssSafe(input?.colors?.text, DEFAULT_THEME.colors.text),

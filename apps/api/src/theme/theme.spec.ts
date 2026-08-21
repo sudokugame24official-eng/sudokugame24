@@ -23,6 +23,10 @@ function mockRowNull() {
 }
 
 describe('P1-X: DB-driven theme', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('defaults mirror the CURRENT globals.css', () => {
     expect(DEFAULT_THEME.colors.primary).toBe('217.2 91.2% 59.8%');
     expect(DEFAULT_THEME.radius).toBe('0.75rem');
@@ -49,8 +53,7 @@ describe('P1-X: DB-driven theme', () => {
     expect(t.shadow).toBe(DEFAULT_THEME.shadow);
   });
 
-  // TODO: investigate Jest mockResolvedValueOnce ordering between describe blocks
-  it.skip('logo/favicon: only absolute http(s) URLs pass', async () => {
+  it('logo/favicon: only absolute http(s) URLs pass', async () => {
     mockRow({ logoUrl: 'javascript:alert(1)', faviconUrl: 'https://ok.com/f.png' });
     const t = await new ThemeService().getPublished();
     expect(t.logoUrl).toBeNull();
@@ -68,8 +71,7 @@ describe('P1-X: DB-driven theme', () => {
     );
   });
 
-  // TODO: investigate Jest mockResolvedValueOnce ordering between describe blocks
-  it.skip('publish backs up current live for rollback', async () => {
+  it('publish backs up current live for rollback', async () => {
     (prisma.siteSettings.findUnique as jest.Mock).mockImplementation(({ where }) => {
       if (where.key === 'theme_draft') return Promise.resolve({ value: JSON.stringify({ brandName: 'New' }) });
       if (where.key === 'theme_published') return Promise.resolve({ value: JSON.stringify({ brandName: 'Old' }) });

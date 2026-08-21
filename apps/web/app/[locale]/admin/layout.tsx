@@ -80,6 +80,7 @@ export default function AdminLayout({
     {
       title: "Content",
       items: [
+        { name: "Homepage Builder", path: "/homepage", icon: LayoutDashboard },
         { name: "Articles", path: "/content", icon: FileText },
         { name: "Media", path: "/media", icon: ImageIcon },
         { name: "Marketing", path: "/marketing", icon: Megaphone },
@@ -96,9 +97,10 @@ export default function AdminLayout({
     {
       title: "Platform",
       items: [
+        { name: "Analytics", path: "/analytics", icon: BarChart },
+        { name: "Theme Studio", path: "/theme", icon: Palette },
+        { name: "SEO Control", path: "/seo", icon: Megaphone },
         { name: "Features", path: "/features", icon: ToggleLeft },
-        { name: "SEO", path: "/seo", icon: BarChart },
-        { name: "Appearance", path: "/appearance", icon: Palette },
         { name: "Settings", path: "/settings", icon: Settings },
       ],
     },

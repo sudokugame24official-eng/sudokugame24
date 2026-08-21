@@ -32,6 +32,7 @@ import { QuestionsModule } from './questions/questions.module';
 import { GameModesModule } from './gamemodes/game-modes.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ThemeModule } from './theme/theme.module';
+import { HomepageModule } from './homepage/homepage.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { ThemeModule } from './theme/theme.module';
     GameModesModule,
     AnalyticsModule,
     ThemeModule,
+    HomepageModule,
   ],
   controllers: [AppController, UsersController],
   providers: [
