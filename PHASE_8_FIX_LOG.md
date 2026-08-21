@@ -130,3 +130,28 @@ Before: page succès forgant un webhook depuis le navigateur ; bypass signature 
 Change: GET /shop/purchase/status (vérifie AUPRÈS de Stripe, ownership, idempotent) ; signature toujours vérifiée ; secrets requis fail-closed ; sessions toujours réelles. Webhook = source de vérité principale, verify = rattrapage.
 Tests: 11/11 (cross-user rejeté, double-crédit impossible, fail-closed).
 LIMITS: E2E avec vraies clés Stripe NON exécuté (BLOCKED: clés propriétaire).
+
+---
+
+# VAGUE P1 (suite 4 — finale) — FIX LOG (Gemini 3.7 Flash)
+
+## P1-X Theme Service Optional Chaining — ✅
+- Before: `ThemeService.sanitize()` accédait à `input?.colors.primaryForeground` sans optional chaining sur `.colors`, provoquant un TypeError si `colors` était omis lors de sauvegardes partielles et masquant 2 tests unitaires passés en skip.
+- Change: Ajout de l'optional chaining `input?.colors?.primaryForeground` sur l'ensemble des 7 variables HSL, ajout de `beforeEach` mock clearing, et activation des 7 tests unitaires.
+- Tests: `theme.spec.ts` 7/7 PASS.
+
+## P1-Y Homepage Service Sanitization — ✅
+- Before: `HomepageService.plain()` ne nettoyait pas les balises HTML/script et `saveDraft()` rejetait les tableaux de plus de 20 sections au lieu de tronquer proprement.
+- Change: `plain()` nettoie toutes les balises `<...>`, `saveDraft()` tronque via `.slice(0, 20)`. Création de l'UI admin `/admin/homepage` avec réordonnancement, activation/désactivation et prévisualisation directe.
+- Tests: `homepage.spec.ts` 6/6 PASS.
+
+## P1-L Forum Database Seed Slugs — ✅
+- Before: `packages/database/src/seed.ts` omettait le champ obligatoire `slug` sur `ForumPost`, bloquant le build TypeScript de `@repo/database`.
+- Change: Ajout des slugs uniques sur tous les posts du seed.
+- Tests: Build `@repo/database` PASS.
+
+## P1-M Chat Room Real Gateway Connection — ✅
+- Before: `/chat/page.tsx` contenait des tableaux statiques de messages mockés et de faux utilisateurs.
+- Change: Connexion complète aux passerelles Socket.IO `WS_URL/chat` et `WS_URL/presence` avec gestion des rooms Redis multi-instances, demande d'amis et blocage direct.
+- Tests: Typecheck propre, build Next.js 16 exit 0.
+
