@@ -180,13 +180,13 @@ export default function AdminLayout({
                   <Link
                     key={item.path}
                     href={`/${lang}/admin${item.path}`}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-180 ${
                       isActive
-                        ? "bg-primary/20 text-white border border-primary/30"
-                        : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                        ? "bg-gradient-to-r from-brand-orange/20 to-brand-gold/10 text-white border border-brand-orange/40 shadow-[0_0_20px_rgba(255,69,0,0.15)]"
+                        : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? "text-primary" : ""}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? "text-brand-orange" : "text-slate-400"}`} />
                     {item.name}
                   </Link>
                 );

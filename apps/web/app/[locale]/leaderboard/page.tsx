@@ -140,24 +140,36 @@ export default async function LeaderboardPage({
         ) : (
           <>
             {/* Podium */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 items-end">
               {[1, 0, 2].map((idx) => {
                 const r = podium[idx];
                 const orderClass = idx === 0 ? "order-1 md:order-none" : idx === 1 ? "order-2 md:order-none" : "order-3 md:order-none";
                 if (!r) return <div key={idx} className={orderClass} />;
-                const medal = idx === 0 ? <Trophy className="w-8 h-8 text-yellow-400" /> : idx === 1 ? <Medal className="w-8 h-8 text-gray-300" /> : <Award className="w-8 h-8 text-amber-600" />;
+                
+                const medal = idx === 0 
+                  ? <Trophy className="w-9 h-9 text-brand-gold drop-shadow-[0_0_12px_rgba(255,204,0,0.6)]" /> 
+                  : idx === 1 
+                    ? <Medal className="w-8 h-8 text-slate-300 drop-shadow-[0_0_10px_rgba(226,232,240,0.4)]" /> 
+                    : <Award className="w-8 h-8 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.4)]" />;
+                
+                const podiumStyle = idx === 0
+                  ? "badge-gold border-brand-gold/60 md:-mt-4 shadow-[0_0_30px_rgba(255,204,0,0.2)]"
+                  : idx === 1
+                    ? "badge-silver border-slate-300/40"
+                    : "badge-bronze border-amber-600/40";
+
                 return (
                   <div
                     key={r.userId}
-                    className={`bg-card/40 border rounded-2xl p-4 sm:p-5 text-center min-w-0 flex flex-col items-center justify-center ${idx === 0 ? "border-yellow-400/40 md:-mt-4" : "border-white/10"} ${orderClass}`}
+                    className={`backdrop-blur-xl border rounded-2xl p-5 text-center min-w-0 flex flex-col items-center justify-center transition-all duration-200 hover:-translate-y-1 ${podiumStyle} ${orderClass}`}
                   >
                     <div className="flex justify-center mb-3">{medal}</div>
-                    <p className="font-black truncate w-full">{r.username}</p>
-                    <p className="text-2xl font-black text-primary mt-1">{r.rating}</p>
-                    <p className="text-xs text-muted-foreground truncate w-full">
-                      {t("Level", "Niveau")} {r.level}
-                      {typeof r.winRate === "number" ? ` · ${r.winRate}% ${t("wins", "victoires")}` : ""}
-                      {r.streak ? <span className="flex items-center justify-center gap-1 mt-1"><Flame className="w-3 h-3 text-orange-400 shrink-0" />{r.streak}</span> : null}
+                    <p className="font-black text-lg tracking-tight text-white truncate w-full">{r.username}</p>
+                    <p className="text-3xl font-black text-white mt-1 tabular-nums drop-shadow-sm">{r.rating}</p>
+                    <p className="text-xs text-slate-300 mt-2 truncate w-full flex items-center justify-center gap-1.5 font-medium">
+                      <span>{t("Level", "Niveau")} {r.level}</span>
+                      {typeof r.winRate === "number" ? <span>· {r.winRate}% {t("wins", "victoires")}</span> : ""}
+                      {r.streak ? <span className="flex items-center gap-0.5 text-brand-orange font-bold"><Flame className="w-3 h-3 text-brand-orange shrink-0" />{r.streak}</span> : null}
                     </p>
                   </div>
                 );

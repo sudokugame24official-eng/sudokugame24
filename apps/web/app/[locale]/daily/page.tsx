@@ -63,22 +63,22 @@ export default function DailyPage() {
 
           {/* Streak Banner */}
           {user && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 bg-brand-orange/10 border border-brand-orange/30 rounded-2xl px-6 py-3 mb-8 w-fit mx-auto">
-              <Flame className="w-6 h-6 text-brand-orange" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 bg-gradient-to-r from-brand-orange/15 via-brand-gold/10 to-brand-orange/15 border border-brand-orange/40 rounded-2xl px-6 py-3.5 mb-8 w-fit mx-auto shadow-[0_0_30px_rgba(255,69,0,0.15)]">
+              <Flame className="w-7 h-7 text-brand-orange animate-bounce" />
               <div className="text-left">
-                <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">
+                <p className="text-[10px] text-slate-300 uppercase font-bold tracking-widest">
                   {t("currentStreak")}
                 </p>
-                <p className="text-2xl font-black text-brand-orange">
+                <p className="text-2xl font-black text-brand-orange tabular-nums">
                   {(user as any).streak || 0} {t("days")}
                 </p>
               </div>
-              <div className="w-px h-8 bg-white/20 mx-2" />
+              <div className="w-px h-8 bg-white/20 mx-3 hidden sm:block" />
               <div className="text-left">
-                <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">
+                <p className="text-[10px] text-slate-300 uppercase font-bold tracking-widest">
                   {t("bestStreak")}
                 </p>
-                <p className="text-2xl font-black text-white">
+                <p className="text-2xl font-black text-white tabular-nums">
                   {(user as any).maxStreak || 0} {t("days")}
                 </p>
               </div>
@@ -91,9 +91,9 @@ export default function DailyPage() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 px-10 py-5 bg-brand-orange text-white font-black text-xl rounded-xl shadow-[0_8px_0_#CC3700] active:shadow-[0_0px_0_#CC3700] active:translate-y-2 transition-all uppercase tracking-widest"
+                className="flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-brand-orange to-[#FF6B33] text-white font-black text-xl rounded-2xl shadow-[0_8px_25px_rgba(255,69,0,0.4)] active:translate-y-1 transition-all uppercase tracking-widest btn-tactile"
               >
-                <Play className="w-6 h-6" /> {t("playToday")}
+                <Play className="w-6 h-6 fill-white" /> {t("playToday")}
               </motion.button>
             </Link>
           </div>
@@ -103,31 +103,31 @@ export default function DailyPage() {
       <div className="max-w-5xl mx-auto px-4 py-12 space-y-10">
         {/* Challenge Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-brand-navy-light border border-white/10 rounded-2xl p-6 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-brand-orange/20 flex items-center justify-center shrink-0">
+          <div className="bg-brand-navy-light/80 backdrop-blur-xl border border-white/15 rounded-2xl p-6 flex items-center gap-4 shadow-lg hover:border-white/25 transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 flex items-center justify-center shrink-0">
               <Clock className="w-6 h-6 text-brand-orange" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">
+              <p className="text-xs text-slate-400 uppercase font-bold tracking-widest mb-1">
                 {t("timeLimit")}
               </p>
-              <p className="text-2xl font-black">2 min</p>
+              <p className="text-2xl font-black tabular-nums">2 min</p>
             </div>
           </div>
 
-          <div className="bg-brand-navy-light border border-white/10 rounded-2xl p-6 flex items-center gap-4">
+          <div className="bg-brand-navy-light/80 backdrop-blur-xl border border-white/15 rounded-2xl p-6 flex items-center gap-4 shadow-lg hover:border-white/25 transition-all">
             {loading ? (
               <Skeleton className="w-full h-12" />
             ) : (
               <>
-                <div className="w-12 h-12 rounded-full bg-brand-gold/20 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-brand-gold/20 border border-brand-gold/30 flex items-center justify-center shrink-0">
                   <Users className="w-6 h-6 text-brand-gold" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">
+                  <p className="text-xs text-slate-400 uppercase font-bold tracking-widest mb-1">
                     {t("playersToday")}
                   </p>
-                  <p className="text-2xl font-black text-brand-gold">
+                  <p className="text-2xl font-black text-brand-gold tabular-nums">
                     {daily?.participantCount || "—"}
                   </p>
                 </div>

@@ -437,14 +437,14 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
                   key={`${rIdx}-${cIdx}`}
                   onClick={() => handleCellClick(rIdx, cIdx)}
                   className={cn(
-                    "relative aspect-square flex items-center justify-center text-lg sm:text-2xl md:text-3xl font-black cursor-pointer transition-all duration-200",
-                    isInitial ? "text-white" : "text-brand-gold", // Initial white, Player gold
+                    "relative aspect-square flex items-center justify-center text-lg sm:text-2xl md:text-3xl font-black cursor-pointer transition-all duration-150 select-none",
+                    isInitial ? "text-slate-100 font-extrabold" : "text-brand-gold font-black", // Initial crisp white, Player glowing gold
                     isSelected
-                      ? "bg-brand-orange/40 shadow-[inset_0_0_20px_rgba(255,69,0,0.6)] ring-2 ring-brand-orange z-10"
-                      : "bg-[#112240]", // Selected cell
-                    isHighlightZone && !isError ? "bg-brand-orange/10" : "", // Cross highlight
+                      ? "bg-brand-orange/40 shadow-[inset_0_0_20px_rgba(255,69,0,0.6)] ring-2 ring-brand-orange z-10 scale-[1.02]"
+                      : "bg-[#0c1b33]", // Deep navy background
+                    isHighlightZone && !isError ? "bg-brand-orange/15" : "", // Focused crosshair
                     isSameValue
-                      ? "bg-brand-gold/20 ring-1 ring-brand-gold/50"
+                      ? "bg-brand-gold/25 ring-1 ring-brand-gold/60"
                       : "", // Same number highlight
                     isError ? "bg-red-500/30 text-red-500 animate-shake" : "",
                     borderRight,
@@ -453,23 +453,24 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
                     rIdx === 0 && cIdx === 8 && "rounded-tr-lg",
                     rIdx === 8 && cIdx === 0 && "rounded-bl-lg",
                     rIdx === 8 && cIdx === 8 && "rounded-br-lg",
-                    "hover:bg-white/15",
+                    "hover:bg-brand-navy-lighter/60",
                   )}
                 >
                   {cell !== 0 ? (
                     <motion.span
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: [1.2, 1], opacity: 1 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: [1.15, 1], opacity: 1 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="tabular-nums drop-shadow-sm"
                     >
                       {cell}
                     </motion.span>
                   ) : cellNotes && cellNotes.size > 0 ? (
-                    <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5">
+                    <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 pointer-events-none">
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                         <div
                           key={n}
-                          className="flex items-center justify-center text-[7px] sm:text-[9px] md:text-[10px] text-white/50 font-bold leading-none"
+                          className="flex items-center justify-center text-[7px] sm:text-[9px] md:text-[10px] text-cyan-300/75 font-bold leading-none tabular-nums"
                         >
                           {cellNotes.has(n) ? n : ""}
                         </div>
@@ -551,7 +552,7 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
             <button
               key={num}
               onClick={() => insertValue(num)}
-              className="aspect-square bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-xl font-black text-xl sm:text-2xl md:text-3xl hover:bg-brand-orange hover:text-white hover:border-brand-orange hover:scale-105 active:scale-95 transition-all flex items-center justify-center shadow-lg"
+              className="aspect-square bg-gradient-to-b from-[#133A7C] to-[#0A2A5C] border border-white/15 text-white rounded-xl font-black text-xl sm:text-2xl md:text-3xl hover:from-brand-orange hover:to-[#CC3700] hover:text-white hover:border-brand-orange/80 active:translate-y-1 active:scale-95 transition-all flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.4)] select-none tabular-nums"
             >
               {num}
             </button>
