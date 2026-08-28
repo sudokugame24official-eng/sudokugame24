@@ -1,5 +1,6 @@
 "use client";
 import { API_URL } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -22,6 +23,8 @@ interface LeaderboardEntry {
 function LeaderboardContent() {
   const searchParams = useSearchParams();
   const challengeId = searchParams.get("challengeId");
+  const td = useTranslations("daily");
+  const tg = useTranslations("game");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +65,7 @@ function LeaderboardContent() {
           href="/play"
           className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors mb-8 bg-white/5 px-4 py-2 rounded-full border border-white/10 hover:bg-white/10"
         >
-          <ArrowLeft className="w-5 h-5" /> Retour
+          <ArrowLeft className="w-5 h-5" /> {td("lbBack")}
         </Link>
 
         <div className="text-center mb-12">
@@ -74,11 +77,10 @@ function LeaderboardContent() {
             <Trophy className="w-12 h-12 text-white" />
           </motion.div>
           <h1 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tight">
-            Classement Quotidien
+            {td("lbTitle")}
           </h1>
           <p className="text-lg text-blue-200/70 max-w-2xl mx-auto">
-            Découvrez les meilleurs joueurs du jour. Le classement est basé sur
-            les pièces gagnées puis sur le temps passé !
+            {td("lbDesc")}
           </p>
         </div>
 
@@ -91,9 +93,9 @@ function LeaderboardContent() {
             {leaderboard.length === 0 ? (
               <div className="text-center py-20 text-white/50">
                 <p className="text-xl font-bold">
-                  Aucun score enregistré pour le moment.
+                  {tg("noScoresYet")}
                 </p>
-                <p>Soyez le premier à participer !</p>
+                <p>{tg("beFirst")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -194,6 +196,7 @@ function LeaderboardContent() {
 }
 
 export default function DailyLeaderboardPage() {
+  const t = useTranslations("game");
   return (
     <Suspense
       fallback={

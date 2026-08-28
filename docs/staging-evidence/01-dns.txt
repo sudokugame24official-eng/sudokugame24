@@ -1,0 +1,66 @@
+================================================================================
+EVIDENCE FILE: 01-dns.txt
+CHECK: DNS Resolution & Diagnostics for Staging Environment
+TIMESTAMP: 2026-08-21T20:47:00+02:00
+CLASSIFICATION: BLOCKED_BY_OWNER (CASE B: Domain / Subdomains Non-Existent in Public DNS)
+================================================================================
+
+COMMAND 1:
+Resolve-DnsName -Name 'staging.sudoku-global.com' -QuickTimeout
+OUTPUT:
+DNS Error: Resolution failed (NXDOMAIN)
+
+COMMAND 2:
+Resolve-DnsName -Name 'api-staging.sudoku-global.com' -QuickTimeout
+OUTPUT:
+DNS Error: Resolution failed (NXDOMAIN)
+
+COMMAND 3:
+nslookup staging.sudoku-global.com 8.8.8.8
+OUTPUT:
+Serveur :   dns.google
+Address:  8.8.8.8
+*** dns.google ne parvient pas à trouver staging.sudoku-global.com : Non-existent domain
+
+COMMAND 4:
+nslookup api-staging.sudoku-global.com 8.8.8.8
+OUTPUT:
+Serveur :   dns.google
+Address:  8.8.8.8
+*** dns.google ne parvient pas à trouver api-staging.sudoku-global.com : Non-existent domain
+
+COMMAND 5:
+nslookup sudoku-global.com 8.8.8.8
+OUTPUT:
+Serveur :   dns.google
+Address:  8.8.8.8
+*** dns.google ne parvient pas à trouver sudoku-global.com : Non-existent domain
+
+COMMAND 6:
+nslookup -type=NS sudoku-global.com 8.8.8.8
+OUTPUT:
+Serveur :   dns.google
+Address:  8.8.8.8
+*** dns.google ne parvient pas à trouver sudoku-global.com : Non-existent domain
+
+COMMAND 7:
+curl.exe -v --connect-timeout 15 https://staging.sudoku-global.com/
+OUTPUT:
+* Could not resolve host: staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: staging.sudoku-global.com
+
+COMMAND 8:
+curl.exe -v --connect-timeout 15 https://api-staging.sudoku-global.com/health
+OUTPUT:
+* Could not resolve host: api-staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: api-staging.sudoku-global.com
+
+--------------------------------------------------------------------------------
+DIAGNOSTIC CONCLUSION:
+Apex domain 'sudoku-global.com' and subdomains 'staging.sudoku-global.com' and
+'api-staging.sudoku-global.com' have no active public DNS records (NXDOMAIN).
+Blocker Root Cause: Cloudflare DNS zone records or domain registrar delegation
+not yet configured in the Owner console.
+--------------------------------------------------------------------------------

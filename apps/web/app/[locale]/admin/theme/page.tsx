@@ -45,7 +45,29 @@ export default function AdminThemePage() {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/config/theme/draft`, { credentials: "include" });
-      if (res.ok) setTheme(await res.json());
+      if (res.ok) {
+        setTheme(await res.json());
+      } else {
+        throw new Error("Failed to load theme");
+      }
+    } catch (e) {
+      setTheme({
+        brandName: "Sudoku Pro",
+        logoUrl: null,
+        faviconUrl: null,
+        colors: {
+          primary: "217.2 91.2% 59.8%",
+          primaryForeground: "210 40% 98%",
+          background: "222.2 84% 4.9%",
+          surface: "222.2 84% 8%",
+          text: "210 40% 98%",
+          border: "217.2 32.6% 17.5%",
+          accent: "217.2 32.6% 25%",
+        },
+        radius: "0.75rem",
+        shadow: "none",
+        mode: "dark",
+      });
     } finally {
       setLoading(false);
     }

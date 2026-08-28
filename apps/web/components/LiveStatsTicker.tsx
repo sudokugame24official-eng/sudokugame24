@@ -2,7 +2,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swords, Users, Trophy, Flame, Globe } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import { API_URL } from "@/lib/api";
+import { SUPPORTED_LOCALES } from "./LanguageSwitcher";
 
 interface Stats {
   onlinePlayers: number;
@@ -52,7 +54,9 @@ function StatItem({
 }) {
   const numericValue = typeof value === "number" ? value : 0;
   const animated = useCountUp(numericValue);
-  const display = typeof value === "number" ? animated.toLocaleString("fr-FR") : value;
+  const locale = useLocale();
+  const display =
+    typeof value === "number" ? animated.toLocaleString(locale) : value;
 
   return (
     <div className="flex items-center gap-2 px-4 py-1.5 whitespace-nowrap">
@@ -69,6 +73,7 @@ function StatItem({
 }
 
 export const LiveStatsTicker = () => {
+  const t = useTranslations("home");
   const [stats, setStats] = useState<Stats>(MOCK_STATS);
   const [visible, setVisible] = useState(true);
 
@@ -110,24 +115,24 @@ export const LiveStatsTicker = () => {
         {/* Center: Scrolling stats */}
         <div className="flex items-center overflow-hidden flex-1 mx-4">
           <div className="flex items-center animate-[ticker_20s_linear_infinite] hover:[animation-play-state:paused]">
-            <StatItem icon={Users} value={stats.onlinePlayers} label="joueurs en ligne" color="text-green-400" pulse />
+            <StatItem icon={Users} value={stats.onlinePlayers} label={t("tickerOnline")} color="text-green-400" pulse />
             <span className="text-gray-700 mx-2">•</span>
-            <StatItem icon={Swords} value={stats.ongoingDuels} label="duels en cours" color="text-brand-orange" />
+            <StatItem icon={Swords} value={stats.ongoingDuels} label={t("tickerDuels")} color="text-brand-orange" />
             <span className="text-gray-700 mx-2">•</span>
-            <StatItem icon={Trophy} value={stats.todayGames} label="parties aujourd'hui" color="text-brand-gold" />
+            <StatItem icon={Trophy} value={stats.todayGames} label={t("tickerGames")} color="text-brand-gold" />
             <span className="text-gray-700 mx-2">•</span>
             {stats.topPlayer && (
               <>
-                <StatItem icon={Flame} value={stats.topPlayer} label="meilleur joueur du jour" color="text-brand-cyan" />
+                <StatItem icon={Flame} value={stats.topPlayer} label={t("tickerTop")} color="text-brand-cyan" />
                 <span className="text-gray-700 mx-2">•</span>
               </>
             )}
-            <StatItem icon={Globe} value="12" label="langues supportées" color="text-purple-400" />
+            <StatItem icon={Globe} value={String(SUPPORTED_LOCALES.length)} label={t("tickerLangs")} color="text-purple-400" />
             {/* Repeat for seamless loop */}
             <span className="text-gray-700 mx-2 pl-8">•</span>
-            <StatItem icon={Users} value={stats.onlinePlayers} label="joueurs en ligne" color="text-green-400" pulse />
+            <StatItem icon={Users} value={stats.onlinePlayers} label={t("tickerOnline")} color="text-green-400" pulse />
             <span className="text-gray-700 mx-2">•</span>
-            <StatItem icon={Swords} value={stats.ongoingDuels} label="duels en cours" color="text-brand-orange" />
+            <StatItem icon={Swords} value={stats.ongoingDuels} label={t("tickerDuels")} color="text-brand-orange" />
           </div>
         </div>
 

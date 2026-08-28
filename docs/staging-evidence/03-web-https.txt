@@ -1,0 +1,29 @@
+================================================================================
+EVIDENCE FILE: 03-web-https.txt
+CHECK: Web Frontend HTTPS Public Reachability & Transport Diagnostic
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGET: https://staging.sudoku-global.com/
+CLASSIFICATION: BLOCKED_BY_OWNER
+================================================================================
+
+COMMAND:
+curl.exe -v --connect-timeout 15 -I https://staging.sudoku-global.com/
+
+EXECUTION OUTPUT:
+* Could not resolve host: staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: staging.sudoku-global.com
+
+DIAGNOSIS MATRIX:
+- DNS Resolution: FAILED (NXDOMAIN)
+- TCP SYN / Connection: UNREACHABLE (No target IP resolved)
+- TLS Handshake: NOT REACHED
+- HTTP Status: NONE (000)
+- Origin CDN / Reverse Proxy: UNREACHABLE
+
+VERIFICATION SUMMARY:
+Public web frontend cannot be reached because domain record 'staging.sudoku-global.com'
+is not published in public DNS or attached to Vercel/Cloudflare.
+Public Runtime Verification Status: BLOCKED_BY_OWNER.
+Local Build Status: Exit code 0 (Next.js 16 SSG/SSR build verified statically).
+================================================================================

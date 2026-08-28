@@ -9,7 +9,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { DuelService } from './duel.service';
+import { DuelService, BotDifficulty } from './duel.service';
 import { Logger, UseGuards } from '@nestjs/common';
 import { Difficulty, prisma } from '@repo/database';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
@@ -129,9 +129,38 @@ export class DuelGateway
   }
 
   @SubscribeMessage('accept_bot')
-  handleAcceptBot(@ConnectedSocket() client: Socket) {
+  handleAcceptBot(
+    @MessageBody() data: { botDifficulty?: BotDifficulty },
+    @ConnectedSocket() client: Socket,
+  ) {
     const userId = client.data?.user?.id;
-    if (userId) this.duelService.acceptBot(userId);
+    if (userId) this.duelService.acceptBot(userId, data?.botDifficulty ?? 'MEDIUM');
+  }
+
+  @SubscribeMessage('play_vs_bot')
+  async handlePlayVsBot(
+    @MessageBody()
+    data: {
+      difficulty: Difficulty;
+      botDifficulty: BotDifficulty;
+      betAmount: number;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.data?.user?.id;
+    if (!userId) return;
+
+    const profile = await prisma.profile.findUnique({ where: { userId } });
+    if (!profile) return;
+
+    await this.duelService.playAgainstBot(
+      client,
+      userId,
+      profile.username,
+      data.difficulty,
+      data.betAmount ?? 0,
+      data.botDifficulty ?? 'MEDIUM',
+    );
   }
 
   // --- LOBBY SYSTEM ---
@@ -194,6 +223,17 @@ export class DuelGateway
     if (!userId) return;
 
     await this.duelService.startLobbyMatch(client, userId, data.lobbyId);
+  }
+
+  @SubscribeMessage('join_match')
+  async handleJoinMatch(
+    @MessageBody() data: { matchId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.data?.user?.id;
+    if (userId && data?.matchId) {
+      await this.duelService.joinMatch(client, data.matchId, userId);
+    }
   }
 
   @SubscribeMessage('spectate_match')

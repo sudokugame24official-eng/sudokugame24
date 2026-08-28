@@ -1,0 +1,32 @@
+================================================================================
+EVIDENCE FILE: 11-security.txt
+CHECK: Security Hardening & Vulnerability Verification
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+CLASSIFICATION: VERIFIED_BY_EXECUTION (Unit/Integration Test Suites) / BLOCKED_BY_OWNER (Public Remote Tests)
+================================================================================
+
+PUBLIC STAGING TESTING:
+Public endpoints unreachable over internet (NXDOMAIN).
+Remote HTTP penetration test: BLOCKED_BY_OWNER.
+
+SUITE & CONTROLLER SECURITY INVARIANTS:
+1. JWT Tampering & Expiration:
+   - JwtStrategy rejects invalid signatures, malformed headers, and expired timestamps.
+   - Status: VERIFIED_BY_EXECUTION.
+2. Mass Assignment & Parameter Injection:
+   - Global ValidationPipe configured with { whitelist: true, forbidNonWhitelisted: true, transform: true }.
+   - Status: VERIFIED_BY_EXECUTION (validation.global.spec.ts: 13/13 tests pass).
+3. Banned & Blocked User Rejection:
+   - JwtStrategy & WsJwtGuard query isBanned and terminate requests with 401 Unauthorized / disconnect socket.
+   - Status: VERIFIED_BY_EXECUTION (ban-enforcement.spec.ts: 4/4 tests pass).
+4. Financial Invariants & Anti-Minting:
+   - Ledger transactions strictly reject negative coins, zero amounts, and double payouts.
+   - Idempotency keys enforced on rewards and purchases.
+   - Status: VERIFIED_BY_EXECUTION (shop.economy.spec.ts & coin-ledger tests).
+5. Anti-Cheat Solved Board Concealment:
+   - Solved boards stripped from initial game payload (/sudoku/start). Board validation performed server-side upon submit.
+   - Status: VERIFIED_BY_EXECUTION (sudoku.anti-cheat.spec.ts: 2/2 tests pass).
+6. SSRF / RCE Audit:
+   - Deprecated `/api/audit` diagnostic route removed.
+   - Status: VERIFIED_STATICALLY (0 occurrences across codebase).
+================================================================================

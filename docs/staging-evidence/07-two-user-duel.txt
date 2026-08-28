@@ -1,0 +1,24 @@
+================================================================================
+EVIDENCE FILE: 07-two-user-duel.txt
+CHECK: Two Real Users Multiplayer Duel Lifecycle on Staging
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+CLASSIFICATION: BLOCKED_BY_INFRA
+================================================================================
+
+PUBLIC STAGING EXECUTION STATUS:
+Public API and Public WSS are currently unreachable over public DNS (NXDOMAIN).
+In accordance with strict staging execution rules:
+- No synthetic users were fabricated.
+- No local runtime was substituted for public staging proof.
+- Public runtime duel verification is classified as BLOCKED_BY_INFRA.
+
+CODEBASE CAPABILITY VERIFICATION (LOCAL SUITES & MIGRATIONS):
+1. Registration & Auth: Verified via auth.service & jwt.strategy suites.
+2. Friend Challenge: Verified via friend-challenge.spec.ts (11/11 tests pass).
+3. Duel Concurrency & Moves: Verified via duel.concurrency.spec.ts & duel.service.spec.ts.
+4. Solved Board Concealment: Verified via sudoku.anti-cheat.spec.ts.
+5. Coin Settlement: Verified via shop.economy.spec.ts.
+
+NEXT STEP FOR REAL EXECUTION:
+Run the live duel script against https://staging.sudoku-global.com once DNS records resolve.
+================================================================================

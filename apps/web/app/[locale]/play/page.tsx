@@ -1,5 +1,6 @@
 "use client";
 import { API_URL } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "@/navigation";
 
 export default function SoloPlayPage() {
+  const t = useTranslations("play");
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameMode, setGameMode] = useState<"SOLO" | "DAILY">("SOLO");
   const { isEnabled } = useGameModes(); // P1-P: disabled modes disappear
@@ -208,7 +210,7 @@ export default function SoloPlayPage() {
                 <Brain className="w-6 h-6 text-[#FF4500]" />
               )}
               <h2 className="text-xl font-black text-white tracking-wide uppercase">
-                {gameMode === "DAILY" ? "Daily Challenge" : "Solo Practice"}
+                {gameMode === "DAILY" ? t("dailyChallenge") : t("soloPractice")}
               </h2>
             </div>
 
@@ -288,23 +290,23 @@ export default function SoloPlayPage() {
 
                 <h2 className="text-3xl font-black text-white mb-2 uppercase">
                   {gameResult === "VICTORY"
-                    ? "You Win!"
+                    ? t("youWin")
                     : gameResult === "TIME_OUT"
-                      ? "Time's Up!"
-                      : "Game Over!"}
+                      ? t("timesUp")
+                      : t("gameOver")}
                 </h2>
                 <p className="text-white/70 mb-6">
                   {gameResult === "VICTORY"
-                    ? `Puzzle completed in ${formatTime(time)}.`
+                    ? t("completedIn", { time: formatTime(time) })
                     : gameResult === "TIME_OUT"
-                      ? "The daily timer has ended."
-                      : "You made 3 mistakes."}
+                      ? t("timerEnded")
+                      : t("mistakesMsg", { count: 3 })}
                 </p>
 
                 {(gameMode === "DAILY" || coinsEarned > 0) && (
                   <div className="bg-black/30 rounded-2xl p-6 mb-8 border border-white/10">
                     <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-2">
-                      Gains Récoltés
+                      {t("earned")}
                     </p>
                     <div className="flex items-center justify-center gap-3">
                       <Coins className="w-8 h-8 text-[#FFCC00]" />
@@ -314,7 +316,7 @@ export default function SoloPlayPage() {
                     </div>
                     {gameMode === "DAILY" && (
                       <p className="text-xs text-muted-foreground mt-2">
-                        +5 Coins par case correcte
+                        {t("perCellCoins")}
                       </p>
                     )}
                   </div>
@@ -327,21 +329,21 @@ export default function SoloPlayPage() {
                       href={`/daily/leaderboard?challengeId=${challengeId}`}
                       className="flex-1 bg-white hover:bg-gray-100 text-[#0A2A5C] font-black uppercase tracking-wider py-4 rounded-xl transition-all text-center flex justify-center items-center gap-2"
                     >
-                      <Trophy className="w-5 h-5" /> Leaderboard
+                      <Trophy className="w-5 h-5" /> {t("leaderboardBtn")}
                     </Link>
                   ) : (
                     <button
                       onClick={() => startGame("SOLO", selectedDifficulty)}
                       className="flex-1 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-wider py-4 rounded-xl transition-all"
                     >
-                      Play Again
+                      {t("playAgain")}
                     </button>
                   )}
                   <button
                     onClick={() => setIsPlaying(false)}
                     className="flex-1 bg-[#FF4500] hover:bg-[#ff5c1a] text-white font-black uppercase tracking-wider py-4 rounded-xl transition-all"
                   >
-                    Exit
+                    {t("exit")}
                   </button>
                 </div>
               </motion.div>
@@ -392,26 +394,24 @@ export default function SoloPlayPage() {
             <div className="relative z-10 h-full flex flex-col justify-between">
               <div>
                 <div className="bg-[#FF4500] text-white text-xs font-black uppercase px-3 py-1 rounded-full inline-block mb-6 shadow-md">
-                  Nouveau Quotidien
+                  {t("dailyNew")}
                 </div>
                 <h2 className="text-3xl font-black text-white mb-4">
-                  Challenge du Jour
+                  {t("dailyCardTitle")}
                 </h2>
                 <p className="text-blue-200/70 mb-4 max-w-[90%] leading-relaxed">
-                  Vous avez <strong>2 minutes maximum</strong>. Chaque case
-                  correcte vous rapporte{" "}
-                  <strong className="text-[#FFCC00]">+5 Coins</strong>. Gagnez
-                  un maximum d'argent avant la fin du temps !
+                  {t("dailyPrefix")} <strong>{t("dailyTimeLimit")}</strong>{t("dailyMid")}
+                  <strong className="text-[#FFCC00]">{t("dailyEarn")}</strong>{t("dailySuffix")}
                 </p>
               </div>
               <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF4500] to-[#ff5c1a] text-white font-black uppercase tracking-wider px-6 py-4 rounded-xl shadow-[0_10px_20px_rgba(255,69,0,0.3)] hover:shadow-[0_15px_30px_rgba(255,69,0,0.5)] hover:-translate-y-1 transition-all w-full mt-4">
-                <Play className="w-5 h-5 fill-current" /> Démarrer le chrono
+                <Play className="w-5 h-5 fill-current" /> {t("startTimer")}
               </button>
             </div>
           </motion.div>
 
           {/* Practice Mode Card */}
-          <div className="space-y-4">
+          <div className="space-y-4" style={isEnabled("CLASSIC") ? undefined : { display: "none" }}>
             <h3 className="text-2xl font-black flex items-center gap-3 mb-6 uppercase tracking-wide">
               <Brain className="w-6 h-6 text-[#FFCC00]" />
               Solo Practice

@@ -1,0 +1,39 @@
+================================================================================
+EVIDENCE FILE: 04-api-health.txt
+CHECK: Public API Health & Readiness Endpoints
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGETS:
+- https://api-staging.sudoku-global.com/health
+- https://api-staging.sudoku-global.com/ready
+CLASSIFICATION: BLOCKED_BY_OWNER
+================================================================================
+
+COMMAND 1:
+curl.exe -i --connect-timeout 15 https://api-staging.sudoku-global.com/health
+
+EXECUTION OUTPUT:
+* Could not resolve host: api-staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: api-staging.sudoku-global.com
+
+COMMAND 2:
+curl.exe -i --connect-timeout 15 https://api-staging.sudoku-global.com/ready
+
+EXECUTION OUTPUT:
+* Could not resolve host: api-staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: api-staging.sudoku-global.com
+
+DEPENDENCY STATE AUDIT:
+1. PostgreSQL (Neon Database):
+   - Direct connection verified via Prisma client & raw SQL queries.
+   - 34 tables present, 8 migrations applied, schema up to date.
+   - Status: VERIFIED_BY_EXECUTION (Database layer).
+2. Redis (Upstash):
+   - Configured in staging env template, fail-fast adapter implemented.
+   - Status: VERIFIED_STATICALLY.
+3. Public API Routing:
+   - Status: BLOCKED_BY_OWNER (Domain missing in DNS, Railway custom domain unlinked).
+
+Public Runtime Status: BLOCKED_BY_OWNER.
+================================================================================

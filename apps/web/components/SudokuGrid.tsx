@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RotateCcw, Lightbulb, Eraser, Edit3, Bot, Video } from "lucide-react";
 import RewardVideoModal from "./RewardVideoModal";
+import { useTranslations } from "next-intl";
 
 interface SudokuGridProps {
   difficulty?: Difficulty;
@@ -34,6 +35,7 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
   initialBoardProp,
   onCorrectCell,
 }) => {
+  const gt = useTranslations("game");
   const [initialBoard, setInitialBoard] = useState<GridType | null>(null);
   const [board, setBoard] = useState<GridType | null>(null);
   const [solvedBoard, setSolvedBoard] = useState<GridType | null>(null);
@@ -280,8 +282,8 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
       setSelectedCell([targetRow, targetCol]);
     } else {
       setCoachMessage({
-        technique: "Terminé",
-        text: "La grille semble déjà résolue ou je n'arrive pas à trouver d'indice.",
+        technique: gt("hintDone"),
+        text: gt("hintUnavailable"),
       });
     }
   }, [board, disabled, foundCells, notes, onBoardChange, hintsLeft]);

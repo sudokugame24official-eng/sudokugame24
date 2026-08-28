@@ -1,0 +1,32 @@
+================================================================================
+EVIDENCE FILE: 05-tls.txt
+CHECK: SSL/TLS Certificate & Cipher Suite Diagnostics
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGETS:
+- staging.sudoku-global.com:443
+- api-staging.sudoku-global.com:443
+CLASSIFICATION: BLOCKED_BY_OWNER
+================================================================================
+
+COMMAND 1 (Web TLS):
+curl.exe -v --connect-timeout 15 -k https://staging.sudoku-global.com/ 2>&1
+
+OUTPUT:
+* Could not resolve host: staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: staging.sudoku-global.com
+
+COMMAND 2 (API TLS):
+curl.exe -v --connect-timeout 15 -k https://api-staging.sudoku-global.com/ 2>&1
+
+OUTPUT:
+* Could not resolve host: api-staging.sudoku-global.com
+* closing connection #0
+curl: (6) Could not resolve host: api-staging.sudoku-global.com
+
+DIAGNOSIS:
+TLS negotiation cannot initiate prior to DNS resolution.
+Once Cloudflare Proxy (Orange Cloud) is activated by the Owner, TLS termination
+will be handled by Cloudflare Edge with Universal SSL (TLS 1.3 / ECDHE).
+Status: BLOCKED_BY_OWNER.
+================================================================================

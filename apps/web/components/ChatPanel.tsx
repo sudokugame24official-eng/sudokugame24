@@ -24,9 +24,11 @@ import { Link } from "@/navigation";
 import { useAuth } from "./AuthProvider";
 import { io, Socket } from "socket.io-client";
 import { PlayerIdentity } from "./PlayerIdentity";
+import { useTranslations } from "next-intl";
 
 export const ChatPanel = () => {
   const { user } = useAuth();
+  const t = useTranslations("chat");
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "conversations">(
     "conversations",
@@ -209,9 +211,7 @@ export const ChatPanel = () => {
   const handleBlockUser = async () => {
     if (!selectedUser || !user) return;
     if (
-      confirm(
-        `Êtes-vous sûr de vouloir bloquer/débloquer ${selectedUser.user.name} ?`,
-      )
+      confirm(t("confirmBlock", { name: selectedUser.user.name }))
     ) {
       try {
         const res = await fetch(
@@ -222,15 +222,15 @@ export const ChatPanel = () => {
           const result = await res.json();
           toast.success(
             result.status === "blocked"
-              ? "Utilisateur bloqué."
-              : "Utilisateur débloqué.",
+              ? t("blockedToast")
+              : t("unblockedToast"),
           );
           setSelectedUser(null);
           fetchConversations();
         }
       } catch (err) {
         console.error(err);
-        toast.error("Erreur réseau");
+        toast.error(t("networkError"));
       }
     }
   };
@@ -249,23 +249,26 @@ export const ChatPanel = () => {
   };
 
   const ConversationsList = () => (
-    <div className="flex flex-col h-full bg-card">
-      <div className="p-3 border-b border-border bg-secondary/30">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+    <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl relative overflow-hidden">
+      {/* Ambient glow in sidebar */}
+      <div className="absolute top-0 left-0 w-full h-32 bg-blue-500/10 blur-[50px] pointer-events-none" />
+      
+      <div className="p-4 border-b border-white/5 bg-black/20 z-10">
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
-            placeholder="Rechercher une conversation..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-background border border-border rounded-full pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+            className="w-full bg-black/40 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
           />
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
         {filteredConversations.length === 0 && (
           <p className="text-center text-xs text-muted-foreground mt-4">
-            Aucune conversation trouvée.
+            {t("noConversations")}
           </p>
         )}
         {filteredConversations.map((conv) => (
@@ -273,14 +276,14 @@ export const ChatPanel = () => {
             key={conv.user.id}
             onClick={() => handleSelectUser(conv)}
             className={cn(
-              "flex items-center gap-3 p-2 rounded-xl cursor-pointer group transition-colors relative",
+              "flex items-center gap-3 p-3 rounded-2xl cursor-pointer group transition-all relative z-10",
               selectedUser?.user.id === conv.user.id
-                ? "bg-primary/20 border border-primary/30"
-                : "hover:bg-secondary/60",
+                ? "bg-gradient-to-r from-primary/20 to-transparent border border-primary/30 shadow-[inset_4px_0_0_0_rgb(59,130,246)]"
+                : "hover:bg-white/5 border border-transparent",
             )}
           >
             <div className="relative shrink-0">
-              <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center shadow-sm border border-border/50 overflow-hidden">
+              <div className="w-12 h-12 bg-secondary/50 rounded-2xl flex items-center justify-center shadow-lg border border-white/10 overflow-hidden transform group-hover:scale-105 transition-transform">
                 {conv.user.avatar ? (
                   <img
                     src={conv.user.avatar}
@@ -336,17 +339,22 @@ export const ChatPanel = () => {
   );
 
   const ChatMessagesArea = () => (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-black/20 backdrop-blur-sm relative overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute top-1/4 right-0 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-purple-500/5 blur-[80px] pointer-events-none" />
+
       {!selectedUser ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4 text-center">
-          Sélectionnez une conversation pour commencer à discuter.
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 text-center z-10">
+          <MessageCircle className="w-16 h-16 text-white/10 mb-4" />
+          <p className="text-sm font-medium">{t("selectToChat")}</p>
         </div>
       ) : (
         <>
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/20">
+          <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5 backdrop-blur-md z-10">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 bg-secondary/80 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 shadow-lg">
                 {selectedUser.user.avatar ? (
                   <img
                     src={selectedUser.user.avatar}
@@ -407,10 +415,10 @@ export const ChatPanel = () => {
                 >
                   <div
                     className={cn(
-                      "px-4 py-2 rounded-2xl",
+                      "px-5 py-3 shadow-lg",
                       isMe
-                        ? "bg-primary text-primary-foreground rounded-tr-sm"
-                        : "bg-secondary text-foreground rounded-tl-sm",
+                        ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-3xl rounded-tr-sm shadow-blue-500/20"
+                        : "bg-white/10 backdrop-blur-md border border-white/5 text-white rounded-3xl rounded-tl-sm",
                     )}
                   >
                     <p className="text-sm break-words">
@@ -427,22 +435,22 @@ export const ChatPanel = () => {
           </div>
 
           {/* Input */}
-          <div className="p-3 bg-card border-t border-border">
+          <div className="p-4 bg-black/40 backdrop-blur-xl border-t border-white/5 z-10">
             <form
               onSubmit={handleSend}
-              className="flex items-center gap-2 relative"
+              className="flex items-center gap-3 relative"
             >
               <input
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Écrire un message..."
-                className="flex-1 bg-background border border-border rounded-full px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner"
+                placeholder={t("writeMessage")}
+                className="flex-1 bg-white/5 border border-white/10 hover:border-white/20 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all shadow-inner text-white placeholder:text-muted-foreground"
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim()}
-                className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 text-white rounded-2xl flex items-center justify-center hover:scale-105 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none shrink-0"
               >
                 <Send className="w-4 h-4 ml-0.5" />
               </button>
@@ -462,9 +470,11 @@ export const ChatPanel = () => {
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setIsOpen(true)}
-            className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-blue-400 text-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.6)] hover:scale-110 hover:shadow-[0_0_30px_rgba(37,99,235,0.8)] transition-all relative"
+            className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white rounded-[2rem] flex items-center justify-center shadow-[0_10px_40px_rgba(79,70,229,0.5)] hover:scale-110 hover:shadow-[0_15px_50px_rgba(79,70,229,0.7)] transition-all relative group overflow-hidden"
           >
-            <MessageCircle className="w-6 h-6" />
+            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
+            <div className="absolute inset-0 rounded-[2rem] border-[2px] border-white/20"></div>
+            <MessageCircle className="w-7 h-7 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -472,20 +482,24 @@ export const ChatPanel = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-0 right-0 w-[360px] md:w-[700px] h-[550px] md:h-[550px] max-h-[calc(100vh-100px)] bg-card/95 backdrop-blur-2xl border border-border rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="absolute bottom-0 right-0 w-[380px] md:w-[750px] h-[600px] md:h-[600px] max-h-[calc(100vh-100px)] bg-[#0A0A14]/95 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="h-14 flex items-center justify-between px-5 bg-gradient-to-r from-card to-secondary/30 border-b border-border shrink-0">
+            <div className="h-16 flex items-center justify-between px-6 bg-gradient-to-r from-white/5 to-transparent border-b border-white/5 shrink-0 relative">
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
               <div className="flex items-center gap-3">
-                <UserCheck className="w-5 h-5 text-blue-500" />
-                <h3 className="font-bold text-lg">Messagerie</h3>
+                <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                  <UserCheck className="w-4 h-4 text-blue-400" />
+                </div>
+                <h3 className="font-black text-lg text-white tracking-tight">MESSAGERIE</h3>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10 hover:scale-110 transition-all border border-white/5"
               >
                 <X className="w-4 h-4" />
               </button>

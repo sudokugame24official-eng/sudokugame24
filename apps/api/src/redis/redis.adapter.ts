@@ -3,26 +3,23 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { Redis } from 'ioredis';
 
 export class RedisIoAdapter extends IoAdapter {
-  private adapterConstructor: ReturnType<typeof createAdapter>;
+  private adapterConstructor?: ReturnType<typeof createAdapter>;
 
   async connectToRedis(): Promise<void> {
-    let pubClient: any, subClient: any;
     if (!process.env.REDIS_URL) {
       if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
         throw new Error(
-          'REDIS_URL is required in production/staging: refusing to silently fall back to ioredis-mock ' +
+          'REDIS_URL is required in production/staging: refusing to silently fall back to default adapter ' +
           '(WebSocket broadcasts would not propagate across instances).',
         );
       }
-      const RedisMock = require('ioredis-mock');
-      pubClient = new RedisMock();
-      subClient = pubClient.duplicate();
-    } else {
-      pubClient = new Redis(process.env.REDIS_URL, {
-        maxRetriesPerRequest: null,
-      });
-      subClient = pubClient.duplicate();
+      return;
     }
+
+    const pubClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: null,
+    });
+    const subClient = pubClient.duplicate();
 
     this.adapterConstructor = createAdapter(pubClient, subClient);
   }
@@ -39,7 +36,9 @@ export class RedisIoAdapter extends IoAdapter {
         credentials: true,
       },
     });
-    server.adapter(this.adapterConstructor);
+    if (this.adapterConstructor) {
+      server.adapter(this.adapterConstructor);
+    }
     return server;
   }
 }

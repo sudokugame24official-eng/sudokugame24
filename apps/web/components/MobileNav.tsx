@@ -11,11 +11,11 @@ export const MobileNav = () => {
   const t = useTranslations("nav");
 
   const navItems = [
-    { href: "/", icon: Home, label: "Accueil" },
+    { href: "/", icon: Home, label: t("home") },
     { href: "/play", icon: Play, label: t("play") },
     { href: "/daily", icon: Calendar, label: t("daily") },
     { href: "/duel", icon: Swords, label: t("duel"), badge: true },
-    { href: "/leaderboard", icon: Trophy, label: "Classement" },
+    { href: "/leaderboard", icon: Trophy, label: t("leaderboard") },
   ];
 
   return (

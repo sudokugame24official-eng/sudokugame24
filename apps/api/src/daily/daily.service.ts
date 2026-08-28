@@ -1,4 +1,4 @@
-import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { prisma, Difficulty, CoinTransactionType } from '@repo/database';
 import { SudokuGenerator } from '@repo/sudoku-engine';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
@@ -158,11 +158,11 @@ export class DailyService {
     });
 
     if (!challenge) {
-      throw new Error('Challenge not found');
+      throw new NotFoundException('Challenge not found');
     }
 
     if (challenge.date.getTime() !== today.getTime()) {
-      throw new Error("You can only start today's challenge");
+      throw new BadRequestException("You can only start today's challenge");
     }
 
     // Check if already started
@@ -172,7 +172,7 @@ export class DailyService {
 
     if (existing) {
       if (existing.completed) {
-        throw new Error('Challenge already completed');
+        throw new ConflictException('Challenge already completed');
       }
       return existing; // Resume
     }
@@ -201,10 +201,10 @@ export class DailyService {
       include: { puzzle: true }, // Need the puzzle to get solvedBoard
     });
 
-    if (!challenge) throw new Error('Challenge not found');
+    if (!challenge) throw new NotFoundException('Challenge not found');
 
     if (challenge.date.getTime() !== today.getTime()) {
-      throw new Error('This challenge has expired or is not for today');
+      throw new BadRequestException('This challenge has expired or is not for today');
     }
 
     const entry = await prisma.dailyChallengeEntry.findUnique({
@@ -212,7 +212,7 @@ export class DailyService {
     });
 
     if (!entry || entry.completed) {
-      throw new Error('Invalid state for submission');
+      throw new ConflictException('Challenge already completed or invalid state for submission');
     }
 
     // Server-Authoritative Anti-Cheat: Calculate score here

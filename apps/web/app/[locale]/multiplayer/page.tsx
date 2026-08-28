@@ -126,7 +126,7 @@ export default function MultiplayerPage() {
   const [matchData, setMatchData] = useState<any>(null);
 
   useEffect(() => {
-    const newSocket = io(WS_URL);
+    const newSocket = io(WS_URL, { withCredentials: true });
     setSocket(newSocket);
     newSocket.on("waitingForOpponent", () => setStatus("searching"));
     newSocket.on("gameStarted", (data) => {

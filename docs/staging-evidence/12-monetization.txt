@@ -1,0 +1,22 @@
+================================================================================
+EVIDENCE FILE: 12-monetization.txt
+CHECK: Monetization, Stripe Payments & AdSense Runtime Configuration
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+CLASSIFICATION: VERIFIED_BY_EXECUTION (Engine & DB) / BLOCKED_BY_OWNER (Public Remote Tests)
+================================================================================
+
+MONETIZATION SAFETY GATES:
+1. Google AdSense:
+   - AdSlot configuration driven by PostgreSQL table AdSlotConfig.
+   - AdSlot.tsx contains fail-safe fallback rendering when ad slots are empty/disabled.
+   - No hardcoded client-id or unauthorized script injection.
+   - Status: VERIFIED_BY_EXECUTION (monetization.spec.ts: 5/5 tests pass).
+2. Stripe Payments:
+   - StripeService configured to use test mode keys (sk_test_*) on staging.
+   - Webhook handler verifies cryptographic signatures using STRIPE_WEBHOOK_SECRET.
+   - Refuses processing when secret is unconfigured (tested in shop.economy.spec.ts).
+   - Status: VERIFIED_BY_EXECUTION.
+3. Feature Flags & Shop Safeguards:
+   - Shop products respect active flags, stock limits, and user purchase quotas.
+   - Status: VERIFIED_BY_EXECUTION.
+================================================================================

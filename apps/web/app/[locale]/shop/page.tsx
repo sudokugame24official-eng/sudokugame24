@@ -17,8 +17,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { Link } from "@/navigation";
+import { useTranslations } from "next-intl";
 
 export default function ShopPage() {
+  const t = useTranslations("shop");
   const { user, checkAuth } = useAuth();
   const [activeTab, setActiveTab] = useState<"COINS" | "PERKS">("PERKS");
   const [coinPacks, setCoinPacks] = useState<any[]>([]);
@@ -68,7 +70,7 @@ export default function ShopPage() {
 
   const handleBuyCoins = async (packId: string) => {
     if (!user) {
-      toast.error("Veuillez vous connecter pour acheter des pièces.");
+      toast.error(t("loginToBuyCoins"));
       return;
     }
     try {
@@ -84,13 +86,13 @@ export default function ShopPage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error("Erreur lors de l'initialisation du paiement.");
+      toast.error(t("paymentInitError"));
     }
   };
 
   const handleWatchAd = async () => {
     if (!user) {
-      toast.error("Veuillez vous connecter pour gagner des pièces.");
+      toast.error(t("loginToEarnCoins"));
       return;
     }
     setIsWatchingAd(true);
@@ -106,11 +108,11 @@ export default function ShopPage() {
           toast.success(data.message);
           checkAuth(); // Refresh user coins
         } else {
-          toast.error("Erreur: " + data.message);
+          toast.error(t("errorPrefix") + data.message);
         }
       } catch (e) {
         console.error(e);
-        toast.error("Une erreur est survenue.");
+        toast.error(t("genericError"));
       } finally {
         setIsWatchingAd(false);
       }
@@ -119,10 +121,10 @@ export default function ShopPage() {
 
   const handleBuyPerk = async (productId: string) => {
     if (!user) {
-      toast.error("Veuillez vous connecter pour acheter des avantages.");
+      toast.error(t("loginToBuyPerks"));
       return;
     }
-    if (confirm("Confirmer l'achat de cet avantage ?")) {
+    if (confirm(t("purchaseConfirm"))) {
       try {
         const res = await fetch(`${API_URL}/shop/buy-product`, {
           method: "POST",
@@ -136,10 +138,10 @@ export default function ShopPage() {
           fetchData(); // Refresh my perks
           checkAuth(); // Refresh user coins
         } else {
-          toast.error("Erreur : " + data.message);
+          toast.error(t("errorPrefix") + data.message);
         }
       } catch (e) {
-        toast.error("Une erreur est survenue.");
+        toast.error(t("genericError"));
       }
     }
   };
@@ -168,14 +170,13 @@ export default function ShopPage() {
       <main className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center justify-center text-center">
         <Crown className="w-24 h-24 text-[#FFCC00] mb-8 opacity-50" />
         <h1 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tight">
-          Boutique{" "}
+          {t("title")}{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFCC00] to-[#FF4500]">
-            Bientôt Disponible
+            {t("accentSoon")}
           </span>
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl">
-          Nous préparons des avatars exclusifs, des thèmes et de nouvelles
-          façons de personnaliser votre profil. Restez à l'écoute !
+          {t("comingSoonDesc")}
         </p>
       </main>
     );
@@ -194,13 +195,13 @@ export default function ShopPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tight"
           >
-            Boutique{" "}
+            {t("title")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFCC00] to-[#FF4500]">
-              Premium
+              {t("accentPremium")}
             </span>
           </motion.h1>
           <p className="text-muted-foreground">
-            Améliorez votre expérience Sudoku avec des avantages exclusifs.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -209,7 +210,7 @@ export default function ShopPage() {
           <div className="flex justify-center mb-8">
             <div className="bg-card/50 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full flex items-center gap-3 shadow-lg">
               <span className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">
-                Votre Solde :
+                {t("yourBalance")}
               </span>
               <div className="flex items-center gap-2">
                 <Coins className="w-5 h-5 text-yellow-400" />
@@ -228,13 +229,13 @@ export default function ShopPage() {
               onClick={() => setActiveTab("PERKS")}
               className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "PERKS" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
             >
-              Avantages & Bonus
+              {t("tabPerks")}
             </button>
             <button
               onClick={() => setActiveTab("COINS")}
               className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "COINS" ? "bg-[#FFCC00] text-black shadow-[0_0_15px_rgba(255,204,0,0.5)]" : "text-muted-foreground hover:text-foreground"}`}
             >
-              <Coins className="w-4 h-4" /> Acheter des Pièces
+              <Coins className="w-4 h-4" /> {t("tabCoins")}
             </button>
           </div>
         </div>
@@ -272,14 +273,14 @@ export default function ShopPage() {
                             <h3 className="font-bold text-lg">{perk.name}</h3>
                             <p className="text-xs text-muted-foreground">
                               {perk.durationDays
-                                ? `Valable ${perk.durationDays} jours`
-                                : "Permanent"}
+                                ? t("validDays", { days: perk.durationDays })
+                                : t("permanent")}
                             </p>
                           </div>
                         </div>
                         {owned && (
                           <div className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> Actif
+                            <CheckCircle2 className="w-3 h-3" /> {t("activeBadge")}
                           </div>
                         )}
                       </div>
@@ -298,10 +299,10 @@ export default function ShopPage() {
                         disabled={owned && perk.durationDays === null}
                       >
                         {owned && perk.durationDays === null ? (
-                          "Déjà possédé"
+                          t("ownedBtn")
                         ) : (
                           <>
-                            Activer pour{" "}
+                            {t("activateFor")}{" "}
                             <Coins className="w-4 h-4 text-yellow-400" />{" "}
                             {perk.priceCoins}
                           </>
@@ -324,11 +325,10 @@ export default function ShopPage() {
                       </div>
                       <div>
                         <h3 className="font-bold text-xl mb-1 text-white">
-                          Pièces Gratuites
+                          {t("freeCoinsTitle")}
                         </h3>
                         <p className="text-sm text-blue-200/70">
-                          Regardez une courte vidéo pour gagner 50 Coins
-                          gratuitement.
+                          {t("freeCoinsDesc")}
                         </p>
                       </div>
                     </div>
@@ -337,7 +337,7 @@ export default function ShopPage() {
                       disabled={isWatchingAd}
                       className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.5)] disabled:opacity-50 flex items-center gap-2"
                     >
-                      {isWatchingAd ? "Vidéo en cours..." : "Regarder la vidéo"}
+                      {isWatchingAd ? t("watchingAd") : t("watchVideo")}
                     </button>
                   </div>
                 )}
@@ -351,7 +351,7 @@ export default function ShopPage() {
                     >
                       {pack.popular && (
                         <div className="absolute -top-4 bg-[#FFCC00] text-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-lg">
-                          Plus Populaire
+                          {t("popularBadge")}
                         </div>
                       )}
 
@@ -369,7 +369,7 @@ export default function ShopPage() {
                           {pack.coins}
                         </span>
                         <span className="text-muted-foreground font-semibold">
-                          Coins
+                          {t("coinsUnit")}
                         </span>
                       </div>
 

@@ -17,7 +17,8 @@ export default function AdminForumPage() {
     try {
       const res = await fetch(`${API_URL}/forum/posts`);
       if (res.ok) {
-        setPosts(await res.json());
+        const data = await res.json();
+        setPosts(data.posts || []);
       }
     } catch (e) {
       console.error(e);

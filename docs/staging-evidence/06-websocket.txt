@@ -1,0 +1,28 @@
+================================================================================
+EVIDENCE FILE: 06-websocket.txt
+CHECK: Real Public WebSocket (WSS) Connectivity & Transport Upgrade
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGET: wss://api-staging.sudoku-global.com/
+CLASSIFICATION: BLOCKED_BY_INFRA
+================================================================================
+
+ATTEMPTED CONNECTION:
+Target Endpoint: wss://api-staging.sudoku-global.com/
+Protocol: WebSocket over TLS (WSS) / Socket.IO
+
+NETWORK ATTEMPT OUTPUT:
+Failed to connect: Target hostname 'api-staging.sudoku-global.com' unresolved (NXDOMAIN).
+HTTP Upgrade handshake could not be initiated across public internet.
+
+TEST SCOPE MATRIX:
+- DNS Resolution: BLOCKED_BY_OWNER
+- TLS Negotiation: BLOCKED_BY_OWNER
+- HTTP Upgrade: BLOCKED_BY_INFRA
+- WebSocket Connection: BLOCKED_BY_INFRA
+- WsJwtGuard Authentication: VERIFIED_BY_EXECUTION (via Jest suite ban-enforcement.spec.ts & chat.gateway.spec.ts)
+- Event Transmission / Reception: VERIFIED_BY_EXECUTION (via Jest suite chat.gateway.spec.ts & friend-challenge.spec.ts)
+- Reconnect & Presence Heartbeat: VERIFIED_BY_EXECUTION (via PresenceGateway unit suite)
+
+PUBLIC RUNTIME STATUS: BLOCKED_BY_INFRA
+(Real public staging WSS execution blocked until public DNS/Railway infrastructure is reachable).
+================================================================================

@@ -97,7 +97,7 @@ export default async function LeaderboardPage({
         </nav>
 
         <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 flex items-center gap-3">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 flex flex-wrap items-center gap-3">
             <Trophy className="w-10 h-10 text-yellow-400" />
             {t("Sudoku Leaderboard", "Classement Sudoku")}
           </h1>
@@ -140,23 +140,24 @@ export default async function LeaderboardPage({
         ) : (
           <>
             {/* Podium */}
-            <div className="grid grid-cols-3 gap-4 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
               {[1, 0, 2].map((idx) => {
                 const r = podium[idx];
-                if (!r) return <div key={idx} />;
+                const orderClass = idx === 0 ? "order-1 md:order-none" : idx === 1 ? "order-2 md:order-none" : "order-3 md:order-none";
+                if (!r) return <div key={idx} className={orderClass} />;
                 const medal = idx === 0 ? <Trophy className="w-8 h-8 text-yellow-400" /> : idx === 1 ? <Medal className="w-8 h-8 text-gray-300" /> : <Award className="w-8 h-8 text-amber-600" />;
                 return (
                   <div
                     key={r.userId}
-                    className={`bg-card/40 border rounded-2xl p-5 text-center ${idx === 0 ? "border-yellow-400/40 md:-mt-4" : "border-white/10"}`}
+                    className={`bg-card/40 border rounded-2xl p-4 sm:p-5 text-center min-w-0 flex flex-col items-center justify-center ${idx === 0 ? "border-yellow-400/40 md:-mt-4" : "border-white/10"} ${orderClass}`}
                   >
                     <div className="flex justify-center mb-3">{medal}</div>
-                    <p className="font-black truncate">{r.username}</p>
+                    <p className="font-black truncate w-full">{r.username}</p>
                     <p className="text-2xl font-black text-primary mt-1">{r.rating}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate w-full">
                       {t("Level", "Niveau")} {r.level}
                       {typeof r.winRate === "number" ? ` · ${r.winRate}% ${t("wins", "victoires")}` : ""}
-                      {r.streak ? <span className="flex items-center justify-center gap-1 mt-1"><Flame className="w-3 h-3 text-orange-400" />{r.streak}</span> : null}
+                      {r.streak ? <span className="flex items-center justify-center gap-1 mt-1"><Flame className="w-3 h-3 text-orange-400 shrink-0" />{r.streak}</span> : null}
                     </p>
                   </div>
                 );
@@ -164,8 +165,8 @@ export default async function LeaderboardPage({
             </div>
 
             {/* Table */}
-            <div className="bg-card/40 border border-white/10 rounded-2xl overflow-hidden">
-              <table className="w-full text-left">
+            <div className="bg-card/40 border border-white/10 rounded-2xl overflow-x-auto">
+              <table className="w-full text-left min-w-[500px]">
                 <thead className="bg-white/5 border-b border-white/10">
                   <tr>
                     <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase">#</th>

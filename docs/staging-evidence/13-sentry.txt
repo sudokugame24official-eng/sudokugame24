@@ -1,0 +1,18 @@
+================================================================================
+EVIDENCE FILE: 13-sentry.txt
+CHECK: Sentry Observability & Error Tracking Integration
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+CLASSIFICATION: VERIFIED_STATICALLY (SDK Initialization) / BLOCKED_BY_OWNER (Public Ingestion Test)
+================================================================================
+
+AUDIT DETAILS:
+1. Sentry Configuration:
+   - Next.js web application: @sentry/nextjs configured in instrumentation & next.config.
+   - NestJS API application: @sentry/node configured in main.ts & logger filter.
+2. DSN & Environment Variables:
+   - NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN mapped in environment configurations.
+   - Sentry initializes conditionally when DSN is present, bypassing crash loops when unconfigured.
+3. Controlled Public Staging Exception Trigger:
+   - Blocked until public staging URL is routed and live SENTRY_DSN is populated in hosting console.
+   - Status: BLOCKED_BY_OWNER.
+================================================================================

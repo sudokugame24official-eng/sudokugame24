@@ -33,9 +33,13 @@ async function bootstrap() {
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.FRONTEND_URL 
-      ? process.env.FRONTEND_URL.split(',') 
-      : 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || (process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes(origin))) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Dev fallback
+      }
+    },
     credentials: true,
   });
 

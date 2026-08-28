@@ -11,7 +11,7 @@ export class CreateForumPostDto {
   @MaxLength(20000)
   content!: string;
 
-  @IsUUID()
+  @IsString()
   categoryId!: string;
 }
 

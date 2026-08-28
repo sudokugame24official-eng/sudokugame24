@@ -62,8 +62,6 @@ export async function generateMetadata({
         en: "/en",
         fr: "/fr",
         de: "/de",
-        es: "/es",
-        it: "/it",
       },
     },
   };
@@ -124,7 +122,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable}`}
+        className={`${geistSans.variable} ${geistMono.variable} overflow-x-hidden`}
         suppressHydrationWarning
       >
         <NextIntlClientProvider messages={messages} locale={locale}>

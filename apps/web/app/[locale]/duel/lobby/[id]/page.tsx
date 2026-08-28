@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
@@ -16,6 +17,7 @@ const currentUser = {
 };
 
 export default function LobbyPage() {
+  const t = useTranslations("duel");
   const { id: lobbyId } = useParams();
   const router = useRouter();
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -24,7 +26,7 @@ export default function LobbyPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const newSocket = io(`${WS_URL}/duel`);
+    const newSocket = io(`${WS_URL}/duel`, { withCredentials: true });
     setSocket(newSocket);
 
     // Initial fetch/join? The backend currently only broadcasts lobby state.
@@ -77,7 +79,7 @@ export default function LobbyPage() {
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="flex flex-col items-center">
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-16 h-16 border-t-2 border-primary rounded-full" />
-          <p className="mt-4 text-muted-foreground font-bold">Chargement du Lobby...</p>
+          <p className="mt-4 text-muted-foreground font-bold">{t("loadingLobby")}</p>
         </div>
       </div>
     );
@@ -140,7 +142,7 @@ export default function LobbyPage() {
                     <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="w-24 h-24 mx-auto border-4 border-dashed border-muted-foreground rounded-full flex items-center justify-center">
                       <Users className="w-10 h-10 text-muted-foreground" />
                     </motion.div>
-                    <p className="text-muted-foreground font-medium">En attente d'un adversaire...</p>
+                    <p className="text-muted-foreground font-medium">{t("waitingOpponent")}</p>
                   </div>
                 )}
               </div>
@@ -164,7 +166,7 @@ export default function LobbyPage() {
           </div>
 
           <div className="bg-card/40 backdrop-blur-md border border-white/10 rounded-3xl p-6">
-             <h3 className="font-bold mb-4 flex items-center gap-2 text-muted-foreground"><AlertCircle className="w-4 h-4"/> Paramètres de la table</h3>
+             <h3 className="font-bold mb-4 flex items-center gap-2 text-muted-foreground"><AlertCircle className="w-4 h-4"/> {t("tableSettings")}</h3>
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-secondary/30 p-3 rounded-lg text-center">
                   <p className="text-xs text-muted-foreground mb-1">Chronomètre</p>
@@ -190,7 +192,7 @@ export default function LobbyPage() {
             </h3>
             <div className="flex-1 bg-secondary/20 rounded-xl p-4 overflow-y-auto mb-4 space-y-3 border border-border">
               {chatMessages.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center mt-10">Aucun message pour le moment.</p>
+                <p className="text-muted-foreground text-sm text-center mt-10">{t("noMessages")}</p>
               ) : (
                 chatMessages.map((msg, i) => (
                   <div key={i} className="text-sm">
@@ -205,7 +207,7 @@ export default function LobbyPage() {
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Message..."
+                placeholder={t("messagePlaceholder")}
                 className="flex-1 bg-secondary border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <button type="submit" className="bg-primary px-4 py-2 rounded-lg font-bold hover:bg-primary/90">
@@ -219,7 +221,7 @@ export default function LobbyPage() {
               <Users className="w-5 h-5 text-blue-400" /> Spectateurs ({lobby.spectators?.length || 0})
             </h3>
             {lobby.spectators?.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun spectateur</p>
+              <p className="text-sm text-muted-foreground">{t("noSpectators")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {lobby.spectators.map((s: any, i: number) => (

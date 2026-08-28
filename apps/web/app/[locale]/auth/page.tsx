@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Globe, Smartphone, Loader2 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function AuthPage() {
+  const t = useTranslations("auth");
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +17,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
+  const params = useParams<{ locale?: string }>();
+  const locale = params?.locale || "en";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +40,16 @@ export default function AuthPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "Une erreur est survenue");
+      throw new Error(data.message || t("errorGeneric"));
       }
 
       const userData = await res.json();
       login(userData);
-      router.push("/profile");
+      if (userData.role === "SUPER_ADMIN" || userData.role === "ADMIN") {
+        router.push(`/${locale}/admin`);
+      } else {
+        router.push(`/${locale}/profile`);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -66,12 +74,12 @@ export default function AuthPage() {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400 mb-2">
-            {isLogin ? "Rebonjour !" : "Rejoignez la légende"}
+            {isLogin ? t("welcomeBack") : t("welcomeNew")}
           </h1>
           <p className="text-muted-foreground">
             {isLogin
-              ? "Connectez-vous pour reprendre votre progression et grimper dans le classement."
-              : "Créez un compte pour jouer en multijoueur et suivre vos statistiques."}
+              ? t("loginSubtitle")
+              : t("registerSubtitle")}
           </p>
         </div>
 
@@ -87,7 +95,7 @@ export default function AuthPage() {
               <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Nom d'utilisateur"
+                placeholder={t("username")}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required={!isLogin}
@@ -100,7 +108,7 @@ export default function AuthPage() {
             <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <input
               type="email"
-              placeholder="Adresse e-mail"
+              placeholder={t("email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -112,7 +120,7 @@ export default function AuthPage() {
             <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <input
               type="password"
-              placeholder="Mot de passe"
+              placeholder={t("password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -125,12 +133,12 @@ export default function AuthPage() {
             className="w-full py-3 mt-4 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] transition-all disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isLogin ? "Se connecter" : "S'inscrire"}
+            {isLogin ? t("signIn") : t("signUp")}
           </button>
         </form>
 
         <div className="mt-8 flex items-center gap-4 before:flex-1 before:border-t before:border-border after:flex-1 after:border-t after:border-border">
-          <span className="text-muted-foreground text-sm font-medium">OU</span>
+          <span className="text-muted-foreground text-sm font-medium">{t("or")}</span>
         </div>
 
         <div className="mt-6 flex flex-col gap-4">
@@ -140,13 +148,13 @@ export default function AuthPage() {
           >
             <Globe className="w-5 h-5 text-red-500" />
             <span className="font-semibold text-sm">
-              Se connecter avec Google
+              {t("google")}
             </span>
           </button>
         </div>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          {isLogin ? "Pas encore de compte ? " : "Déjà membre ? "}
+          {isLogin ? t("noAccount") + " " : t("hasAccount") + " "}
           <button
             type="button"
             onClick={() => {
@@ -155,7 +163,7 @@ export default function AuthPage() {
             }}
             className="text-primary font-bold hover:underline"
           >
-            {isLogin ? "S'inscrire" : "Se connecter"}
+            {isLogin ? t("signUp") : t("signIn")}
           </button>
         </div>
       </motion.div>

@@ -15,7 +15,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self' *.google.com *.googleapis.com *.gstatic.com *.facebook.net *.facebook.com *.tiktok.com *.tiktok.com *.google-analytics.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' *.google.com *.gstatic.com *.facebook.net *.tiktok.com *.google-analytics.com *.googletagmanager.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' blob: data: *.googleusercontent.com *.google.com *.facebook.com *.tiktok.com; font-src 'self' *.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
+            value: "default-src 'self' http://localhost:3001 ws://localhost:3001 http://127.0.0.1:3001 ws://127.0.0.1:3001 *.google.com *.googleapis.com *.gstatic.com *.facebook.net *.facebook.com *.tiktok.com *.tiktok.com *.google-analytics.com; connect-src 'self' http://localhost:3001 ws://localhost:3001 http://127.0.0.1:3001 ws://127.0.0.1:3001 *.google.com *.googleapis.com *.gstatic.com *.facebook.net *.facebook.com *.tiktok.com *.tiktok.com *.google-analytics.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' *.google.com *.gstatic.com *.facebook.net *.tiktok.com *.google-analytics.com *.googletagmanager.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' blob: data: *.googleusercontent.com *.google.com *.facebook.com *.tiktok.com; font-src 'self' *.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
           },
           {
             key: 'X-Frame-Options',

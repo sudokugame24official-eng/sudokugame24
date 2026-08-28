@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { WS_URL } from "@/lib/api";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +25,7 @@ const currentUser = {
 };
 
 export default function ActiveDuelPage() {
+  const t = useTranslations("duel");
   const { matchId } = useParams();
   const searchParams = useSearchParams();
   const isSpectating = searchParams.get("spectate") === "true";
@@ -54,11 +56,13 @@ export default function ActiveDuelPage() {
   const [showModeration, setShowModeration] = useState(false);
 
   useEffect(() => {
-    const newSocket = io(`${WS_URL}/duel`);
+    const newSocket = io(`${WS_URL}/duel`, { withCredentials: true });
     setSocket(newSocket);
 
     if (isSpectating) {
       newSocket.emit("spectate_match", { matchId, userId: currentUser.id });
+    } else {
+      newSocket.emit("join_match", { matchId });
     }
 
     // --- GAME EVENTS ---
@@ -250,19 +254,19 @@ export default function ActiveDuelPage() {
                 >
                   <Crown className="w-16 h-16 text-yellow-500 mb-4" />
                   <h2 className="text-3xl font-black mb-2 text-white">
-                    Match Terminé
+                    {t("matchOver")}
                   </h2>
                   <p className="text-lg text-yellow-400 font-bold mb-6">
                     {winnerId === currentUser.id
-                      ? "Vous avez gagné !"
+                      ? t("youWon")
                       : winnerId
-                        ? "Défaite..."
-                        : "Égalité"}
+                        ? t("defeat")
+                        : t("draw")}
                   </p>
                   
                   {xpGained !== null && (
                     <div className="bg-secondary/80 px-6 py-4 rounded-xl border border-white/10 flex flex-col items-center mb-6">
-                      <span className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-2">Expérience Gagnée</span>
+                      <span className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-2">{t("xpGained")}</span>
                       <div className="flex items-center gap-3">
                          <div className="text-2xl font-black text-primary">+{xpGained} XP</div>
                       </div>
@@ -342,7 +346,7 @@ export default function ActiveDuelPage() {
                   <button
                     onClick={() => handleModerate("mute", spec)}
                     className="text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors"
-                    title="Mute ce spectateur"
+                    title={t("muteSpectator")}
                   >
                     <MicOff className="w-3 h-3" />
                   </button>

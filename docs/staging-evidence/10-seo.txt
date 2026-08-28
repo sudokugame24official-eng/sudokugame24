@@ -1,0 +1,22 @@
+================================================================================
+EVIDENCE FILE: 10-seo.txt
+CHECK: Real Public HTML SEO Validation & Crawl
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGET: https://staging.sudoku-global.com
+CLASSIFICATION: BLOCKED_BY_OWNER (Public Runtime) / VERIFIED_BY_EXECUTION (Local Engine)
+================================================================================
+
+PUBLIC AUDIT EXECUTION:
+Command: node apps/web/scripts/seo-audit.mjs https://staging.sudoku-global.com
+Result: 0/60 routes reachable (NXDOMAIN on staging.sudoku-global.com)
+Public Runtime Status: BLOCKED_BY_OWNER
+
+LOCAL SSR/SSG ENGINE VERIFICATION:
+Command: node apps/web/scripts/related-links.test.mjs
+Result: 6/6 tests passing (French/German/English taxonomy & contextual mesh)
+
+HTML ARCHITECTURE VERIFIED IN CODEBASE:
+- Routes: /en, /fr, /de, /en/sudoku/{easy,medium,hard,expert,extreme}, /en/daily, /en/leaderboard, /en/learn, /en/forum, /en/questions, /en/about, /en/faq, /en/help, /en/contact
+- Tags: H1 tag on every page, canonical link rel="canonical", hreflang alternates (en, fr, de, x-default), OpenGraph tags, JSON-LD structured data (FAQPage, DiscussionForumPosting, QAPage, BreadcrumbList, WebSite).
+- Auth Routes (/login, /register, /profile): Marked with <meta name="robots" content="noindex,nofollow" />.
+================================================================================

@@ -1,11 +1,53 @@
 "use client";
 import { WS_URL } from "@/lib/api";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sword, Users, Coins, Eye, Play, Plus, Loader2 } from "lucide-react";
+import {
+  Sword, Users, Coins, Eye, Play, Plus, Loader2, Bot, X, Zap, Trophy, Shield,
+  ChevronRight, Sparkles,
+} from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+
+type BotDifficulty = "EASY" | "MEDIUM" | "HARD";
+
+interface BotLevel {
+  key: BotDifficulty;
+  labelKey: string;
+  eloRange: [number, number];
+  color: string;
+  icon: React.ReactNode;
+  descKey: string;
+}
+
+const BOT_LEVELS: BotLevel[] = [
+  {
+    key: "EASY",
+    labelKey: "bot.easy.label",
+    eloRange: [800, 1100],
+    color: "from-green-500 to-emerald-400",
+    icon: <Shield className="w-6 h-6" />,
+    descKey: "bot.easy.desc",
+  },
+  {
+    key: "MEDIUM",
+    labelKey: "bot.medium.label",
+    eloRange: [1200, 1500],
+    color: "from-blue-500 to-cyan-400",
+    icon: <Zap className="w-6 h-6" />,
+    descKey: "bot.medium.desc",
+  },
+  {
+    key: "HARD",
+    labelKey: "bot.hard.label",
+    eloRange: [1600, 1900],
+    color: "from-purple-500 to-pink-500",
+    icon: <Trophy className="w-6 h-6" />,
+    descKey: "bot.hard.desc",
+  },
+];
 
 // Dummy user state for preview
 const currentUser = {
@@ -15,15 +57,260 @@ const currentUser = {
   coins: 5000,
 };
 
+// ─── Bot Offer Modal ──────────────────────────────────────────────────────────
+function BotOfferModal({
+  offer,
+  onAccept,
+  onDecline,
+}: {
+  offer: { timeoutMs: number };
+  onAccept: (level: BotDifficulty) => void;
+  onDecline: () => void;
+}) {
+  const t = useTranslations("duel");
+  const [remaining, setRemaining] = useState(Math.ceil(offer.timeoutMs / 1000));
+  const [selected, setSelected] = useState<BotDifficulty>("MEDIUM");
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setRemaining((r) => {
+        if (r <= 1) {
+          clearInterval(iv);
+          onAccept("MEDIUM"); // auto-accept medium
+          return 0;
+        }
+        return r - 1;
+      });
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [onAccept]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+    >
+      <motion.div
+        initial={{ scale: 0.85, y: 30 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.85, y: 30 }}
+        transition={{ type: "spring", damping: 20 }}
+        className="bg-[#0f0f1a] border border-white/10 w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
+      >
+        {/* Ambient glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-purple-600/20 blur-[80px] rounded-full pointer-events-none" />
+
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+              <Bot className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white">{t("noOpponent")}</h2>
+              <p className="text-sm text-muted-foreground">{t("playVsBotQ")}</p>
+            </div>
+            {/* Countdown ring */}
+            <div className="ml-auto flex flex-col items-center">
+              <div className="relative w-12 h-12">
+                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#ffffff15" strokeWidth="3" />
+                  <circle
+                    cx="22" cy="22" r="18" fill="none"
+                    stroke="url(#timerGrad)" strokeWidth="3"
+                    strokeDasharray={`${2 * Math.PI * 18}`}
+                    strokeDashoffset={`${2 * Math.PI * 18 * (1 - remaining / Math.ceil(offer.timeoutMs / 1000))}`}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000"
+                  />
+                  <defs>
+                    <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#ec4899" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-white">
+                  {remaining}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground mt-1">{t("autoLabel")}</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
+            {t("botOfferDesc")}
+          </p>
+
+          {/* Bot level selection */}
+          <div className="space-y-3 mb-6">
+            {BOT_LEVELS.map((lvl) => (
+              <button
+                key={lvl.key}
+                onClick={() => setSelected(lvl.key)}
+                className={cn(
+                  "w-full flex items-center gap-4 p-4 rounded-2xl border transition-all",
+                  selected === lvl.key
+                    ? "border-white/30 bg-white/10"
+                    : "border-white/5 bg-white/3 hover:bg-white/7"
+                )}
+              >
+                <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shrink-0", lvl.color)}>
+                  {lvl.icon}
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-bold text-sm text-white">{t(lvl.labelKey)}</p>
+                  <p className="text-xs text-muted-foreground">{t(lvl.descKey)}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-muted-foreground">Elo</p>
+                  <p className="text-sm font-bold text-white">{lvl.eloRange[0]}–{lvl.eloRange[1]}</p>
+                </div>
+                {selected === lvl.key && (
+                  <motion.div
+                    layoutId="bot-selected"
+                    className={cn("w-2 h-2 rounded-full bg-gradient-to-br shrink-0", lvl.color)}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={onDecline}
+              className="flex-1 py-3 rounded-xl border border-white/10 text-muted-foreground font-bold text-sm hover:bg-white/5 transition-colors"
+            >
+              {t("keepWaiting")}
+            </button>
+            <button
+              onClick={() => onAccept(selected)}
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            >
+              <Bot className="w-4 h-4" />
+              {t("playVsBotBtn")}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Direct Bot Modal ─────────────────────────────────────────────────────────
+function PlayBotModal({
+  onClose,
+  onPlay,
+  difficulty,
+  bet,
+}: {
+  onClose: () => void;
+  onPlay: (botDifficulty: BotDifficulty) => void;
+  difficulty: string;
+  bet: number;
+}) {
+  const t = useTranslations("duel");
+  const [selected, setSelected] = useState<BotDifficulty>("MEDIUM");
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ scale: 0.88, y: 24 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.88, y: 24 }}
+        transition={{ type: "spring", damping: 22 }}
+        className="bg-[#0f0f1a] border border-white/10 w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
+      >
+        <div className="absolute -top-16 -right-16 w-48 h-48 bg-purple-600/20 blur-[80px] rounded-full pointer-events-none" />
+
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4 text-muted-foreground" />
+        </button>
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <Bot className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white">{t("playVsBotTitle")}</h2>
+              <p className="text-sm text-muted-foreground">{t("instantStart", { difficulty, bet })}</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mb-5">
+            {t("botLevelHint")}
+          </p>
+
+          <div className="space-y-3 mb-6">
+            {BOT_LEVELS.map((lvl) => (
+              <button
+                key={lvl.key}
+                onClick={() => setSelected(lvl.key)}
+                className={cn(
+                  "w-full flex items-center gap-4 p-4 rounded-2xl border transition-all group",
+                  selected === lvl.key
+                    ? "border-white/30 bg-white/10"
+                    : "border-white/5 hover:border-white/15 hover:bg-white/5"
+                )}
+              >
+                <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shrink-0 transition-transform group-hover:scale-110", lvl.color)}>
+                  {lvl.icon}
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-bold text-sm text-white">{t(lvl.labelKey)}</p>
+                  <p className="text-xs text-muted-foreground">{t(lvl.descKey)}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-muted-foreground">{t("eloApprox")}</p>
+                  <p className="text-sm font-bold text-white">{lvl.eloRange[0]}–{lvl.eloRange[1]}</p>
+                </div>
+                {selected === lvl.key && (
+                  <ChevronRight className="w-4 h-4 text-white shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => onPlay(selected)}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black shadow-xl shadow-purple-500/25 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            <Sparkles className="w-5 h-5" />
+            {t("startBotDuel", { level: BOT_LEVELS.find((b) => b.key === selected) ? t(BOT_LEVELS.find((b) => b.key === selected)!.labelKey) : "" })}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DuelLobbyPage() {
+  const t = useTranslations("duel");
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [lobbyState, setLobbyState] = useState({
-    waitingPlayers: [],
-    ongoingMatches: [],
-  });
+  const [lobbyState, setLobbyState] = useState<{
+    waitingPlayers: any[];
+    ongoingMatches: any[];
+    createdTables?: any[];
+  }>({ waitingPlayers: [], ongoingMatches: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showBotModal, setShowBotModal] = useState(false);
+  const [botOffer, setBotOffer] = useState<{ timeoutMs: number } | null>(null);
   const [receivedInvite, setReceivedInvite] = useState<any>(null);
   const [targetUsername, setTargetUsername] = useState("");
   const router = useRouter();
@@ -32,20 +319,32 @@ export default function DuelLobbyPage() {
   const [difficulty, setDifficulty] = useState("MEDIUM");
   const [bet, setBet] = useState(50);
   const [hasTimer, setHasTimer] = useState(true);
-  const [timeLimit, setTimeLimit] = useState(300); // 5 minutes
+  const [timeLimit, setTimeLimit] = useState(300);
   const [allowSpectators, setAllowSpectators] = useState(true);
   const [allowSpectatorChat, setAllowSpectatorChat] = useState(true);
 
+  // Searching countdown display
+  const [searchSeconds, setSearchSeconds] = useState(0);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startSearchTimer = useCallback(() => {
+    setSearchSeconds(0);
+    searchTimerRef.current = setInterval(() => setSearchSeconds((s) => s + 1), 1000);
+  }, []);
+
+  const stopSearchTimer = useCallback(() => {
+    if (searchTimerRef.current) clearInterval(searchTimerRef.current);
+    setSearchSeconds(0);
+  }, []);
+
   useEffect(() => {
-    // Connect to the backend socket
-    const newSocket = io(`${WS_URL}/duel`);
+    const newSocket = io(`${WS_URL}/duel`, { withCredentials: true });
     setSocket(newSocket);
 
-    newSocket.on("lobby_state", (data) => {
-      setLobbyState(data);
-    });
+    newSocket.on("lobby_state", (data) => setLobbyState(data));
 
     newSocket.on("duel_start", (data) => {
+      stopSearchTimer();
       router.push(`/duel/${data.matchId}`);
     });
 
@@ -57,23 +356,23 @@ export default function DuelLobbyPage() {
       router.push(`/duel/lobby/${data.lobbyId}`);
     });
 
+    // ← New: rich bot_offer with level selection
     newSocket.on("bot_offer", (data) => {
-      if (window.confirm(data.message)) {
-        newSocket.emit("accept_bot", { userId: currentUser.id });
-      }
+      setBotOffer(data);
     });
 
     newSocket.on("duel_invite_received", (data) => {
       setReceivedInvite(data);
     });
 
-    newSocket.on("chat_error", (data) => alert("Erreur: " + data.message));
-    newSocket.on("chat_success", (data) => alert("Succès: " + data.message));
+    newSocket.on("chat_error", (data) => alert(t('errorAlert') + data.message));
+    newSocket.on("chat_success", (data) => alert(t('successAlert') + data.message));
 
     return () => {
+      stopSearchTimer();
       newSocket.disconnect();
     };
-  }, [router]);
+  }, [router, stopSearchTimer]);
 
   const handleCreateGame = () => {
     if (socket) {
@@ -87,6 +386,14 @@ export default function DuelLobbyPage() {
       });
       setIsSearching(true);
       setShowCreateModal(false);
+    }
+  };
+
+  const handleQuickSearch = () => {
+    if (socket) {
+      socket.emit("join_queue", { difficulty, betAmount: bet });
+      setIsSearching(true);
+      startSearchTimer();
     }
   };
 
@@ -106,23 +413,54 @@ export default function DuelLobbyPage() {
 
   const handleSendInvite = () => {
     if (socket && targetUsername) {
-      socket.emit("send_invite", {
-        targetUsername,
-        difficulty,
-        betAmount: bet,
-      });
+      socket.emit("send_invite", { targetUsername, difficulty, betAmount: bet });
       setShowInviteModal(false);
     }
   };
 
   const handleAcceptInvite = () => {
     if (socket && receivedInvite) {
-      socket.emit("accept_invite", {
-        inviteId: receivedInvite.inviteId,
-      });
+      socket.emit("accept_invite", { inviteId: receivedInvite.inviteId });
       setReceivedInvite(null);
     }
   };
+
+  // Accept bot offer from matchmaking queue (after 10s wait)
+  const handleAcceptBotOffer = (botDifficulty: BotDifficulty) => {
+    if (socket) {
+      socket.emit("accept_bot", { botDifficulty });
+      setBotOffer(null);
+      stopSearchTimer();
+    }
+  };
+
+  const handleDeclineBotOffer = () => {
+    setBotOffer(null);
+    // Stay in queue — server will continue matchmaking
+  };
+
+  // Direct "Play vs Bot" button (skips queue entirely)
+  const handlePlayVsBot = (botDifficulty: BotDifficulty) => {
+    if (socket) {
+      socket.emit("play_vs_bot", {
+        difficulty,
+        botDifficulty,
+        betAmount: bet,
+      });
+      setShowBotModal(false);
+      setIsSearching(false);
+    }
+  };
+
+  const handleCancelSearch = () => {
+    setIsSearching(false);
+    setBotOffer(null);
+    stopSearchTimer();
+    socket?.emit("leave_queue", { userId: currentUser.id });
+  };
+
+  const formatSearchTime = (s: number) =>
+    `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   return (
     <div className="min-h-screen bg-[#050505] text-foreground p-4 lg:p-8 relative overflow-hidden">
@@ -147,7 +485,7 @@ export default function DuelLobbyPage() {
               </span>
             </h1>
             <p className="text-muted-foreground font-medium">
-              Paris en direct, parties classées, aucune triche.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -171,53 +509,119 @@ export default function DuelLobbyPage() {
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-card/40 backdrop-blur-3xl border border-white/10 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <h2 className="text-2xl font-black mb-6">Prêt au Combat ?</h2>
+              <h2 className="text-2xl font-black mb-6 relative z-10">{t("readyTitle")}</h2>
 
               {isSearching ? (
-                <div className="flex flex-col items-center justify-center py-8">
+                <div className="flex flex-col items-center justify-center py-8 relative z-10">
                   <div className="relative mb-6">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                       className="w-20 h-20 rounded-full border-b-2 border-l-2 border-primary"
                     />
                     <Loader2 className="w-6 h-6 text-primary animate-spin absolute top-[28px] left-[28px]" />
                   </div>
-                  <h3 className="font-bold text-lg mb-2">
-                    Recherche d'adversaire
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Mise: {bet} Coins • Diff: {difficulty}
+                  <h3 className="font-bold text-lg mb-1">{t("searching")}</h3>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {formatSearchTime(searchSeconds)}
                   </p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {t("betInfo", { bet, difficulty })}
+                  </p>
+
+                  {/* "Play vs Bot" shortcut while searching */}
+                  {searchSeconds >= 5 && (
+                    <motion.button
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => setShowBotModal(true)}
+                      className="flex items-center gap-2 text-sm font-bold text-purple-400 hover:text-purple-300 transition-colors mb-4 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/30"
+                    >
+                      <Bot className="w-4 h-4" />
+                      {t("playBotNow")}
+                    </motion.button>
+                  )}
+
                   <button
-                    onClick={() => {
-                      setIsSearching(false);
-                      socket?.emit("leave_queue", { userId: currentUser.id });
-                    }}
+                    onClick={handleCancelSearch}
                     className="text-sm font-bold text-red-400 hover:text-red-300 transition-colors"
                   >
-                    Annuler la recherche
+                    {t("cancelSearch")}
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 relative z-10">
+                  {/* Quick Match */}
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block font-bold uppercase tracking-wide">{t("difficultyLabel")}</label>
+                        <select
+                          value={difficulty}
+                          onChange={(e) => setDifficulty(e.target.value)}
+                          className="w-full bg-secondary border border-border rounded-xl p-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                        >
+                          <option value="EASY">{t("easy")}</option>
+                          <option value="MEDIUM">{t("medium")}</option>
+                          <option value="HARD">{t("hard")}</option>
+                          <option value="EXPERT">{t("expert")}</option>
+                          <option value="MASTER">Master</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block font-bold uppercase tracking-wide">{t("betLabel")}</label>
+                        <select
+                          value={bet}
+                          onChange={(e) => setBet(Number(e.target.value))}
+                          className="w-full bg-secondary border border-border rounded-xl p-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                        >
+                          <option value={0}>{t("free")}</option>
+                          <option value={50}>50 Coins</option>
+                          <option value={200}>200 Coins</option>
+                          <option value={1000}>1 000 Coins</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleQuickSearch}
+                      className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 transition-all hover:scale-[1.02]"
+                    >
+                      <Sword className="w-5 h-5" />
+                      {t("quickSearch")}
+                    </button>
+                  </div>
+
+                  <div className="relative flex items-center gap-2">
+                    <div className="flex-1 h-px bg-white/10" />
+                    <span className="text-xs text-muted-foreground font-bold">{t("orDivider")}</span>
+                    <div className="flex-1 h-px bg-white/10" />
+                  </div>
+
+                  {/* Play vs Bot — direct */}
+                  <button
+                    onClick={() => setShowBotModal(true)}
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-500/30 hover:border-purple-400/60 text-white py-4 rounded-2xl font-bold transition-all hover:scale-[1.02]"
+                  >
+                    <Bot className="w-5 h-5 text-purple-400" />
+                    {t("playVsBotTitle")}
+                    <span className="ml-auto text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full">{t("instantBadge")}</span>
+                  </button>
+
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 transition-all hover:scale-[1.02]"
+                    className="w-full flex items-center justify-center gap-3 bg-secondary/50 border border-white/10 hover:bg-secondary text-white py-3 rounded-2xl font-bold transition-all hover:scale-[1.02]"
                   >
                     <Plus className="w-5 h-5" />
-                    Créer une Table
+                    {t("createPrivateTable")}
                   </button>
+
                   <button
                     onClick={() => setShowInviteModal(true)}
-                    className="w-full flex items-center justify-center gap-3 bg-secondary/50 border border-white/10 hover:bg-secondary text-white py-4 rounded-2xl font-bold transition-all hover:scale-[1.02]"
+                    className="w-full flex items-center justify-center gap-3 bg-secondary/30 border border-white/5 hover:bg-secondary/50 text-muted-foreground hover:text-white py-3 rounded-2xl font-bold transition-all"
                   >
-                    <Sword className="w-5 h-5 text-purple-400" />
-                    Défier un ami directement
+                    <Users className="w-5 h-5" />
+                    {t("challengeFriend")}
                   </button>
                 </div>
               )}
@@ -225,22 +629,20 @@ export default function DuelLobbyPage() {
 
             <div className="bg-card/40 backdrop-blur-3xl border border-white/10 p-6 rounded-[2rem] shadow-xl">
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-purple-400" /> Stats Globales
+                <Users className="w-5 h-5 text-purple-400" /> {t("globalStats")}
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center bg-secondary/30 p-3 rounded-xl">
-                  <span className="text-muted-foreground text-sm">
-                    Joueurs en ligne
-                  </span>
+                  <span className="text-muted-foreground text-sm">{t("playersOnline")}</span>
                   <span className="font-bold text-green-400">1,204</span>
                 </div>
                 <div className="flex justify-between items-center bg-secondary/30 p-3 rounded-xl">
-                  <span className="text-muted-foreground text-sm">
-                    Duels en cours
-                  </span>
-                  <span className="font-bold text-blue-400">
-                    {lobbyState.ongoingMatches.length}
-                  </span>
+                  <span className="text-muted-foreground text-sm">{t("ongoingDuels")}</span>
+                  <span className="font-bold text-blue-400">{lobbyState.ongoingMatches.length}</span>
+                </div>
+                <div className="flex justify-between items-center bg-secondary/30 p-3 rounded-xl">
+                  <span className="text-muted-foreground text-sm">{t("openTables")}</span>
+                  <span className="font-bold text-purple-400">{lobbyState.waitingPlayers?.length ?? 0}</span>
                 </div>
               </div>
             </div>
@@ -248,22 +650,29 @@ export default function DuelLobbyPage() {
 
           {/* Lobby Lists */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Waiting Players (Tables to join) */}
+            {/* Waiting Players */}
             <section>
               <h2 className="text-xl font-black mb-4 flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                Joueurs en attente ({lobbyState.waitingPlayers.length})
+                {t("waitingPlayers", { count: lobbyState.waitingPlayers.length })}
               </h2>
 
-              <div className="bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-xl overflow-hidden min-h-[250px]">
+              <div className="bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-xl overflow-hidden min-h-[200px]">
                 {lobbyState.waitingPlayers.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full py-16 text-muted-foreground">
                     <Users className="w-12 h-12 mb-4 opacity-20" />
-                    <p>Aucun joueur en attente pour le moment.</p>
+                    <p>{t("noWaiting")}</p>
+                    <button
+                      onClick={() => setShowBotModal(true)}
+                      className="mt-4 flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 font-bold transition-colors"
+                    >
+                      <Bot className="w-4 h-4" />
+                      {t("playBotInstead")}
+                    </button>
                   </div>
                 ) : (
                   <div className="divide-y divide-border/50">
-                    {lobbyState.waitingPlayers.map((player: any, i) => (
+                    {lobbyState.waitingPlayers.map((player: any, i: number) => (
                       <div
                         key={i}
                         className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
@@ -280,7 +689,7 @@ export default function DuelLobbyPage() {
                               </span>
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Elo: {player.elo}
+                              Elo: {player.rating ?? player.elo ?? "?"}
                             </p>
                           </div>
                         </div>
@@ -297,7 +706,7 @@ export default function DuelLobbyPage() {
                             }
                             className="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white px-6 py-2 rounded-full font-bold text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Rejoindre
+                            {t("join")}
                           </button>
                         </div>
                       </div>
@@ -307,20 +716,20 @@ export default function DuelLobbyPage() {
               </div>
             </section>
 
-            {/* Spectator Mode */}
+            {/* Live Matches */}
             <section>
               <h2 className="text-xl font-black mb-4 flex items-center gap-2">
                 <Eye className="w-5 h-5 text-blue-400" />
-                Parties en direct ({lobbyState.ongoingMatches.length})
+                {t("liveMatches", { count: lobbyState.ongoingMatches.length })}
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {lobbyState.ongoingMatches.length === 0 ? (
                   <p className="text-muted-foreground text-sm p-4 col-span-2">
-                    Aucun match en cours.
+                    {t("noMatches")}
                   </p>
                 ) : (
-                  lobbyState.ongoingMatches.map((match: any, i) => (
+                  lobbyState.ongoingMatches.map((match: any, i: number) => (
                     <div
                       key={i}
                       className="bg-card/40 backdrop-blur-3xl border border-white/10 p-4 rounded-2xl flex justify-between items-center hover:border-primary/50 transition-colors"
@@ -333,10 +742,14 @@ export default function DuelLobbyPage() {
                           <span className="text-[10px] font-bold uppercase bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full flex items-center gap-1">
                             <Coins className="w-3 h-3" /> {match.betAmount * 2}
                           </span>
+                          {match.isBotMatch && (
+                            <span className="text-[10px] font-bold bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <Bot className="w-3 h-3" /> Bot
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm font-medium">
-                          Table {match.id.substring(0, 6)}{" "}
-                          {match.isBotMatch && "(vs Bot)"}
+                          Table {match.id.substring(0, 6)}
                         </p>
                       </div>
                       <button
@@ -354,8 +767,28 @@ export default function DuelLobbyPage() {
         </div>
       </div>
 
-      {/* Create Table Modal */}
+      {/* ── Modals ── */}
       <AnimatePresence>
+        {/* Bot offer from matchmaking */}
+        {botOffer && (
+          <BotOfferModal
+            offer={botOffer}
+            onAccept={handleAcceptBotOffer}
+            onDecline={handleDeclineBotOffer}
+          />
+        )}
+
+        {/* Direct "Play vs Bot" modal */}
+        {showBotModal && (
+          <PlayBotModal
+            onClose={() => setShowBotModal(false)}
+            onPlay={handlePlayVsBot}
+            difficulty={difficulty}
+            bet={bet}
+          />
+        )}
+
+        {/* Create Table Modal */}
         {showCreateModal && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -371,18 +804,16 @@ export default function DuelLobbyPage() {
             >
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"
               >
-                <Users className="w-5 h-5" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
 
-              <h2 className="text-2xl font-black mb-6">Créer une Table</h2>
+              <h2 className="text-2xl font-black mb-6">{t("createTable")}</h2>
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-muted-foreground mb-2">
-                    Mise en Coins
-                  </label>
+                  <label className="block text-sm font-bold text-muted-foreground mb-2">{t("coinBet")}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {[50, 200, 1000].map((val) => (
                       <button
@@ -392,7 +823,7 @@ export default function DuelLobbyPage() {
                           "py-3 rounded-xl font-bold flex flex-col items-center justify-center border transition-all",
                           bet === val
                             ? "bg-yellow-500/20 border-yellow-500 text-yellow-500"
-                            : "bg-secondary border-transparent text-muted-foreground",
+                            : "bg-secondary border-transparent text-muted-foreground"
                         )}
                       >
                         <Coins className="w-4 h-4 mb-1" />
@@ -403,25 +834,23 @@ export default function DuelLobbyPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-muted-foreground mb-2">
-                    Difficulté
-                  </label>
+                  <label className="block text-sm font-bold text-muted-foreground mb-2">{t("difficultyLabel")}</label>
                   <select
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                     className="w-full bg-secondary border border-border rounded-xl p-4 font-bold focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                   >
-                    <option value="EASY">Facile</option>
-                    <option value="MEDIUM">Moyen</option>
-                    <option value="HARD">Difficile</option>
-                    <option value="EXPERT">Expert</option>
-                    <option value="MASTER">Master</option>
+                    <option value="EASY">{t("easy")}</option>
+                    <option value="MEDIUM">{t("medium")}</option>
+                    <option value="HARD">{t("hard")}</option>
+                    <option value="EXPERT">{t("expert")}</option>
+                    <option value="MASTER">{t("master")}</option>
                   </select>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Chronomètre</span>
+                    <span className="font-bold text-sm">{t("timerLabel")}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={hasTimer} onChange={(e) => setHasTimer(e.target.checked)} className="sr-only peer" />
                       <div className="w-11 h-6 bg-secondary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
@@ -430,7 +859,7 @@ export default function DuelLobbyPage() {
 
                   {hasTimer && (
                     <div className="flex items-center justify-between pl-4">
-                      <span className="text-sm text-muted-foreground">Durée (minutes)</span>
+                      <span className="text-sm text-muted-foreground">{t("durationMinutes")}</span>
                       <select value={timeLimit / 60} onChange={(e) => setTimeLimit(Number(e.target.value) * 60)} className="bg-secondary rounded p-1 text-sm outline-none border border-border">
                         <option value="3">3 min</option>
                         <option value="5">5 min</option>
@@ -441,35 +870,26 @@ export default function DuelLobbyPage() {
                   )}
 
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Spectateurs autorisés</span>
+                    <span className="font-bold text-sm">{t("allowSpectators")}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={allowSpectators} onChange={(e) => setAllowSpectators(e.target.checked)} className="sr-only peer" />
                       <div className="w-11 h-6 bg-secondary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                   </div>
-
-                  {allowSpectators && (
-                    <div className="flex items-center justify-between pl-4">
-                      <span className="text-sm text-muted-foreground">Chat spectateurs</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked={allowSpectatorChat} onChange={(e) => setAllowSpectatorChat(e.target.checked)} className="sr-only peer" />
-                        <div className="w-9 h-5 bg-secondary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-                  )}
                 </div>
 
                 <button
                   onClick={handleCreateGame}
                   className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:bg-primary/90 transition-colors"
                 >
-                  Lancer la recherche
+                  {t("startSearch")}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
 
+        {/* Invite Modal */}
         {showInviteModal && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -485,31 +905,27 @@ export default function DuelLobbyPage() {
             >
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"
               >
-                <Users className="w-5 h-5" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
 
-              <h2 className="text-2xl font-black mb-6">Défier un ami</h2>
+              <h2 className="text-2xl font-black mb-6">{t("challengeFriend")}</h2>
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-muted-foreground mb-2">
-                    Pseudo de l'ami
-                  </label>
+                  <label className="block text-sm font-bold text-muted-foreground mb-2">{t("friendUsername")}</label>
                   <input
                     type="text"
                     value={targetUsername}
                     onChange={(e) => setTargetUsername(e.target.value)}
-                    placeholder="Ex: SudokuKing99"
+                    placeholder="SudokuKing99"
                     className="w-full bg-secondary border border-border rounded-xl p-4 font-bold focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-muted-foreground mb-2">
-                    Mise en Coins
-                  </label>
+                  <label className="block text-sm font-bold text-muted-foreground mb-2">{t("coinBet")}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {[50, 200, 1000].map((val) => (
                       <button
@@ -519,7 +935,7 @@ export default function DuelLobbyPage() {
                           "py-3 rounded-xl font-bold flex flex-col items-center justify-center border transition-all",
                           bet === val
                             ? "bg-yellow-500/20 border-yellow-500 text-yellow-500"
-                            : "bg-secondary border-transparent text-muted-foreground",
+                            : "bg-secondary border-transparent text-muted-foreground"
                         )}
                       >
                         <Coins className="w-4 h-4 mb-1" />
@@ -529,34 +945,18 @@ export default function DuelLobbyPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-muted-foreground mb-2">
-                    Difficulté
-                  </label>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value)}
-                    className="w-full bg-secondary border border-border rounded-xl p-4 font-bold focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
-                  >
-                    <option value="EASY">Facile</option>
-                    <option value="MEDIUM">Moyen</option>
-                    <option value="HARD">Difficile</option>
-                    <option value="EXPERT">Expert</option>
-                    <option value="MASTER">Master</option>
-                  </select>
-                </div>
-
                 <button
                   onClick={handleSendInvite}
                   className="w-full bg-purple-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-purple-600 transition-colors"
                 >
-                  Envoyer le défi
+                  {t("sendChallenge")}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
 
+        {/* Received invite toast */}
         {receivedInvite && (
           <motion.div
             initial={{ y: -50, opacity: 0 }}
@@ -564,22 +964,24 @@ export default function DuelLobbyPage() {
             exit={{ y: -50, opacity: 0 }}
             className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/50 shadow-2xl p-6 rounded-2xl w-full max-w-sm"
           >
-            <h3 className="font-black text-xl mb-2 text-primary">Nouveau Défi !</h3>
+            <h3 className="font-black text-xl mb-2 text-primary">{t("newChallenge")}</h3>
             <p className="font-medium mb-4">
-              <strong className="text-white">{receivedInvite.senderUsername}</strong> vous défie en {receivedInvite.difficulty} pour <strong className="text-yellow-500">{receivedInvite.betAmount} Coins</strong> !
+              <strong className="text-white">{receivedInvite.senderUsername}</strong> {t("inviteMiddle")}{" "}
+              {receivedInvite.difficulty} pour{" "}
+              <strong className="text-yellow-500">{receivedInvite.betAmount} Coins</strong> !
             </p>
             <div className="flex gap-3">
               <button
                 onClick={handleAcceptInvite}
                 className="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg hover:bg-green-600"
               >
-                Accepter
+                {t("accept")}
               </button>
               <button
                 onClick={() => setReceivedInvite(null)}
                 className="flex-1 bg-secondary text-white font-bold py-2 rounded-lg hover:bg-white/10"
               >
-                Refuser
+                {t("decline")}
               </button>
             </div>
           </motion.div>

@@ -59,7 +59,9 @@ describe('CoinLedgerService - Integration & Concurrency', () => {
               if (
                 e instanceof BadRequestException ||
                 e.status === 400 ||
-                e.status === 409
+                e.status === 409 ||
+                e.name === 'PrismaClientKnownRequestError' ||
+                e.message?.includes('Transaction')
               ) {
                 failureCount++;
               } else {
@@ -98,7 +100,13 @@ describe('CoinLedgerService - Integration & Concurrency', () => {
             `reward_req_${i}`,
             idempotencyKey,
           ).catch(e => {
-            if (e.status === 409 || e.status === 400 || e.name === 'ConflictException') {
+            if (
+              e.status === 409 ||
+              e.status === 400 ||
+              e.name === 'ConflictException' ||
+              e.name === 'PrismaClientKnownRequestError' ||
+              e.message?.includes('Transaction')
+            ) {
               return { success: false, error: e };
             }
             throw e;

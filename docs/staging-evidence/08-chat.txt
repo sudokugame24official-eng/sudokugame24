@@ -1,0 +1,17 @@
+================================================================================
+EVIDENCE FILE: 08-chat.txt
+CHECK: Real-Time Chat & DM Subsystem on Public Staging
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+CLASSIFICATION: BLOCKED_BY_INFRA
+================================================================================
+
+PUBLIC STAGING EXECUTION STATUS:
+Unreachable due to public DNS (NXDOMAIN) on api-staging.sudoku-global.com.
+Public execution classified as BLOCKED_BY_INFRA.
+
+STATIC & TEST SUITE VERIFICATION:
+1. Multi-Instance Chat: chat.gateway.spec.ts passing (9/9 tests).
+2. Presence & DM Rooms: Redis pub/sub room isolation verified.
+3. Block Enforcement: Banned and blocked user checks verified in JwtStrategy & WsJwtGuard.
+4. Unread / Read Lifecycle: Tested in chat controller & repository integration suites.
+================================================================================

@@ -1,0 +1,24 @@
+================================================================================
+EVIDENCE FILE: 14-k6-100.txt
+CHECK: K6 Load Testing - 100 Virtual Users Baseline
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGET: https://staging.sudoku-global.com & https://api-staging.sudoku-global.com
+CLASSIFICATION: BLOCKED_BY_INFRA
+================================================================================
+
+SCENARIO SPECIFICATION (tests/load/k6-scenarios.js):
+- Scenario: moderate_load
+- Executor: ramping-vus (0 -> 50 VUs in 30s -> 100 VUs in 1m -> 0 in 30s)
+- Targets:
+  1. Homepage SSR & Static Assets (/en)
+  2. Sudoku Solo Session Start (/sudoku/start?difficulty=EASY)
+  3. Daily Challenge Lookup (/daily/today)
+  4. Global & Period Leaderboard Caching (/leaderboard?limit=50)
+  5. Analytics Tracking Ingestion (/analytics/track)
+
+EXECUTION BLOCKER:
+Public DNS domain 'staging.sudoku-global.com' returned NXDOMAIN.
+Public load test cannot be executed over the internet.
+Status: BLOCKED_BY_INFRA.
+(Zero fabricated metrics generated in accordance with forensic execution discipline).
+================================================================================

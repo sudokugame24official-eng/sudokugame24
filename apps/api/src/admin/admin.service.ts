@@ -592,6 +592,48 @@ export class AdminService {
     });
   }
 
+  // --- EMAIL TEMPLATES ---
+  async getEmailTemplates() {
+    let templates = await prisma.emailTemplate.findMany({
+      orderBy: { name: 'asc' },
+    });
+    if (templates.length === 0) {
+      await prisma.emailTemplate.createMany({
+        data: [
+          {
+            name: 'WELCOME_EMAIL',
+            subject: 'Bienvenue sur Sudoku Premium, {{username}} !',
+            htmlContent: `<h2>Bienvenue sur Sudoku Premium !</h2><p>Bonjour <strong>{{username}}</strong>,</p><p>Votre compte a bien été créé. Rejoignez des milliers de joueurs en ligne pour résoudre des grilles quotidiennes et participer à des duels classés.</p><p>À bientôt sur <a href="http://localhost:3000">Sudoku Premium</a> !</p>`,
+          },
+          {
+            name: 'DUEL_INVITATION',
+            subject: 'Défi Sudoku 1v1 de {{username}}',
+            htmlContent: `<h2>Vous avez été défié en duel !</h2><p><strong>{{username}}</strong> (Elo: {{elo}}) vous invite à un match de Sudoku en direct.</p><p><a href="http://localhost:3000/duel">Rejoindre le duel</a></p>`,
+          },
+        ],
+      });
+      templates = await prisma.emailTemplate.findMany({ orderBy: { name: 'asc' } });
+    }
+    return templates;
+  }
+
+  async updateEmailTemplate(id: string, data: { subject: string; htmlContent: string }) {
+    return prisma.emailTemplate.update({
+      where: { id },
+      data: {
+        subject: data.subject,
+        htmlContent: data.htmlContent,
+      },
+    });
+  }
+
+  async testEmailTemplate(id: string, adminId: string) {
+    const template = await prisma.emailTemplate.findUnique({ where: { id } });
+    if (!template) throw new NotFoundException('Template not found');
+    this.logger.log(`Test email triggered for template ${template.name} by admin ${adminId}`);
+    return { success: true, message: `Email de test simulé pour ${template.name}` };
+  }
+
   // --- SYSTEM HEALTH ---
   async getSystemHealth() {
     // Basic node.js metrics

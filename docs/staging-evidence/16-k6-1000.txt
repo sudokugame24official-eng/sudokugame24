@@ -1,0 +1,19 @@
+================================================================================
+EVIDENCE FILE: 16-k6-1000.txt
+CHECK: K6 Load Testing - 1000 Virtual Users Stress Peak
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+TARGET: https://staging.sudoku-global.com & https://api-staging.sudoku-global.com
+CLASSIFICATION: BLOCKED_BY_INFRA
+================================================================================
+
+SCENARIO SPECIFICATION (tests/load/k6-scenarios.js):
+- Scenario: stress_peak
+- Executor: ramping-vus (0 -> 500 VUs in 45s -> 1000 VUs in 1m30s -> 0 in 45s)
+- Thresholds: http_req_failed < 1%, p(95) < 300ms, p(99) < 800ms
+
+EXECUTION BLOCKER:
+Public DNS domain 'staging.sudoku-global.com' returned NXDOMAIN.
+Public load test cannot be executed over the internet.
+Status: BLOCKED_BY_INFRA.
+(Zero fabricated metrics generated in accordance with forensic execution discipline).
+================================================================================

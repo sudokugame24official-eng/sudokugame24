@@ -7,6 +7,7 @@ import {
   Get,
   Res,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
@@ -43,8 +44,7 @@ export class AuthController {
   async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.authService.validateUser(body.email, body.password);
     if (!user) {
-      res.status(401).json({ message: 'Identifiants invalides' });
-      return;
+      throw new UnauthorizedException('Identifiants invalides');
     }
 
     const { access_token } = await this.authService.login(user);

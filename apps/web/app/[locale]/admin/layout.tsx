@@ -57,58 +57,55 @@ export default function AdminLayout({
     }
   }, [loading, isStaff, lang, router]);
 
-  // Menu rule (P1-C): only pages that actually work are listed.
+  // 10 Logical Admin Groups matching Owner Control Center architecture
   const menuSections = [
     {
-      title: "Main",
+      title: "Overview",
       items: [
         { name: "Dashboard", path: "", icon: LayoutDashboard },
-        { name: "Users", path: "/users", icon: Users },
-        { name: "Moderation", path: "/moderation", icon: ShieldAlert },
-        { name: "Audit Logs", path: "/audit", icon: ScrollText },
-        { name: "Daily Challenge", path: "/daily", icon: CalendarDays },
-        { name: "Game Modes", path: "/modes", icon: Gamepad2 },
+        { name: "Analytics", path: "/analytics", icon: BarChart },
+        { name: "System Health", path: "/system/health", icon: Server },
       ],
     },
     {
-      title: "Community",
+      title: "Play & Games",
       items: [
+        { name: "Game Modes", path: "/modes", icon: Gamepad2 },
+        { name: "Daily Challenge", path: "/daily", icon: CalendarDays },
+      ],
+    },
+    {
+      title: "Community & Support",
+      items: [
+        { name: "Users", path: "/users", icon: Users },
+        { name: "Moderation", path: "/moderation", icon: ShieldAlert },
         { name: "Forum", path: "/forum", icon: MessageSquare },
         { name: "Support Tickets", path: "/support", icon: LifeBuoy },
       ],
     },
     {
-      title: "Content",
+      title: "Content & Media",
       items: [
-        { name: "Homepage Builder", path: "/homepage", icon: LayoutDashboard },
-        { name: "Articles", path: "/content", icon: FileText },
-        { name: "Media", path: "/media", icon: ImageIcon },
-        { name: "Marketing", path: "/marketing", icon: Megaphone },
+        { name: "CMS Articles", path: "/content", icon: FileText },
+        { name: "Media Library", path: "/media", icon: ImageIcon },
       ],
     },
     {
-      title: "Monetization",
+      title: "Monetization & Growth",
       items: [
-        { name: "Shop Products", path: "/shop", icon: ShoppingCart },
-        { name: "Flags & Ads", path: "/monetization", icon: DollarSign },
-        { name: "Ad Slots", path: "/monetization/ad-slots", icon: DollarSign },
-      ],
-    },
-    {
-      title: "Platform",
-      items: [
-        { name: "Analytics", path: "/analytics", icon: BarChart },
-        { name: "Theme Studio", path: "/theme", icon: Palette },
+        { name: "Shop & Perks", path: "/shop", icon: ShoppingCart },
+        { name: "Monetization & Ads", path: "/monetization", icon: DollarSign },
         { name: "SEO Control", path: "/seo", icon: Megaphone },
-        { name: "Features", path: "/features", icon: ToggleLeft },
-        { name: "Settings", path: "/settings", icon: Settings },
       ],
     },
     {
-      title: "System",
+      title: "Appearance & Settings",
       items: [
-        { name: "Health", path: "/system/health", icon: Server },
-        { name: "Maintenance", path: "/emergency", icon: Lock },
+        { name: "Theme Studio", path: "/theme", icon: Palette },
+        { name: "Homepage Builder", path: "/homepage", icon: LayoutDashboard },
+        { name: "Feature Flags", path: "/features", icon: ToggleLeft },
+        { name: "Audit Logs", path: "/audit", icon: ScrollText },
+        { name: "Settings", path: "/settings", icon: Settings },
       ],
     },
   ];

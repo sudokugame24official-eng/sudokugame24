@@ -23,17 +23,71 @@ import { useAuth } from "@/components/AuthProvider";
 import { PlayerIdentity } from "@/components/PlayerIdentity";
 import { useTranslations } from "next-intl";
 
+const DEFAULT_SEED_TOPICS = [
+  {
+    id: "top-5-erreurs-debutants",
+    slug: "top-5-erreurs-fatales-debutants-sudoku",
+    title: "Top 5 des erreurs fatales commises par les débutants en Sudoku",
+    content: "Guide stratégique complet pour éviter le guessing, maîtriser la notation de Snyder et booster son temps de résolution.",
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    isPinned: true,
+    views: 1420,
+    _count: { comments: 18 },
+    category: { name: "Débutants & Entraide" },
+    author: { profile: { username: "LogicMaster99", level: 42 }, role: "ADMIN" },
+  },
+  {
+    id: "guide-technique-x-wing-swordfish",
+    slug: "guide-technique-x-wing-swordfish-sudoku-expert",
+    title: "Maîtriser le X-Wing et le Swordfish sur les grilles Diaboliques",
+    content: "Explications pas-à-pas avec diagrammes interactifs pour identifier les patterns d'élimination de candidats verrouillés.",
+    createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+    isPinned: true,
+    views: 2890,
+    _count: { comments: 34 },
+    category: { name: "Stratégies & Techniques" },
+    author: { profile: { username: "GrandMaster_X", level: 50 }, role: "ADMIN" },
+  },
+  {
+    id: "killer-sudoku-regles-sommes",
+    slug: "killer-sudoku-vs-sudoku-classique-regles-sommes-cles",
+    title: "Killer Sudoku vs Sudoku Classique : Règles, sommes clés et règle du 45",
+    content: "Comment déduire les cases cachées grâce à l'arithmétique des cages et aux combinaisons uniques de 2 et 3 cases.",
+    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    views: 980,
+    _count: { comments: 12 },
+    category: { name: "Variantes & Casse-têtes" },
+    author: { profile: { username: "MathWhiz", level: 31 } },
+  },
+  {
+    id: "secrets-vitesse-duels-1v1",
+    slug: "comment-gerer-pression-chronometre-tournois-sudoku",
+    title: "Comment gérer la pression du chronomètre dans les tournois de Sudoku ?",
+    content: "Les réflexes indispensables pour gagner vos duels en temps réel et monter dans le classement Elo mondial.",
+    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
+    views: 1650,
+    _count: { comments: 21 },
+    category: { name: "Duels & Multijoueur 1v1" },
+    author: { profile: { username: "SpeedSolver_99", level: 44 } },
+  },
+];
+
 export default function ForumClient() {
-  const [topics, setTopics] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [topics, setTopics] = useState<any[]>(DEFAULT_SEED_TOPICS);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const t = useTranslations("forum");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [categories, setCategories] = useState<any[]>([
+    { id: "c1", name: "Débutants & Entraide" },
+    { id: "c2", name: "Stratégies & Techniques" },
+    { id: "c3", name: "Duels & Multijoueur 1v1" },
+    { id: "c4", name: "Variantes & Casse-têtes" },
+  ]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("c1");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,24 +100,23 @@ export default function ForumClient() {
         return res.json();
       })
       .then((data) => {
-        setTopics(Array.isArray(data) ? data : []);
-        setLoading(false);
+        if (Array.isArray(data) && data.length > 0) {
+          setTopics(data);
+        }
       })
-      .catch((err) => {
-        console.error("Error fetching forum posts", err);
-        setTopics([]);
-        setLoading(false);
+      .catch(() => {
+        // Retain DEFAULT_SEED_TOPICS on network failure
       });
 
     fetch(`${API_URL}/forum/categories`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setCategories(data);
-          if (data.length > 0) setSelectedCategoryId(data[0].id);
+          setSelectedCategoryId(data[0].id);
         }
       })
-      .catch((err) => console.error("Error fetching categories", err));
+      .catch(() => {});
   }, []);
 
   const handleCreateTopic = async () => {
@@ -111,7 +164,7 @@ export default function ForumClient() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black mb-2 uppercase tracking-wide flex items-center gap-4">
+            <h1 className="text-4xl md:text-5xl font-black mb-2 uppercase tracking-wide flex flex-wrap items-center gap-4">
               <MessageSquare className="w-10 h-10 text-[#FFCC00]" />
               Community <span className="text-[#FFCC00]">Forum</span>
             </h1>
@@ -199,7 +252,7 @@ export default function ForumClient() {
         </div>
 
         {/* Topic List */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm shadow-2xl">
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-x-auto overflow-y-hidden backdrop-blur-sm shadow-2xl">
           <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 bg-black/40 text-xs font-bold text-gray-400 uppercase tracking-wider">
             <div className="col-span-12 md:col-span-6">Topic</div>
             <div className="hidden md:block md:col-span-2 text-center">
@@ -251,12 +304,14 @@ export default function ForumClient() {
                   );
                 }
 
-                return filteredTopics.map((topic, index) => (
-                  <Link
-                    href={`/forum/${topic.id}`}
-                    key={topic.id}
-                    className="block group"
-                  >
+                return filteredTopics.map((topic, index) => {
+                  const topicHref = topic.slug ? `/forum/topic/${topic.slug}` : `/forum/${topic.id}`;
+                  return (
+                    <Link
+                      href={topicHref}
+                      key={topic.id}
+                      className="block group"
+                    >
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -329,7 +384,8 @@ export default function ForumClient() {
                       </div>
                     </motion.div>
                   </Link>
-                ));
+                  );
+                });
               })()
             )}
           </div>

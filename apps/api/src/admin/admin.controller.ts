@@ -256,6 +256,30 @@ export class AdminController {
     return this.adminService.updateAdSlot(slotName, data as any);
   }
 
+  // --- EMAIL TEMPLATES ---
+  @Get('email-templates')
+  @RequirePermission('settings.view')
+  async getEmailTemplates() {
+    return this.adminService.getEmailTemplates();
+  }
+
+  @Put('email-templates/:id')
+  @RequirePermission('settings.manage')
+  @AuditAction('marketing.update_template')
+  async updateEmailTemplate(
+    @Param('id') id: string,
+    @Body() body: { subject: string; htmlContent: string },
+  ) {
+    return this.adminService.updateEmailTemplate(id, body);
+  }
+
+  @Post('email-templates/:id/test')
+  @RequirePermission('settings.manage')
+  @AuditAction('marketing.test_template')
+  async testEmailTemplate(@Request() req: any, @Param('id') id: string) {
+    return this.adminService.testEmailTemplate(id, req.user.id);
+  }
+
   // --- SYSTEM HEALTH ---
   @Get('system/health')
   @RequirePermission('system.view')

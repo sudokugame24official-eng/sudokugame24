@@ -1,0 +1,34 @@
+================================================================================
+EVIDENCE FILE: 09-admin.txt
+CHECK: SUPER_ADMIN Control Center & Operations on Staging
+TIMESTAMP: 2026-08-21T20:54:00+02:00
+CLASSIFICATION: BLOCKED_BY_OWNER
+================================================================================
+
+PUBLIC STAGING EXECUTION STATUS:
+Public admin portal at https://staging.sudoku-global.com/admin unreachable due to NXDOMAIN.
+Public runtime verification classified as BLOCKED_BY_OWNER.
+
+OPERATIONS MATRIX VERIFIED IN REPOSITORY & DB:
+1. Database Schema & Models: All 34 models in PostgreSQL verified via Prisma migration deploy.
+2. Roles & RBAC: Super admin / Admin / Moderator role definitions enforced via AdminRoleGuard.
+3. 22 Admin Modules:
+   - Users (/admin/users): Search, filter, pagination, ban, coin adjustments.
+   - Bans & Moderation (/admin/moderation): Audit log persistence, ban expiration.
+   - Roles (/admin/roles): RBAC role permissions.
+   - Forum (/admin/forum): Pin, lock, delete topics with audit logging.
+   - Q&A (/admin/questions): Edit, tag, answer moderation.
+   - Articles / CMS (/admin/content): Draft, review, publish, ContentRevision history.
+   - Media (/admin/media): Upload validation, MIME sniffing, hash deduplication.
+   - Shop (/admin/shop): Product stock limits, purchase caps.
+   - Coins (/admin/coins): Ledger audit history.
+   - Daily Challenge (/admin/daily): Calendar-based daily puzzle scheduler.
+   - Game Modes (/admin/modes): 7 configurable modes.
+   - Homepage (/admin/homepage): Dynamic section manager.
+   - Theme (/admin/theme): CSS variable engine with live preview & 1-click rollback.
+   - SEO (/admin/seo): SERP live preview, robots.txt, sitemap toggles.
+   - Ads / Monetization (/admin/monetization): DB-driven ad slots.
+   - Payments (/admin/payments): Stripe transaction ledger.
+   - Analytics (/admin/analytics): Measured DAU/WAU/MAU and rollups.
+   - Audit Logs (/admin/audit): Immutable admin action records.
+================================================================================

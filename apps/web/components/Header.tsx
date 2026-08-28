@@ -72,6 +72,7 @@ const TopAccentBar = () => (
 );
 
 /* ---------- Mega Dropdown Item ---------- */
+/* ---------- Mega Dropdown Item ---------- */
 const MegaItem = ({
   href,
   icon: Icon,
@@ -87,18 +88,19 @@ const MegaItem = ({
 }) => (
   <Link href={href}>
     <motion.div
-      whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.06)" }}
-      className="flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer transition-colors"
+      whileHover={{ x: 6, backgroundColor: "rgba(255,255,255,0.08)" }}
+      whileTap={{ scale: 0.98 }}
+      className="flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group/item"
     >
       <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: "rgba(255,255,255,0.05)" }}
+        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-white/5 shadow-inner transition-transform duration-200 group-hover/item:scale-110"
+        style={{ background: "rgba(255,255,255,0.06)" }}
       >
         <Icon className={`w-4 h-4 ${color}`} />
       </div>
       <div>
-        <p className={`text-sm font-bold ${color}`}>{label}</p>
-        {desc && <p className="text-[11px] text-gray-500">{desc}</p>}
+        <p className={`text-sm font-black tracking-wide transition-colors ${color}`}>{label}</p>
+        {desc && <p className="text-[11px] text-gray-400 font-medium">{desc}</p>}
       </div>
     </motion.div>
   </Link>
@@ -126,21 +128,27 @@ const NavDropdown = ({
     >
       <Link
         href={href}
-        className={`flex items-center gap-1 text-[14px] font-black uppercase tracking-wide transition-colors ${
-          isActive ? "text-brand-gold" : "text-white/90 hover:text-brand-gold"
+        className={`group relative px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[14px] font-black uppercase tracking-wider transition-all duration-200 ${
+          isActive
+            ? "text-brand-gold bg-brand-gold/10"
+            : "text-white/85 hover:text-brand-gold hover:bg-white/5"
         }`}
       >
-        {label}
-        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+        <span>{label}</span>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-white/60 group-hover:text-brand-gold transition-colors"
+        >
+          <ChevronDown className="w-3.5 h-3.5" />
         </motion.div>
       </Link>
 
-      {/* Active underline */}
+      {/* Active / Hover Glow Underline */}
       {isActive && (
         <motion.div
           layoutId="nav-indicator"
-          className="absolute bottom-3 left-0 right-0 h-0.5 rounded-full"
+          className="absolute bottom-2 left-3 right-3 h-0.5 rounded-full shadow-[0_0_8px_#FFCC00]"
           style={{ background: "linear-gradient(90deg, #FF4500, #FFCC00)" }}
         />
       )}
@@ -148,22 +156,21 @@ const NavDropdown = ({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 450, damping: 28 }}
             className="absolute top-full left-0 pt-2 z-50"
           >
             <div
-              className="rounded-2xl border border-white/8 shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden min-w-[220px]"
+              className="rounded-2xl border border-brand-gold/20 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden min-w-[240px] backdrop-blur-2xl"
               style={{
                 background:
-                  "linear-gradient(145deg, rgba(10,42,92,0.98) 0%, rgba(4,30,66,0.99) 100%)",
-                backdropFilter: "blur(20px)",
+                  "linear-gradient(155deg, rgba(10,42,92,0.98) 0%, rgba(4,30,66,0.99) 100%)",
               }}
             >
-              <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, #FF4500, #FFCC00, #FF4500)" }} />
-              <div className="p-2">{children}</div>
+              <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, #FF4500, #FFCC00, #00BFFF)" }} />
+              <div className="p-2 space-y-0.5">{children}</div>
             </div>
           </motion.div>
         )}
@@ -177,8 +184,10 @@ const NavLink = ({ href, label, isActive }: { href: string; label: string; isAct
   <div className="relative py-5">
     <Link
       href={href}
-      className={`text-[14px] font-black uppercase tracking-wide transition-colors ${
-        isActive ? "text-brand-gold" : "text-white/90 hover:text-brand-gold"
+      className={`group px-3 py-1.5 rounded-lg text-[14px] font-black uppercase tracking-wider transition-all duration-200 flex items-center ${
+        isActive
+          ? "text-brand-gold bg-brand-gold/10"
+          : "text-white/85 hover:text-brand-gold hover:bg-white/5"
       }`}
     >
       {label}
@@ -186,7 +195,7 @@ const NavLink = ({ href, label, isActive }: { href: string; label: string; isAct
     {isActive && (
       <motion.div
         layoutId="nav-indicator"
-        className="absolute bottom-3 left-0 right-0 h-0.5 rounded-full"
+        className="absolute bottom-2 left-3 right-3 h-0.5 rounded-full shadow-[0_0_8px_#FFCC00]"
         style={{ background: "linear-gradient(90deg, #FF4500, #FFCC00)" }}
       />
     )}
@@ -255,25 +264,25 @@ export const Header = () => {
             <NavLink href="/daily" label={t("daily")} isActive={isActive("/daily")} />
 
             <NavDropdown label={t("duel")} href="/duel" isActive={isActive("/duel")}>
-              <MegaItem href="/duel" icon={Swords} label="Trouver un Adversaire" desc="Matchmaking intelligent" color="text-brand-orange" />
-              <MegaItem href="/duel" icon={Star} label="Créer une Table" desc="Paramètres personnalisés" color="text-brand-gold" />
-              <MegaItem href="/leaderboard" icon={Trophy} label="Classement Duel" desc="Top joueurs mondiaux" color="text-brand-cyan" />
+              <MegaItem href="/duel" icon={Swords} label={t("findOpponent")} desc={t("findOpponentDesc")} color="text-brand-orange" />
+              <MegaItem href="/duel" icon={Star} label={t("createTable")} desc={t("createTableDesc")} color="text-brand-gold" />
+              <MegaItem href="/leaderboard" icon={Trophy} label={t("duelRanking")} desc={t("duelRankingDesc")} color="text-brand-cyan" />
             </NavDropdown>
 
             <NavLink href="/leaderboard" label={t("leaderboard")} isActive={isActive("/leaderboard")} />
 
             <NavDropdown label={t("learn")} href="/learn" isActive={isActive("/learn")}>
-              <MegaItem href="/learn" icon={BookOpen} label={t("academy")} desc="Toutes les stratégies" color="text-brand-gold" />
-              <MegaItem href="/learn/beginner" icon={Zap} label={t("beginner")} desc="Débutants bienvenus" color="text-green-400" />
-              <MegaItem href="/learn/intermediate" icon={Zap} label={t("intermediate")} desc="Progressez rapidement" color="text-yellow-400" />
-              <MegaItem href="/learn/advanced" icon={Zap} label={t("advanced")} desc="Techniques d'experts" color="text-brand-orange" />
+              <MegaItem href="/learn" icon={BookOpen} label={t("academy")} desc={t("allStrategies")} color="text-brand-gold" />
+              <MegaItem href="/learn/beginner" icon={Zap} label={t("beginner")} desc={t("beginnerDesc")} color="text-green-400" />
+              <MegaItem href="/learn/intermediate" icon={Zap} label={t("intermediate")} desc={t("intermediateDesc")} color="text-yellow-400" />
+              <MegaItem href="/learn/advanced" icon={Zap} label={t("advanced")} desc={t("advancedDesc")} color="text-brand-orange" />
               <div className="h-px bg-white/8 my-1 mx-2" />
               <MegaItem href="/faq" icon={HelpCircle} label={t("faq")} color="text-gray-400" />
             </NavDropdown>
 
             <NavDropdown label={t("community")} href="/forum" isActive={isActive("/forum") || isActive("/friends")}>
-              <MegaItem href="/forum" icon={MessageSquare} label={t("forum")} desc="Discussions & stratégies" color="text-purple-400" />
-              <MegaItem href="/friends" icon={UsersIcon} label={t("friends")} desc="Vos amis en ligne" color="text-blue-400" />
+              <MegaItem href="/forum" icon={MessageSquare} label={t("forum")} desc={t("forumDesc")} color="text-purple-400" />
+              <MegaItem href="/friends" icon={UsersIcon} label={t("friends")} desc={t("friendsDesc")} color="text-blue-400" />
               <MegaItem href="/messages" icon={Bell} label={t("messages")} color="text-gray-400" />
             </NavDropdown>
           </nav>
@@ -291,7 +300,7 @@ export const Header = () => {
                   style={{ background: "linear-gradient(135deg, #00BFFF 0%, #33CCFF 100%)" }}
                 >
                   <span className="relative z-10 flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4" /> Tchat
+                    <MessageSquare className="w-4 h-4" /> {t("liveChat")}
                   </span>
                   {/* Shimmer sweep */}
                   <motion.div
@@ -309,7 +318,7 @@ export const Header = () => {
                   className="relative overflow-hidden px-5 py-2 rounded-full font-black text-[13px] uppercase tracking-wider text-white shadow-[0_4px_15px_rgba(255,69,0,0.4)]"
                   style={{ background: "linear-gradient(135deg, #FF4500 0%, #FF6B33 100%)" }}
                 >
-                  <span className="relative z-10">⚡ Jouer</span>
+                  <span className="relative z-10">⚡ {t("play")}</span>
                   {/* Shimmer sweep */}
                   <motion.div
                     animate={{ x: ["-100%", "200%"] }}
@@ -350,13 +359,13 @@ export const Header = () => {
                   style={{ background: "linear-gradient(145deg, #0A2A5C, #041E42)" }}
                 >
                   <div className="px-4 py-3 border-b border-white/8 flex justify-between items-center">
-                    <span className="font-black text-sm">Notifications</span>
-                    <span className="bg-brand-orange text-[10px] px-2 py-0.5 rounded-full font-bold">2 NEW</span>
+                    <span className="font-black text-sm">{t("notifications")}</span>
+                    <span className="bg-brand-orange text-[10px] px-2 py-0.5 rounded-full font-bold">2 {t("newBadge")}</span>
                   </div>
                   <div className="divide-y divide-white/5">
                     {[
-                      { avatar: "E", color: "bg-pink-500", name: "Elena99", text: "vous défie en Duel!", time: "2 min" },
-                      { avatar: "🏆", color: "bg-brand-gold", name: null, text: "Vous avez atteint la Ligue Or!", time: "1h" },
+                      { avatar: "E", color: "bg-pink-500", name: "Elena99", text: t("notifChallenge"), time: "2 min" },
+                      { avatar: "🏆", color: "bg-brand-gold", name: null, text: t("notifLeague"), time: "1h" },
                     ].map((n, i) => (
                       <motion.div
                         key={i}
@@ -377,7 +386,7 @@ export const Header = () => {
                     ))}
                   </div>
                   <div className="p-2 text-center text-xs text-gray-500 hover:text-white cursor-pointer transition-colors">
-                    Voir tout →
+                    {t("seeAll")} →
                   </div>
                 </motion.div>
               )}
@@ -404,15 +413,15 @@ export const Header = () => {
                   <div className="p-3 border-b border-white/8 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange font-black">G</div>
                     <div>
-                      <p className="font-bold text-sm">Invité</p>
-                      <Link href="/auth" className="text-[11px] text-brand-gold hover:underline">Se connecter →</Link>
+                      <p className="font-bold text-sm">{t("guest")}</p>
+                      <Link href="/auth" className="text-[11px] text-brand-gold hover:underline">{t("signInCta")} →</Link>
                     </div>
                   </div>
                   <div className="py-2">
                     {[
                       { href: "/profile", label: t("profile"), icon: User },
-                      { href: "/profile?tab=stats", label: "Statistiques", icon: Trophy },
-                      { href: "/profile?tab=achievements", label: "Succès", icon: Star },
+                      { href: "/profile?tab=stats", label: t("stats"), icon: Trophy },
+                      { href: "/profile?tab=achievements", label: t("achievements"), icon: Star },
                       { href: "/settings", label: t("settings"), icon: SettingsIcon },
                     ].map((item) => (
                       <Link key={item.href} href={item.href}>
@@ -467,7 +476,7 @@ export const Header = () => {
                 <div className="flex justify-between items-center p-5 border-b border-white/8">
                   <div className="flex items-center gap-2.5">
                     <SudokuLogoIcon />
-                    <span className="font-black text-lg uppercase tracking-widest text-white">Menu</span>
+                    <span className="font-black text-lg uppercase tracking-widest text-white">{t("menu")}</span>
                   </div>
                   <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowMobileMenu(false)} className="p-2 bg-white/5 rounded-full text-gray-400">
                     <X className="w-5 h-5" />
@@ -478,9 +487,9 @@ export const Header = () => {
                 <div className="mx-4 my-4 p-4 rounded-2xl flex items-center gap-3" style={{ background: "linear-gradient(135deg, rgba(255,69,0,0.15), rgba(255,204,0,0.05))", border: "1px solid rgba(255,69,0,0.2)" }}>
                   <div className="w-12 h-12 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange text-xl font-black">G</div>
                   <div>
-                    <p className="font-black text-white">Invité</p>
+                    <p className="font-black text-white">{t("guest")}</p>
                     <Link href="/auth" onClick={() => setShowMobileMenu(false)}>
-                      <span className="text-xs text-brand-gold font-bold">Se connecter / S'inscrire →</span>
+                      <span className="text-xs text-brand-gold font-bold">{t("signInOrRegister")} →</span>
                     </Link>
                   </div>
                 </div>
@@ -489,9 +498,9 @@ export const Header = () => {
                 <div className="flex-1 overflow-y-auto py-2 px-4">
                   {[
                     {
-                      label: "Jouer",
+                      label: t("play"),
                       items: [
-                        { href: "/", icon: Home, label: "Accueil" },
+                        { href: "/", icon: Home, label: t("home") },
                         { href: "/play", icon: Play, label: t("play") },
                         { href: "/daily", icon: Calendar, label: t("daily") },
                         { href: "/duel", icon: Swords, label: t("duel") },
@@ -499,7 +508,7 @@ export const Header = () => {
                       ],
                     },
                     {
-                      label: "Apprendre",
+                      label: t("learn"),
                       items: [
                         { href: "/learn", icon: BookOpen, label: t("academy") },
                         { href: "/faq", icon: HelpCircle, label: t("faq") },
@@ -507,7 +516,7 @@ export const Header = () => {
                       ],
                     },
                     {
-                      label: "Communauté",
+                      label: t("community"),
                       items: [
                         { href: "/forum", icon: MessageSquare, label: t("forum") },
                         { href: "/questions", icon: HelpCircle, label: "Q&A" },
@@ -516,7 +525,7 @@ export const Header = () => {
                       ],
                     },
                     {
-                      label: "Compte",
+                      label: t("account"),
                       items: [
                         { href: "/profile", icon: User, label: t("profile") },
                         { href: "/settings", icon: SettingsIcon, label: t("settings") },
@@ -551,7 +560,7 @@ export const Header = () => {
 
                 {/* Language footer */}
                 <div className="p-4 border-t border-white/8 bg-black/20">
-                  <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-3">Langue</p>
+                  <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-3">{t("language")}</p>
                   <LanguageSwitcher />
                 </div>
               </motion.div>
