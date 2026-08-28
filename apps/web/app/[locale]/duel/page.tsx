@@ -7,7 +7,7 @@ import {
   ChevronRight, Sparkles,
 } from "lucide-react";
 import { io, Socket } from "socket.io-client";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 

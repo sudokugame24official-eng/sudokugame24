@@ -54,7 +54,7 @@ export default function DailyPage() {
             <Calendar className="w-4 h-4" /> {t("dailyChallenge")}
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-4 leading-none break-words">
-            {t("h1Today")} <span className="text-brand-gold">{t("h1Global")}</span> {t("h1Puzzle")}
+            {t("h1")}
           </h1>
           <p className="text-gray-300 text-lg mb-4">{todayDate}</p>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">

@@ -509,15 +509,14 @@ export const ChatPanel = () => {
               <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
                 <Lock className="w-12 h-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-bold mb-2">
-                  Connectez-vous pour parler
+                  {t("loginPromptTitle")}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Vous devez avoir un compte pour envoyer des messages privés ou
-                  bloquer des utilisateurs.
+                  {t("loginPromptDesc")}
                 </p>
                 <Link href="/auth" onClick={() => setIsOpen(false)}>
                   <button className="px-6 py-2 bg-primary text-primary-foreground rounded-full font-bold shadow-lg">
-                    Se connecter
+                    {t("loginButton")}
                   </button>
                 </Link>
               </div>
@@ -534,7 +533,7 @@ export const ChatPanel = () => {
                         : "text-muted-foreground",
                     )}
                   >
-                    <Users className="w-4 h-4" /> Actifs
+                    <Users className="w-4 h-4" /> {t("activeTab")}
                     {activeTab === "conversations" && (
                       <motion.div
                         layoutId="mobiletab"
@@ -551,7 +550,7 @@ export const ChatPanel = () => {
                         : "text-muted-foreground",
                     )}
                   >
-                    <MessageCircle className="w-4 h-4" /> Chat
+                    <MessageCircle className="w-4 h-4" /> {t("chatTab")}
                     {activeTab === "chat" && (
                       <motion.div
                         layoutId="mobiletab"

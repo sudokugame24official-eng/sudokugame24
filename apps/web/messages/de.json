@@ -951,7 +951,12 @@
     "networkError": "Netzwerkfehler",
     "confirmBlock": "Möchten Sie {name} wirklich blockieren/entsperren?",
     "blockedToast": "Benutzer blockiert.",
-    "unblockedToast": "Benutzer entsperrt."
+    "unblockedToast": "Benutzer entsperrt.",
+    "loginPromptTitle": "Anmelden zum Chatten",
+    "loginPromptDesc": "Du benötigst ein Konto, um Nachrichten zu senden. Gäste können Informationsinhalte einsehen.",
+    "loginButton": "Anmelden",
+    "activeTab": "Aktiv",
+    "chatTab": "Chat"
   },
   "friends": {
     "title": "Freunde & Rivalen",

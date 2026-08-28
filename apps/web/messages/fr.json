@@ -947,11 +947,16 @@
     "searchPlaceholder": "Rechercher une conversation...",
     "noConversations": "Aucune conversation trouvée.",
     "selectToChat": "Sélectionnez une conversation pour commencer à discuter.",
-    "writeMessage": "Écrire un message...",
+    "writeMessage": "Écrivez un message...",
     "networkError": "Erreur réseau",
-    "confirmBlock": "Êtes-vous sûr de vouloir bloquer/débloquer {name} ?",
+    "confirmBlock": "Êtes-vous sûr de vouloir bloquer/débloquer {name} ?",
     "blockedToast": "Utilisateur bloqué.",
-    "unblockedToast": "Utilisateur débloqué."
+    "unblockedToast": "Utilisateur débloqué.",
+    "loginPromptTitle": "Connectez-vous pour parler",
+    "loginPromptDesc": "Vous devez avoir un compte pour envoyer des messages ou bloquer des utilisateurs. Les invités peuvent consulter le contenu informatif.",
+    "loginButton": "Se connecter",
+    "activeTab": "Actifs",
+    "chatTab": "Chat"
   },
   "friends": {
     "title": "Liste d'Amis & Rivalités",

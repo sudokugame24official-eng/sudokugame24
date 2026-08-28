@@ -951,7 +951,12 @@
     "networkError": "Network error",
     "confirmBlock": "Are you sure you want to block/unblock {name}?",
     "blockedToast": "User blocked.",
-    "unblockedToast": "User unblocked."
+    "unblockedToast": "User unblocked.",
+    "loginPromptTitle": "Log in to chat",
+    "loginPromptDesc": "You need an account to send messages or block users. Guests can view informational content.",
+    "loginButton": "Log In",
+    "activeTab": "Active",
+    "chatTab": "Chat"
   },
   "friends": {
     "title": "Friends & Rivalries",

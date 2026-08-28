@@ -1,7 +1,8 @@
 "use client";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { io, Socket } from "socket.io-client";
 import { WS_URL } from "@/lib/api";
 import { motion } from "framer-motion";
