@@ -1,5 +1,5 @@
 import React from "react";
-import { getLevelTier } from "@repo/database";
+import { getLevelTier } from "@/lib/level-config";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "./UserAvatar";
 
