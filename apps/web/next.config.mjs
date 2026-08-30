@@ -6,8 +6,9 @@ const withNextIntl = createNextIntlPlugin(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: false,
-  transpilePackages: ['@repo/database', '@repo/sudoku-engine'],
+  transpilePackages: ['@repo/sudoku-engine', '@repo/ui'],
   async headers() {
     return [
       {
