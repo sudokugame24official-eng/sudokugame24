@@ -7,7 +7,7 @@
     "generate": "prisma generate",
     "db:push": "node ../../scripts/prisma-guard.js push && prisma db push",
     "db:migrate:deploy": "prisma migrate deploy",
-    "build": "tsc"
+    "build": "prisma generate && tsc"
   },
   "prisma": {
     "seed": "ts-node prisma/seed-content.ts"
