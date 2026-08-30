@@ -26,7 +26,6 @@ RUN npm install
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 WORKDIR /app
-RUN npx prisma generate --schema=/app/packages/database/prisma/schema.prisma
 RUN npx turbo run build --filter=web...
 
 FROM base AS runner
