@@ -9,6 +9,7 @@ import {
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
+import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
 
 type BotDifficulty = "EASY" | "MEDIUM" | "HARD";
@@ -300,6 +301,7 @@ function PlayBotModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DuelLobbyPage() {
   const t = useTranslations("duel");
+  const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [lobbyState, setLobbyState] = useState<{
     waitingPlayers: any[];
@@ -399,9 +401,11 @@ export default function DuelLobbyPage() {
 
   const handleJoinTable = (targetUserId: string) => {
     if (socket) {
+      const activeUserId = user?.id || currentUser.id;
+      const activeUsername = user?.profile?.username || currentUser.username;
       socket.emit("join_table", {
-        userId: currentUser.id,
-        username: currentUser.username,
+        userId: activeUserId,
+        username: activeUsername,
         targetUserId,
       });
     }

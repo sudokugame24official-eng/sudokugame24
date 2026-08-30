@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Param, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Param,
+  UseGuards,
+  Request,
+  BadRequestException,
+} from '@nestjs/common';
 import { LeaderboardService } from './leaderboard.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -29,10 +37,15 @@ export class LeaderboardController {
     @Query('limit') limit = '50',
   ) {
     if (!PERIODS.includes(period as any)) {
-      throw new BadRequestException('Période invalide (daily|weekly|monthly|yearly).');
+      throw new BadRequestException(
+        'Période invalide (daily|weekly|monthly|yearly).',
+      );
     }
     const safeLimit = Math.min(parseInt(limit, 10) || 50, 100);
-    return this.leaderboardService.getPeriodLeaderboard(period as any, safeLimit);
+    return this.leaderboardService.getPeriodLeaderboard(
+      period as any,
+      safeLimit,
+    );
   }
 
   /** P1-Q: the caller's own rank + percentile. */

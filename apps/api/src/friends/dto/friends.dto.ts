@@ -1,4 +1,11 @@
-import { IsString, IsUUID, MinLength, MaxLength, Matches, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsUUID,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsBoolean,
+} from 'class-validator';
 
 export class SendFriendRequestDto {
   @IsString()

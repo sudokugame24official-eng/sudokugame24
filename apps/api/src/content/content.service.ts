@@ -145,9 +145,17 @@ export class ContentService {
     const article = await prisma.contentArticle.findUnique({ where: { id } });
     if (!article) throw new NotFoundException('Article not found');
 
-    const { id: _id, createdAt: _c, updatedAt: _u, publishedAt: _p, ...rest } = article;
+    const {
+      id: _id,
+      createdAt: _c,
+      updatedAt: _u,
+      publishedAt: _p,
+      ...rest
+    } = article;
     let slug = `${article.slug}-copy`;
-    const existing = await prisma.contentArticle.findUnique({ where: { slug } });
+    const existing = await prisma.contentArticle.findUnique({
+      where: { slug },
+    });
     if (existing) slug = `${slug}-${Date.now()}`;
 
     return prisma.contentArticle.create({
@@ -198,8 +206,15 @@ export class ContentService {
     return prisma.contentArticle.findMany({
       orderBy: { updatedAt: 'desc' },
       select: {
-        id: true, slug: true, title: true, status: true, type: true,
-        locale: true, updatedAt: true, publishedAt: true, scheduledAt: true,
+        id: true,
+        slug: true,
+        title: true,
+        status: true,
+        type: true,
+        locale: true,
+        updatedAt: true,
+        publishedAt: true,
+        scheduledAt: true,
       },
     });
   }

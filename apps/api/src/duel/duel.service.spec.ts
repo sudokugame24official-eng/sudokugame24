@@ -3,7 +3,7 @@ import { DuelService } from './duel.service';
 import { RedisService } from '../redis/redis.service';
 import { ProgressionService } from '../progression/progression.service';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const RedisMock = require('ioredis-mock');
 
 jest.mock('@repo/database', () => ({
@@ -98,7 +98,10 @@ describe('DuelService.atomicHandleMove — P0-E concurrency regression', () => {
   it('applies exactly ONE move when both players hit the SAME cell concurrently', async () => {
     await redis.set(key, JSON.stringify(makeDuel()), 'EX', 3600);
 
-    const results = await Promise.all([move('p1', 0, 0, 1), move('p2', 0, 0, 1)]);
+    const results = await Promise.all([
+      move('p1', 0, 0, 1),
+      move('p2', 0, 0, 1),
+    ]);
 
     const state = await loadState();
     // The cell is owned by exactly one player and scores sum to 1
@@ -120,7 +123,8 @@ describe('DuelService.atomicHandleMove — P0-E concurrency regression', () => {
     const state = await loadState();
     const applied = results.filter((r: any) => r.success).length;
     let filled = 0;
-    for (let c = 0; c < 10 && c < 9; c++) if (state.currentBoard[0][c] === 1) filled++;
+    for (let c = 0; c < 10 && c < 9; c++)
+      if (state.currentBoard[0][c] === 1) filled++;
 
     expect(filled).toBe(9); // 9 columns max
     expect(applied).toBe(9);

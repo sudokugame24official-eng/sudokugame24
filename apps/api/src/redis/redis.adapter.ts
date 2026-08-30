@@ -7,10 +7,13 @@ export class RedisIoAdapter extends IoAdapter {
 
   async connectToRedis(): Promise<void> {
     if (!process.env.REDIS_URL) {
-      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+      if (
+        process.env.NODE_ENV === 'production' ||
+        process.env.NODE_ENV === 'staging'
+      ) {
         throw new Error(
           'REDIS_URL is required in production/staging: refusing to silently fall back to default adapter ' +
-          '(WebSocket broadcasts would not propagate across instances).',
+            '(WebSocket broadcasts would not propagate across instances).',
         );
       }
       return;
@@ -25,10 +28,10 @@ export class RedisIoAdapter extends IoAdapter {
   }
 
   createIOServer(port: number, options?: any): any {
-    const corsOrigin = process.env.FRONTEND_URL 
-      ? process.env.FRONTEND_URL.split(',') 
+    const corsOrigin = process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.split(',')
       : 'http://localhost:3000';
-      
+
     const server = super.createIOServer(port, {
       ...options,
       cors: {

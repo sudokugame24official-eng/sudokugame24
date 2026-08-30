@@ -10,17 +10,35 @@ import { PermissionGuard } from '../auth/guards/permission.guard';
 import { RequirePermission } from '../auth/guards/require-permission.decorator';
 
 const ALL_EVENTS = [
-  'page_view', 'registration', 'login', 'logout',
-  'game_start', 'game_complete', 'daily_start', 'daily_complete',
-  'duel_start', 'duel_complete', 'friend_request', 'friend_accept',
-  'friend_challenge', 'forum_post', 'forum_reply',
-  'question_ask', 'question_answer', 'chat_message',
-  'shop_view', 'purchase', 'ad_impression', 'ad_reward',
-  'achievement_unlock', 'search', 'share',
+  'page_view',
+  'registration',
+  'login',
+  'logout',
+  'game_start',
+  'game_complete',
+  'daily_start',
+  'daily_complete',
+  'duel_start',
+  'duel_complete',
+  'friend_request',
+  'friend_accept',
+  'friend_challenge',
+  'forum_post',
+  'forum_reply',
+  'question_ask',
+  'question_answer',
+  'chat_message',
+  'shop_view',
+  'purchase',
+  'ad_impression',
+  'ad_reward',
+  'achievement_unlock',
+  'search',
+  'share',
 ] as const;
 
 export class TrackDto {
-  @IsIn(ALL_EVENTS as unknown as string[])
+  @IsIn(ALL_EVENTS)
   name!: string;
 
   @IsOptional() @IsString() @MaxLength(64) sessionId?: string;
@@ -63,12 +81,13 @@ export class AnalyticsController {
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @RequirePermission('analytics.view')
   @Get('series')
-  async series(
-    @Query('metric') metric = 'dau',
-    @Query('days') days = '30',
-  ) {
+  async series(@Query('metric') metric = 'dau', @Query('days') days = '30') {
     const safeDays = Math.min(365, Math.max(7, parseInt(days, 10) || 30));
-    return { metric, days: safeDays, points: await this.analyticsService.getSeries(metric, safeDays) };
+    return {
+      metric,
+      days: safeDays,
+      points: await this.analyticsService.getSeries(metric, safeDays),
+    };
   }
 
   @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -76,7 +95,10 @@ export class AnalyticsController {
   @Get('totals')
   async totals(@Query('days') days = '30') {
     const safeDays = Math.min(365, Math.max(7, parseInt(days, 10) || 30));
-    return { days: safeDays, totals: await this.analyticsService.getTotals(safeDays) };
+    return {
+      days: safeDays,
+      totals: await this.analyticsService.getTotals(safeDays),
+    };
   }
 
   @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -98,13 +120,20 @@ export class AnalyticsController {
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
 
-    const [online, activeDuels, dbOk, pageViewsToday, registrationsToday] = await Promise.all([
-      redis.zcard('presence:online_zset').catch(() => null),
-      redis.scard('duel:active_ids').catch(() => null),
-      prisma.$queryRaw`SELECT 1 as ok`.then(() => true).catch(() => false),
-      prisma.analyticsEvent.count({ where: { name: 'page_view', createdAt: { gte: todayStart } } }).catch(() => null),
-      prisma.user.count({ where: { createdAt: { gte: todayStart } } }).catch(() => null),
-    ]);
+    const [online, activeDuels, dbOk, pageViewsToday, registrationsToday] =
+      await Promise.all([
+        redis.zcard('presence:online_zset').catch(() => null),
+        redis.scard('duel:active_ids').catch(() => null),
+        prisma.$queryRaw`SELECT 1 as ok`.then(() => true).catch(() => false),
+        prisma.analyticsEvent
+          .count({
+            where: { name: 'page_view', createdAt: { gte: todayStart } },
+          })
+          .catch(() => null),
+        prisma.user
+          .count({ where: { createdAt: { gte: todayStart } } })
+          .catch(() => null),
+      ]);
 
     let redisOk: boolean | null = null;
     try {

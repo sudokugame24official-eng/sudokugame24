@@ -14,7 +14,12 @@ export class ProgressionService {
   /**
    * Process progression after a solo game.
    */
-  async awardXP(userId: string, difficulty: Difficulty, timeSec: number, won: boolean): Promise<XpRewardResult> {
+  async awardXP(
+    userId: string,
+    difficulty: Difficulty,
+    timeSec: number,
+    won: boolean,
+  ): Promise<XpRewardResult> {
     const profile = await prisma.profile.findUnique({ where: { userId } });
     if (!profile) throw new Error('Profile not found');
 
@@ -33,17 +38,27 @@ export class ProgressionService {
 
     // Speed bonus
     let expectedTime = 0;
-    switch(difficulty) {
-      case Difficulty.EASY: expectedTime = 300; break;
-      case Difficulty.MEDIUM: expectedTime = 600; break;
-      case Difficulty.HARD: expectedTime = 1200; break;
-      case Difficulty.EXPERT: expectedTime = 2400; break;
-      case Difficulty.MASTER: expectedTime = 3600; break;
+    switch (difficulty) {
+      case Difficulty.EASY:
+        expectedTime = 300;
+        break;
+      case Difficulty.MEDIUM:
+        expectedTime = 600;
+        break;
+      case Difficulty.HARD:
+        expectedTime = 1200;
+        break;
+      case Difficulty.EXPERT:
+        expectedTime = 2400;
+        break;
+      case Difficulty.MASTER:
+        expectedTime = 3600;
+        break;
     }
-    
+
     if (timeSec < expectedTime && timeSec > 30) {
       // Up to 50% extra XP for speed
-      const speedFactor = 1 + (0.5 * (expectedTime - timeSec) / expectedTime);
+      const speedFactor = 1 + (0.5 * (expectedTime - timeSec)) / expectedTime;
       xpEarned = Math.floor(xpEarned * speedFactor);
     }
 
@@ -79,6 +94,8 @@ export class ProgressionService {
         currentStreak,
         longestStreak,
         lastPlayedDate: now,
+        gamesPlayed: { increment: 1 },
+        gamesWon: won ? { increment: 1 } : undefined,
       },
     });
 

@@ -47,7 +47,10 @@ export class KnowledgeController {
   @RequirePermission('cms.edit')
   @UseInterceptors(AuditLogInterceptor)
   @AuditAction('knowledge.update_technique')
-  async updateTechnique(@Param('id') id: string, @Body() data: UpdateTechniqueDto) {
+  async updateTechnique(
+    @Param('id') id: string,
+    @Body() data: UpdateTechniqueDto,
+  ) {
     return this.knowledgeService.updateTechnique(id, data as any);
   }
 

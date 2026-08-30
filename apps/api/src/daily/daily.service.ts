@@ -1,4 +1,11 @@
-import { Injectable, Logger, ForbiddenException, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ForbiddenException,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { prisma, Difficulty, CoinTransactionType } from '@repo/database';
 import { SudokuGenerator } from '@repo/sudoku-engine';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
@@ -36,7 +43,9 @@ export class DailyService {
 
   /** P1-O: owner-configurable daily challenge settings (SiteSettings-backed). */
   async getDailyConfig(): Promise<DailyConfig> {
-    const row = await prisma.siteSettings.findUnique({ where: { key: DAILY_CONFIG_KEY } });
+    const row = await prisma.siteSettings.findUnique({
+      where: { key: DAILY_CONFIG_KEY },
+    });
     if (!row) return { ...DEFAULT_DAILY_CONFIG };
     try {
       return { ...DEFAULT_DAILY_CONFIG, ...JSON.parse(String(row.value)) };
@@ -104,7 +113,9 @@ export class DailyService {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    const existing = await prisma.dailyChallenge.findUnique({ where: { date: today } });
+    const existing = await prisma.dailyChallenge.findUnique({
+      where: { date: today },
+    });
     if (existing) {
       throw new ForbiddenException(
         'Le défi du jour existe déjà (des joueurs ont peut-être participé).',
@@ -204,7 +215,9 @@ export class DailyService {
     if (!challenge) throw new NotFoundException('Challenge not found');
 
     if (challenge.date.getTime() !== today.getTime()) {
-      throw new BadRequestException('This challenge has expired or is not for today');
+      throw new BadRequestException(
+        'This challenge has expired or is not for today',
+      );
     }
 
     const entry = await prisma.dailyChallengeEntry.findUnique({
@@ -212,7 +225,9 @@ export class DailyService {
     });
 
     if (!entry || entry.completed) {
-      throw new ConflictException('Challenge already completed or invalid state for submission');
+      throw new ConflictException(
+        'Challenge already completed or invalid state for submission',
+      );
     }
 
     // Server-Authoritative Anti-Cheat: Calculate score here
@@ -253,7 +268,11 @@ export class DailyService {
     // If they took more than 5 minutes (300s), they might have cheated or left the app.
     // We record the real time. If it's too long, they naturally rank at the bottom of the leaderboard.
 
-    void trackEvent({ name: 'daily_complete', userId, metadata: { score: trueScore } });
+    void trackEvent({
+      name: 'daily_complete',
+      userId,
+      metadata: { score: trueScore },
+    });
     return prisma.dailyChallengeEntry.update({
       where: {
         challengeId_userId: {
@@ -271,7 +290,14 @@ export class DailyService {
 
   async getLeaderboard(challengeId: string) {
     return prisma.dailyChallengeEntry.findMany({
-      where: { challengeId, completed: true },
+      where: {
+        challengeId,
+        completed: true,
+        user: {
+          isBot: false,
+          isBanned: false,
+        },
+      },
       orderBy: [
         { score: 'desc' },
         { timeSec: 'asc' }, // Less time is better if score is tied

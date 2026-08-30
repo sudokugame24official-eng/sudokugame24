@@ -3,7 +3,7 @@ import { GameModesService } from './game-modes.service';
 jest.mock('@repo/database', () => ({
   prisma: { siteSettings: { findUnique: jest.fn(), upsert: jest.fn() } },
 }));
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const { prisma } = require('@repo/database');
 
 describe('P1-P: game modes control center', () => {
@@ -28,7 +28,10 @@ describe('P1-P: game modes control center', () => {
 
   it('PUBLIC view hides disabled modes entirely', async () => {
     (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue({
-      value: JSON.stringify({ DUEL: { enabled: false }, TOURNAMENT: { enabled: false } }),
+      value: JSON.stringify({
+        DUEL: { enabled: false },
+        TOURNAMENT: { enabled: false },
+      }),
     });
     const pub = await service.getPublicModes();
     expect(pub.DUEL).toBeUndefined();
@@ -39,27 +42,41 @@ describe('P1-P: game modes control center', () => {
   it('update merges with stored defaults and persists the FULL map', async () => {
     (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const all = await service.updateMode('DUEL', { minLevel: 10, maxWager: 1000 });
+    const all = await service.updateMode('DUEL', {
+      minLevel: 10,
+      maxWager: 1000,
+    });
 
-    expect(all.DUEL).toMatchObject({ enabled: true, minLevel: 10, maxWager: 1000 });
+    expect(all.DUEL).toMatchObject({
+      enabled: true,
+      minLevel: 10,
+      maxWager: 1000,
+    });
     expect(all.CLASSIC.enabled).toBe(true); // untouched modes preserved
     const call = (prisma.siteSettings.upsert as jest.Mock).mock.calls[0][0];
     expect(JSON.parse(call.update.value).DUEL.minLevel).toBe(10);
   });
 
   it('unknown mode rejected', async () => {
-    await expect(service.updateMode('CASINO', { enabled: true })).rejects.toThrow('inconnu');
+    await expect(
+      service.updateMode('CASINO', { enabled: true }),
+    ).rejects.toThrow('inconnu');
   });
 
   it('invalid values clamped (minLevel >= 1, wager >= 0)', async () => {
     (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue(null);
-    const all = await service.updateMode('DUEL', { minLevel: -5, maxWager: -50 } as any);
+    const all = await service.updateMode('DUEL', {
+      minLevel: -5,
+      maxWager: -50,
+    });
     expect(all.DUEL.minLevel).toBe(1);
     expect(all.DUEL.maxWager).toBe(0);
   });
 
   it('corrupt stored JSON falls back to safe defaults', async () => {
-    (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue({ value: 'xx{' });
+    (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue({
+      value: 'xx{',
+    });
     const all = await service.getAllModes();
     expect(all.CLASSIC.enabled).toBe(true);
   });

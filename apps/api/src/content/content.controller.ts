@@ -18,10 +18,23 @@ import {
   ContentCreateArticleDto,
   ContentUpdateArticleDto,
 } from './dto/article.dto';
-import { IsIn, IsOptional, IsDateString, IsString, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsOptional,
+  IsDateString,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class SetStatusDto {
-  @IsIn(['DRAFT', 'IN_REVIEW', 'SCHEDULED', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'])
+  @IsIn([
+    'DRAFT',
+    'IN_REVIEW',
+    'SCHEDULED',
+    'PUBLISHED',
+    'UNPUBLISHED',
+    'ARCHIVED',
+  ])
   status!: string;
 
   @IsOptional()

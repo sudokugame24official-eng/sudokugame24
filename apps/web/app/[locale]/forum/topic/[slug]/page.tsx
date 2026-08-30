@@ -60,7 +60,8 @@ export default async function ForumTopicPage({
   const topic = await fetchTopic(slug);
   if (!topic) notFound();
 
-  const t = (en: string, fr: string) => (locale === "fr" ? fr : en);
+  const t = (en: string, fr: string, de?: string) =>
+    locale === "fr" ? fr : locale === "de" ? de || en : en;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
   const canonical = `${siteUrl}/${locale}/forum/topic/${topic.slug}`;
 
@@ -90,6 +91,8 @@ export default async function ForumTopicPage({
     ],
   };
 
+  const totalComments = topic._count?.comments ?? topic.comments.length;
+
   return (
     <div className="min-h-screen bg-[#020F24] text-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -108,17 +111,17 @@ export default async function ForumTopicPage({
 
         <article>
           <div className="flex flex-wrap items-center gap-2 text-xs mb-3">
-            {topic.isPinned && <span className="flex items-center gap-1 bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded font-bold"><Pin className="w-3 h-3" />{t("Pinned", "Épinglé")}</span>}
-            {topic.isClosed && <span className="bg-orange-500/20 text-orange-400 px-2 py-1 rounded font-bold">{t("Closed", "Fermé")}</span>}
-            {topic.isLocked && <span className="flex items-center gap-1 bg-red-500/20 text-red-400 px-2 py-1 rounded font-bold"><Lock className="w-3 h-3" />{t("Locked", "Verrouillé")}</span>}
+            {topic.isPinned && <span className="flex items-center gap-1 bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded font-bold"><Pin className="w-3 h-3" />{t("Pinned", "Épinglé", "Angeheftet")}</span>}
+            {topic.isClosed && <span className="bg-orange-500/20 text-orange-400 px-2 py-1 rounded font-bold">{t("Closed", "Fermé", "Geschlossen")}</span>}
+            {topic.isLocked && <span className="flex items-center gap-1 bg-red-500/20 text-red-400 px-2 py-1 rounded font-bold"><Lock className="w-3 h-3" />{t("Locked", "Verrouillé", "Gesperrt")}</span>}
           </div>
 
           <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4">{topic.title}</h1>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-            <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{topic.views} {t("views", "vues")}</span>
-            <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{topic._count?.comments ?? topic.comments.length} {t("replies", "réponses")}</span>
-            <span>{t("by", "par")} <strong className="text-white/80">{topic.author?.profile?.username || t("Member", "Membre")}</strong></span>
+            <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{topic.views} {t("views", "vues", "Aufrufe")}</span>
+            <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{totalComments} {t("replies", "réponses", "Antworten")}</span>
+            <span>{t("by", "par", "von")} <strong className="text-white/80">{topic.author?.profile?.username || t("Member", "Membre", "Mitglied")}</strong></span>
             <time dateTime={topic.createdAt}>{new Date(topic.createdAt).toLocaleDateString(locale)}</time>
           </div>
 
@@ -128,20 +131,20 @@ export default async function ForumTopicPage({
 
           <section>
             <h2 className="text-2xl font-black mb-6">
-              {t(`${topic._count?.comments ?? topic.comments.length} replies`, `${topic._count?.comments ?? topic.comments.length} réponses`)}
+              {totalComments} {t("replies", "réponses", "Antworten")}
             </h2>
             <div className="space-y-3">
               {topic.comments.map((c) => (
                 <div key={c.id} className="bg-card/30 border border-white/10 rounded-xl p-4">
                   <p className="whitespace-pre-wrap text-white/85 text-sm">{c.content}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    — <strong>{c.author?.profile?.username || t("Member", "Membre")}</strong>,{" "}
+                    — <strong>{c.author?.profile?.username || t("Member", "Membre", "Mitglied")}</strong>,{" "}
                     <time dateTime={c.createdAt}>{new Date(c.createdAt).toLocaleDateString(locale)}</time>
                   </p>
                 </div>
               ))}
               {topic.comments.length === 0 && (
-                <p className="text-muted-foreground text-sm">{t("No replies yet.", "Pas encore de réponse.")}</p>
+                <p className="text-muted-foreground text-sm">{t("No replies yet.", "Pas encore de réponse.", "Noch keine Antworten.")}</p>
               )}
             </div>
           </section>
@@ -149,7 +152,7 @@ export default async function ForumTopicPage({
 
         {/* Semantic graph: contextual links (techniques mentioned → Academy, game modes → their pages) */}
         <aside className="mt-12 bg-card/30 border border-white/10 rounded-2xl p-6 text-sm">
-          <h2 className="font-black mb-3">{t("Explore", "Explorer")}</h2>
+          <h2 className="font-black mb-3">{t("Explore", "Explorer", "Erkunden")}</h2>
           {(() => {
             // P1-U: links derived from what THIS topic actually mentions
             const ctx = extractContextualLinks(
@@ -167,10 +170,10 @@ export default async function ForumTopicPage({
             ) : null;
           })()}
           <div className="flex flex-wrap gap-3">
-            <Link href={`/${locale}/learn`} className="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20">{t("Sudoku Academy", "Académie Sudoku")}</Link>
+            <Link href={`/${locale}/learn`} className="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20">{t("Sudoku Academy", "Académie Sudoku", "Sudoku-Akademie")}</Link>
             <Link href={`/${locale}/questions`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">Q&A</Link>
-            <Link href={`/${locale}/play`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">{t("Play free", "Jouer")}</Link>
-            <Link href={`/${locale}/daily`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">{t("Daily challenge", "Défi du jour")}</Link>
+            <Link href={`/${locale}/play`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">{t("Play free", "Jouer", "Spielen")}</Link>
+            <Link href={`/${locale}/daily`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">{t("Daily challenge", "Défi du jour", "Tägliche Herausforderung")}</Link>
             <Link href={`/${locale}/duel`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">Duel</Link>
           </div>
         </aside>

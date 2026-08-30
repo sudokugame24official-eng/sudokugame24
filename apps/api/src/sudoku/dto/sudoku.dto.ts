@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsInt,
-  Min,
-  Max,
-  IsDefined,
-} from 'class-validator';
+import { IsEnum, IsInt, Min, Max, IsDefined } from 'class-validator';
 import { IsValidSudokuBoard } from '../../common/dto/sudoku-board.validator';
 
 export enum DifficultyEnum {

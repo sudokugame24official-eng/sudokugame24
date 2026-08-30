@@ -9,8 +9,8 @@ import { Flame } from "lucide-react";
 interface SharedDuelBoardProps {
   board: number[][];
   ownersBoard: (string | null)[][];
-  player1: { id: string; username: string; score: number; level?: number };
-  player2: { id: string; username: string; score: number; level?: number };
+  player1: { id: string; username: string; score: number; level?: number; avatarUrl?: string | null };
+  player2: { id: string; username: string; score: number; level?: number; avatarUrl?: string | null };
   userId: string;
   onMove: (row: number, col: number, value: number) => void;
   combo: number;

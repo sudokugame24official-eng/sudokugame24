@@ -30,7 +30,11 @@ export class AuthService {
   }
 
   async login(user: any) {
-    void trackEvent({ name: 'login', userId: user?.id, metadata: { via: 'credentials' } });
+    void trackEvent({
+      name: 'login',
+      userId: user?.id,
+      metadata: { via: 'credentials' },
+    });
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),

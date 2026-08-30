@@ -1,9 +1,11 @@
 import React from "react";
 import { getLevelTier } from "@repo/database";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "./UserAvatar";
 
 interface PlayerIdentityProps {
   username: string;
+  avatarUrl?: string | null;
   level?: number;
   className?: string;
   iconOnly?: boolean;
@@ -12,6 +14,7 @@ interface PlayerIdentityProps {
 
 export const PlayerIdentity: React.FC<PlayerIdentityProps> = ({
   username,
+  avatarUrl,
   level = 1,
   className,
   iconOnly = false,
@@ -26,6 +29,13 @@ export const PlayerIdentity: React.FC<PlayerIdentityProps> = ({
     xl: "text-xl font-bold",
   };
 
+  const avatarSizes: Record<"sm" | "md" | "lg" | "xl", "xs" | "sm" | "md" | "lg"> = {
+    sm: "xs",
+    md: "sm",
+    lg: "md",
+    xl: "lg",
+  };
+
   const badgeSizeClasses = {
     sm: "text-[10px]",
     md: "text-xs",
@@ -36,11 +46,18 @@ export const PlayerIdentity: React.FC<PlayerIdentityProps> = ({
   const content = (
     <div
       className={cn(
-        "flex items-center gap-1.5 font-medium whitespace-nowrap",
+        "flex items-center gap-2 font-medium whitespace-nowrap",
         sizeClasses[size],
         className,
       )}
     >
+      {avatarUrl !== undefined && (
+        <UserAvatar
+          avatarUrl={avatarUrl}
+          username={username}
+          size={avatarSizes[size]}
+        />
+      )}
       <span
         className={cn(
           "select-none flex items-center justify-center font-black",

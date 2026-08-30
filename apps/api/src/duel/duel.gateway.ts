@@ -76,7 +76,8 @@ export class DuelGateway
 
   @SubscribeMessage('send_invite')
   async handleSendInvite(
-    @MessageBody() data: { targetUsername: string; difficulty: Difficulty; betAmount: number },
+    @MessageBody()
+    data: { targetUsername: string; difficulty: Difficulty; betAmount: number },
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data?.user?.id;
@@ -85,7 +86,14 @@ export class DuelGateway
     const profile = await prisma.profile.findUnique({ where: { userId } });
     if (!profile) return;
 
-    this.duelService.sendInvite(client, userId, profile.username, data.targetUsername, data.difficulty, data.betAmount);
+    this.duelService.sendInvite(
+      client,
+      userId,
+      profile.username,
+      data.targetUsername,
+      data.difficulty,
+      data.betAmount,
+    );
   }
 
   @SubscribeMessage('accept_invite')
@@ -95,11 +103,16 @@ export class DuelGateway
   ) {
     const userId = client.data?.user?.id;
     if (!userId) return;
-    
+
     const profile = await prisma.profile.findUnique({ where: { userId } });
     if (!profile) return;
-    
-    this.duelService.acceptInvite(client, userId, profile.username, data.inviteId);
+
+    this.duelService.acceptInvite(
+      client,
+      userId,
+      profile.username,
+      data.inviteId,
+    );
   }
 
   @SubscribeMessage('leave_queue')
@@ -134,7 +147,8 @@ export class DuelGateway
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data?.user?.id;
-    if (userId) this.duelService.acceptBot(userId, data?.botDifficulty ?? 'MEDIUM');
+    if (userId)
+      this.duelService.acceptBot(userId, data?.botDifficulty ?? 'MEDIUM');
   }
 
   @SubscribeMessage('play_vs_bot')

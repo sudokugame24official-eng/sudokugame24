@@ -45,9 +45,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(client: Socket) {
     const userId = client.data?.user?.id;
     if (userId) {
-      this.server
-        .to(`user_${userId}`)
-        .emit('user_offline', { userId }); // room-scoped, cluster-wide via adapter
+      this.server.to(`user_${userId}`).emit('user_offline', { userId }); // room-scoped, cluster-wide via adapter
     }
   }
 
@@ -77,7 +75,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       // Deliver to the recipient's personal room: works across instances.
-      this.server.to(`user_${data.receiverId}`).emit('receive_message', message);
+      this.server
+        .to(`user_${data.receiverId}`)
+        .emit('receive_message', message);
 
       // Confirm to the sender.
       client.emit('message_sent', message);
@@ -106,7 +106,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = client.data?.user;
     if (!user) return;
     try {
-      await this.chatService.markConversationRead(user.id, data.conversationWith);
+      await this.chatService.markConversationRead(
+        user.id,
+        data.conversationWith,
+      );
       this.server
         .to(`user_${data.conversationWith}`)
         .emit('messages_read', { byUserId: user.id });

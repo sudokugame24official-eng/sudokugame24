@@ -9,4 +9,3 @@ import { CoinLedgerModule } from '../coin-ledger/coin-ledger.module';
   providers: [AdminService],
 })
 export class AdminModule {}
-

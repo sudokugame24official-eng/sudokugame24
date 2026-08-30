@@ -38,7 +38,11 @@ export class FriendsController {
 
   @Post('respond')
   async respondToRequest(@Request() req, @Body() dto: RespondFriendRequestDto) {
-    return this.friendsService.respondToRequest(req.user.id, dto.friendId, dto.accept);
+    return this.friendsService.respondToRequest(
+      req.user.id,
+      dto.friendId,
+      dto.accept,
+    );
   }
 
   @Delete(':friendId')

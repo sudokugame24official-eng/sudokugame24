@@ -1,4 +1,13 @@
-import { IsString, IsOptional, MinLength, MaxLength, IsEnum, IsBoolean, IsArray, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  IsEnum,
+  IsBoolean,
+  IsArray,
+  IsIn,
+} from 'class-validator';
 
 export class ContentCreateArticleDto {
   @IsString()

@@ -153,7 +153,7 @@ const SEED_TOPICS_BY_LOCALE: Record<string, any[]> = {
 export default function ForumClient() {
   const params = useParams<{ locale: string }>();
   const currentLocale = params?.locale || "en";
-  const defaultTopics = SEED_TOPICS_BY_LOCALE[currentLocale] || SEED_TOPICS_BY_LOCALE.en;
+  const defaultTopics = SEED_TOPICS_BY_LOCALE[currentLocale] || SEED_TOPICS_BY_LOCALE["en"] || [];
   const [topics, setTopics] = useState<any[]>(defaultTopics);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();

@@ -14,6 +14,12 @@ export class LeaderboardService {
     this.logger.log('Starting Leaderboard rebuild synchronization...');
 
     const topProfiles = await prisma.profile.findMany({
+      where: {
+        user: {
+          isBot: false,
+          isBanned: false,
+        },
+      },
       orderBy: { rating: 'desc' },
       take: 10000,
       select: {
@@ -96,6 +102,12 @@ export class LeaderboardService {
 
     // Fallback: direct Postgres query
     const profiles = await prisma.profile.findMany({
+      where: {
+        user: {
+          isBot: false,
+          isBanned: false,
+        },
+      },
       orderBy: { rating: 'desc' },
       take: limit,
       skip: offset,
@@ -130,7 +142,10 @@ export class LeaderboardService {
    * Wins inside the time window, aggregated in SQL (groupBy), cached 60s in
    * Redis. Never loads raw matches into JS.
    */
-  async getPeriodLeaderboard(period: 'daily' | 'weekly' | 'monthly' | 'yearly', limit = 50) {
+  async getPeriodLeaderboard(
+    period: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    limit = 50,
+  ) {
     const capped = Math.min(100, Math.max(10, limit));
     const cacheKey = `leaderboard:period:${period}:${capped}`;
     const redis = this.redisService.getClient();
@@ -164,20 +179,40 @@ export class LeaderboardService {
     ]);
 
     const wins = new Map<string, number>();
-    for (const g of winGroups) if (g.winnerId) wins.set(g.winnerId, g._count.id);
+    for (const g of winGroups)
+      if (g.winnerId) wins.set(g.winnerId, g._count.id);
     const games = new Map<string, number>();
     for (const g of p1Groups) games.set(g.player1Id, g._count.id);
-    for (const g of p2Groups) if (g.player2Id) games.set(g.player2Id, (games.get(g.player2Id) ?? 0) + g._count.id);
+    for (const g of p2Groups)
+      if (g.player2Id)
+        games.set(g.player2Id, (games.get(g.player2Id) ?? 0) + g._count.id);
 
     const candidates = [...new Set([...wins.keys(), ...games.keys()])]
-      .map((userId) => ({ userId, wins: wins.get(userId) ?? 0, games: games.get(userId) ?? 0 }))
+      .map((userId) => ({
+        userId,
+        wins: wins.get(userId) ?? 0,
+        games: games.get(userId) ?? 0,
+      }))
       .sort((a, b) => b.wins - a.wins || b.games - a.games)
       .slice(0, capped);
 
     const profiles = candidates.length
       ? await prisma.profile.findMany({
-          where: { userId: { in: candidates.map((c) => c.userId) } },
-          select: { userId: true, username: true, avatarUrl: true, level: true, rating: true, currentStreak: true },
+          where: {
+            userId: { in: candidates.map((c) => c.userId) },
+            user: {
+              isBot: false,
+              isBanned: false,
+            },
+          },
+          select: {
+            userId: true,
+            username: true,
+            avatarUrl: true,
+            level: true,
+            rating: true,
+            currentStreak: true,
+          },
         })
       : [];
     const byUser = new Map(profiles.map((p) => [p.userId, p]));

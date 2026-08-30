@@ -43,6 +43,7 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('role') role?: string,
     @Query('banned') banned?: string,
+    @Query('isBot') isBot?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -50,6 +51,7 @@ export class AdminController {
       search,
       role,
       banned: banned === undefined ? undefined : banned === 'true',
+      isBot: isBot === undefined ? undefined : isBot === 'true',
       page: page ? parseInt(page, 10) : 1,
       pageSize: pageSize ? parseInt(pageSize, 10) : 20,
     });
@@ -225,12 +227,14 @@ export class AdminController {
   @Post('economy/grant')
   @RequirePermission('economy.adjust')
   @AuditAction('economy.grant_coins')
-  async grantCoins(
-    @Request() req: any,
-    @Body() body: GrantCoinsDto,
-  ) {
+  async grantCoins(@Request() req: any, @Body() body: GrantCoinsDto) {
     const adminId = req.user.id;
-    return this.adminService.grantCoins(adminId, body.userId, body.amount, body.reason);
+    return this.adminService.grantCoins(
+      adminId,
+      body.userId,
+      body.amount,
+      body.reason,
+    );
   }
 
   @Get('economy/reconciliation')
@@ -250,10 +254,35 @@ export class AdminController {
   @RequirePermission('ads.manage')
   @AuditAction('ads.update_slot')
   async updateAdSlot(
+    @Request() req: any,
     @Param('slotName') slotName: string,
     @Body() data: UpdateAdSlotDto,
   ) {
-    return this.adminService.updateAdSlot(slotName, data as any);
+    return this.adminService.updateAdSlot(slotName, data as any, req.user?.id);
+  }
+
+  @Post('ads/disable-all')
+  @RequirePermission('ads.manage')
+  @AuditAction('ads.disable_all')
+  async disableAllAds(@Request() req: any) {
+    return this.adminService.disableAllAds(req.user.id);
+  }
+
+  @Get('ads/audit-history')
+  @RequirePermission('ads.view')
+  async getAdAuditHistory(@Query('limit') limit?: string) {
+    const n = parseInt(limit || '50', 10);
+    return this.adminService.getAdAuditHistory(Number.isFinite(n) ? n : 50);
+  }
+
+  @Post('ads/rollback/:auditLogId')
+  @RequirePermission('ads.manage')
+  @AuditAction('ads.rollback')
+  async rollbackAdConfig(
+    @Request() req: any,
+    @Param('auditLogId') auditLogId: string,
+  ) {
+    return this.adminService.rollbackAdConfig(req.user.id, auditLogId);
   }
 
   // --- EMAIL TEMPLATES ---

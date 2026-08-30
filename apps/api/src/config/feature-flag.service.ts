@@ -5,14 +5,25 @@ import { Role } from '@prisma/client';
 @Injectable()
 export class FeatureFlagService {
   private readonly logger = new Logger(FeatureFlagService.name);
-  
+
   // Very basic in-memory cache for ultra-fast access
-  private cache: Map<string, { enabled: boolean; percentage: number | null; targetRoles: Role[]; updatedAt: number }> = new Map();
+  private cache: Map<
+    string,
+    {
+      enabled: boolean;
+      percentage: number | null;
+      targetRoles: Role[];
+      updatedAt: number;
+    }
+  > = new Map();
   private readonly CACHE_TTL_MS = 60000; // 1 minute cache
 
   constructor() {}
 
-  async isFeatureEnabled(key: string, user?: { id: string; role: Role }): Promise<boolean> {
+  async isFeatureEnabled(
+    key: string,
+    user?: { id: string; role: Role },
+  ): Promise<boolean> {
     const now = Date.now();
     let flag = this.cache.get(key);
 
@@ -42,7 +53,7 @@ export class FeatureFlagService {
     // Percentage rollout logic (stable deterministic hashing based on user ID or random)
     if (flag.percentage !== null && flag.percentage < 100) {
       if (!user) return Math.random() * 100 < flag.percentage;
-      
+
       // Deterministic based on user ID string hash
       let hash = 0;
       for (let i = 0; i < user.id.length; i++) {

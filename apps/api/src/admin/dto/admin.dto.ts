@@ -292,19 +292,17 @@ export class BanUserDto {
 
 export class UpdateUserRoleDto {
   @IsString()
-  @IsEnum(
-    [
-      'GUEST',
-      'MEMBER',
-      'PREMIUM_MEMBER',
-      'SUPPORT_AGENT',
-      'CONTENT_MANAGER',
-      'ANALYST',
-      'MODERATOR',
-      'ADMIN',
-      'SUPER_ADMIN',
-    ],
-  )
+  @IsEnum([
+    'GUEST',
+    'MEMBER',
+    'PREMIUM_MEMBER',
+    'SUPPORT_AGENT',
+    'CONTENT_MANAGER',
+    'ANALYST',
+    'MODERATOR',
+    'ADMIN',
+    'SUPER_ADMIN',
+  ])
   role!: string;
 }
 

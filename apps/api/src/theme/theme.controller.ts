@@ -1,4 +1,13 @@
-import { Controller, Get, Put, Post, Body, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ThemeService } from './theme.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';

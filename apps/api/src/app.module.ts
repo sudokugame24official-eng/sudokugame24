@@ -33,6 +33,7 @@ import { GameModesModule } from './gamemodes/game-modes.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ThemeModule } from './theme/theme.module';
 import { HomepageModule } from './homepage/homepage.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { HomepageModule } from './homepage/homepage.module';
     AnalyticsModule,
     ThemeModule,
     HomepageModule,
+    SupportModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

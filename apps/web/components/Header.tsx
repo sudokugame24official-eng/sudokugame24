@@ -25,6 +25,7 @@ import {
 import { Link } from "@/navigation";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { UserAvatar } from "./UserAvatar";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -202,10 +203,13 @@ const NavLink = ({ href, label, isActive }: { href: string; label: string; isAct
   </div>
 );
 
+import { useAuth } from "./AuthProvider";
+
 /* ---------- MAIN HEADER ---------- */
 export const Header = () => {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -273,6 +277,7 @@ export const Header = () => {
 
             <NavDropdown label={t("learn")} href="/learn" isActive={isActive("/learn")}>
               <MegaItem href="/learn" icon={BookOpen} label={t("academy")} desc={t("allStrategies")} color="text-brand-gold" />
+              <MegaItem href="/learn/rules" icon={BookOpen} label={t("rules")} desc={t("rulesDesc")} color="text-brand-cyan" />
               <MegaItem href="/learn/beginner" icon={Zap} label={t("beginner")} desc={t("beginnerDesc")} color="text-green-400" />
               <MegaItem href="/learn/intermediate" icon={Zap} label={t("intermediate")} desc={t("intermediateDesc")} color="text-yellow-400" />
               <MegaItem href="/learn/advanced" icon={Zap} label={t("advanced")} desc={t("advancedDesc")} color="text-brand-orange" />
@@ -329,8 +334,8 @@ export const Header = () => {
               </Link>
             </div>
 
-            {/* Language */}
-            <div className="hidden xl:block">
+            {/* Language Switcher with Flags */}
+            <div className="hidden md:block">
               <LanguageSwitcher />
             </div>
 
@@ -394,13 +399,17 @@ export const Header = () => {
 
             {/* Profile Menu */}
             <div className="relative group">
-              <Link href="/auth">
+              <Link href={user ? "/profile" : "/auth"}>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="w-9 h-9 rounded-full border-2 border-brand-gold/40 hover:border-brand-gold flex items-center justify-center cursor-pointer transition-all overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, #0A2A5C, #133A7C)" }}
+                  className="cursor-pointer transition-all"
                 >
-                  <User className="w-4 h-4 text-white/80" />
+                  <UserAvatar
+                    avatarUrl={user?.profile?.avatarUrl}
+                    username={user?.profile?.username || user?.email}
+                    size="sm"
+                    borderClassName="border-2 border-brand-gold/60 hover:border-brand-gold shadow-[0_0_12px_rgba(255,204,0,0.3)]"
+                  />
                 </motion.div>
               </Link>
 
@@ -411,17 +420,26 @@ export const Header = () => {
                   style={{ background: "linear-gradient(145deg, #0A2A5C, #041E42)" }}
                 >
                   <div className="p-3 border-b border-white/8 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange font-black">G</div>
-                    <div>
-                      <p className="font-bold text-sm">{t("guest")}</p>
-                      <Link href="/auth" className="text-[11px] text-brand-gold hover:underline">{t("signInCta")} →</Link>
+                    <UserAvatar
+                      avatarUrl={user?.profile?.avatarUrl}
+                      username={user?.profile?.username || user?.email}
+                      size="md"
+                      borderClassName="border-2 border-brand-gold/40"
+                    />
+                    <div className="overflow-hidden">
+                      <p className="font-bold text-sm text-white truncate">
+                        {user?.profile?.username || user?.email?.split("@")[0] || t("guest")}
+                      </p>
+                      {!user ? (
+                        <Link href="/auth" className="text-[11px] text-brand-gold hover:underline">{t("signInCta")} →</Link>
+                      ) : (
+                        <span className="text-[11px] text-gray-400 font-mono">Connecté</span>
+                      )}
                     </div>
                   </div>
                   <div className="py-2">
                     {[
                       { href: "/profile", label: t("profile"), icon: User },
-                      { href: "/profile?tab=stats", label: t("stats"), icon: Trophy },
-                      { href: "/profile?tab=achievements", label: t("achievements"), icon: Star },
                       { href: "/settings", label: t("settings"), icon: SettingsIcon },
                     ].map((item) => (
                       <Link key={item.href} href={item.href}>
@@ -429,23 +447,30 @@ export const Header = () => {
                           whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.05)" }}
                           className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
                         >
-                          <item.icon className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-bold">{item.label}</span>
+                          <item.icon className="w-4 h-4 text-brand-gold" />
+                          <span className="text-sm font-bold text-gray-200 hover:text-white">{item.label}</span>
                         </motion.div>
                       </Link>
                     ))}
                     <div className="h-px bg-white/8 my-1 mx-3" />
                     <Link href="/friends">
                       <motion.div whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.05)" }} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer">
-                        <UsersIcon className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm font-bold">{t("friends")}</span>
+                        <UsersIcon className="w-4 h-4 text-brand-cyan" />
+                        <span className="text-sm font-bold text-gray-200 hover:text-white">{t("friends")}</span>
                       </motion.div>
                     </Link>
-                    <div className="h-px bg-white/8 my-1 mx-3" />
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-white/5 transition-colors">
-                      <LogOut className="w-4 h-4" />
-                      <span className="text-sm font-bold">{t("logout")}</span>
-                    </button>
+                    {user && (
+                      <>
+                        <div className="h-px bg-white/8 my-1 mx-3" />
+                        <button
+                          onClick={logout}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-white/5 transition-colors font-bold text-sm text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>{t("logout")}</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </motion.div>
               </AnimatePresence>

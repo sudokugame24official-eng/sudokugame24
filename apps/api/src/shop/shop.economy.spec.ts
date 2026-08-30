@@ -10,7 +10,11 @@ jest.mock('@repo/database', () => ({
     userPerk: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
     $transaction: jest.fn(async (fn) => {
       const tx = {
-        userPerk: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
+        userPerk: {
+          findUnique: jest.fn(),
+          create: jest.fn(),
+          update: jest.fn(),
+        },
         profile: { update: jest.fn() },
       };
       return fn(tx);
@@ -24,7 +28,6 @@ jest.mock('@repo/database', () => ({
   PerkType: { NO_ADS: 'NO_ADS', EXTRA_HINTS: 'EXTRA_HINTS' },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { prisma } = require('@repo/database');
 
 describe('P0-G: shop economy integrity', () => {
@@ -41,7 +44,9 @@ describe('P0-G: shop economy integrity', () => {
   it('BLOCKS ad rewards once the daily cap is reached (was: unlimited faucet)', async () => {
     (prisma.coinTransaction.count as jest.Mock).mockResolvedValue(5); // cap = 5
 
-    await expect(service.rewardAdWatch('u1')).rejects.toThrow(BadRequestException);
+    await expect(service.rewardAdWatch('u1')).rejects.toThrow(
+      BadRequestException,
+    );
     expect(coinLedger.credit).not.toHaveBeenCalled();
   });
 
@@ -81,25 +86,41 @@ describe('P0-G: shop economy integrity', () => {
 
     await service.buyProduct('u1', 'p1');
 
-    const key = (coinLedger.debit as jest.Mock).mock.calls[0][5];
+    const key = coinLedger.debit.mock.calls[0][5];
     expect(key).toBeUndefined(); // no fake timestamp-based dedup key
-    expect(String((coinLedger.debit as jest.Mock).mock.calls[0][5])).not.toContain('Date');
+    expect(String(coinLedger.debit.mock.calls[0][5])).not.toContain('Date');
   });
 
   it('buyProduct REJECTS when stock is exhausted (P1-E constraint)', async () => {
     (prisma.shopProduct.findUnique as jest.Mock).mockResolvedValue({
-      id: 'p1', isActive: true, priceCoins: 100, type: 'consumable',
-      entitlement: 'EXTRA_HINTS', stock: 0, maxPerUser: null, startDate: null, endDate: null,
+      id: 'p1',
+      isActive: true,
+      priceCoins: 100,
+      type: 'consumable',
+      entitlement: 'EXTRA_HINTS',
+      stock: 0,
+      maxPerUser: null,
+      startDate: null,
+      endDate: null,
     });
 
-    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow('Rupture de stock');
+    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow(
+      'Rupture de stock',
+    );
     expect(coinLedger.debit).not.toHaveBeenCalled();
   });
 
   it('buyProduct REJECTS when maxPerUser is reached (P1-E constraint)', async () => {
     (prisma.shopProduct.findUnique as jest.Mock).mockResolvedValue({
-      id: 'p1', isActive: true, priceCoins: 100, type: 'consumable',
-      entitlement: 'EXTRA_HINTS', stock: 10, maxPerUser: 2, startDate: null, endDate: null,
+      id: 'p1',
+      isActive: true,
+      priceCoins: 100,
+      type: 'consumable',
+      entitlement: 'EXTRA_HINTS',
+      stock: 10,
+      maxPerUser: 2,
+      startDate: null,
+      endDate: null,
     });
     (prisma.coinTransaction.count as jest.Mock).mockResolvedValue(2); // already bought twice
 
@@ -110,12 +131,20 @@ describe('P0-G: shop economy integrity', () => {
   it('buyProduct REJECTS outside the availability window (P1-E constraint)', async () => {
     const past = new Date(Date.now() - 86400000);
     (prisma.shopProduct.findUnique as jest.Mock).mockResolvedValue({
-      id: 'p1', isActive: true, priceCoins: 100, type: 'consumable',
-      entitlement: 'EXTRA_HINTS', stock: 10, maxPerUser: null,
-      startDate: null, endDate: past,
+      id: 'p1',
+      isActive: true,
+      priceCoins: 100,
+      type: 'consumable',
+      entitlement: 'EXTRA_HINTS',
+      stock: 10,
+      maxPerUser: null,
+      startDate: null,
+      endDate: past,
     });
 
-    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow('nest plus disponible');
+    await expect(service.buyProduct('u1', 'p1')).rejects.toThrow(
+      'nest plus disponible',
+    );
   });
 
   it('webhook failure marks the purchase FAILED (never back to PENDING)', async () => {
@@ -132,7 +161,8 @@ describe('P0-G: shop economy integrity', () => {
 
     await service.handleSuccessfulPayment('sess_1', 'evt_1');
 
-    const failedCall = (prisma.purchase.updateMany as jest.Mock).mock.calls[1][0];
+    const failedCall = (prisma.purchase.updateMany as jest.Mock).mock
+      .calls[1][0];
     expect(failedCall.data.status).toBe('FAILED');
     expect(failedCall.data.status).not.toBe('PENDING');
   });
@@ -140,17 +170,23 @@ describe('P0-G: shop economy integrity', () => {
   describe('P1-H: server-authoritative Stripe verification', () => {
     it('rejects a session owned by ANOTHER user (no cross-user completion)', async () => {
       (prisma.purchase.findUnique as jest.Mock).mockResolvedValue({
-        id: 'po1', userId: 'someone-else', status: 'PENDING', coinsGranted: 100,
+        id: 'po1',
+        userId: 'someone-else',
+        status: 'PENDING',
+        coinsGranted: 100,
       });
 
-      await expect(service.verifyAndCompleteSession('u1', 'sess_1')).rejects.toThrow(
-        'ne vous appartient pas',
-      );
+      await expect(
+        service.verifyAndCompleteSession('u1', 'sess_1'),
+      ).rejects.toThrow('ne vous appartient pas');
     });
 
     it('returns COMPLETED immediately for an already-completed purchase (idempotent)', async () => {
       (prisma.purchase.findUnique as jest.Mock).mockResolvedValue({
-        id: 'po1', userId: 'u1', status: 'COMPLETED', coinsGranted: 500,
+        id: 'po1',
+        userId: 'u1',
+        status: 'COMPLETED',
+        coinsGranted: 500,
       });
 
       const res = await service.verifyAndCompleteSession('u1', 'sess_1');

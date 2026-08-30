@@ -50,9 +50,12 @@ export class MediaController {
   @RequirePermission('cms.edit')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_SIZE } }))
   async upload(@UploadedFile() file: any, @Request() req: any) {
-    if (!file) throw new BadRequestException('Aucun fichier reçu (champ "file").');
+    if (!file)
+      throw new BadRequestException('Aucun fichier reçu (champ "file").');
     if (!ALLOWED_MIME.has(file.mimetype)) {
-      throw new BadRequestException(`Type de fichier non autorisé (${file.mimetype}).`);
+      throw new BadRequestException(
+        `Type de fichier non autorisé (${file.mimetype}).`,
+      );
     }
     const filename = sanitizeFilename(file.originalname || 'upload');
     const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase();
@@ -70,7 +73,11 @@ export class MediaController {
       }
     }
 
-    const stored = await this.storage.save(file.buffer, filename, file.mimetype);
+    const stored = await this.storage.save(
+      file.buffer,
+      filename,
+      file.mimetype,
+    );
     return prisma.mediaAsset.create({
       data: {
         key: stored.key,

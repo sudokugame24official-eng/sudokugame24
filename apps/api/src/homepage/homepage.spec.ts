@@ -3,7 +3,7 @@ import { HomepageService } from './homepage.service';
 jest.mock('@repo/database', () => ({
   prisma: { siteSettings: { findUnique: jest.fn(), upsert: jest.fn() } },
 }));
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const { prisma } = require('@repo/database');
 
 describe('P1-Y: homepage builder', () => {
@@ -29,7 +29,9 @@ describe('P1-Y: homepage builder', () => {
   });
 
   it('corrupt stored JSON -> defaults, never a crash', async () => {
-    (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue({ value: '{{{' });
+    (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue({
+      value: '{{{',
+    });
     const sections = await service.getPublished();
     expect(sections.length).toBeGreaterThanOrEqual(8);
   });
@@ -47,7 +49,12 @@ describe('P1-Y: homepage builder', () => {
         buttonLink: 'https://evil.com/phish',
         variant: 'banner',
       },
-      { id: 'y_2', type: 'nonsense_type', enabled: 1, buttonLink: 'javascript:alert(1)' },
+      {
+        id: 'y_2',
+        type: 'nonsense_type',
+        enabled: 1,
+        buttonLink: 'javascript:alert(1)',
+      },
     ]);
     expect(saved).toHaveLength(2);
     expect(saved[0].title).not.toContain('<script>');
@@ -58,13 +65,21 @@ describe('P1-Y: homepage builder', () => {
   });
 
   it('saveDraft rejects non-array payloads and caps at 20 sections', async () => {
-    await expect(service.saveDraft({} as any)).rejects.toThrow('Format invalide');
-    await expect(service.saveDraft(Array.from({ length: 25 }, (_, i) => ({ id: `s_${i}`, type: 'cta' })))).resolves.toHaveProperty('length', 20);
+    await expect(service.saveDraft({} as any)).rejects.toThrow(
+      'Format invalide',
+    );
+    await expect(
+      service.saveDraft(
+        Array.from({ length: 25 }, (_, i) => ({ id: `s_${i}`, type: 'cta' })),
+      ),
+    ).resolves.toHaveProperty('length', 20);
   });
 
   it('section ids are constrained to safe characters', async () => {
     (prisma.siteSettings.findUnique as jest.Mock).mockResolvedValue(null);
-    const saved = await service.saveDraft([{ id: 'bad id with spaces!', type: 'cta' }]);
+    const saved = await service.saveDraft([
+      { id: 'bad id with spaces!', type: 'cta' },
+    ]);
     expect(saved[0].id).toMatch(/^[a-z0-9_]+$/i);
   });
 });

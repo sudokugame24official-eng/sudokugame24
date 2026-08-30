@@ -18,21 +18,23 @@ import {
   Medal,
   UserCheck,
   AlertTriangle,
+  Swords,
+  Bell,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "@/navigation";
 import { useAuth } from "./AuthProvider";
 import { io, Socket } from "socket.io-client";
 import { PlayerIdentity } from "./PlayerIdentity";
+import { UserAvatar } from "./UserAvatar";
 import { useTranslations } from "next-intl";
 
 export const ChatPanel = () => {
   const { user } = useAuth();
   const t = useTranslations("chat");
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "conversations">(
-    "conversations",
-  );
+  const [activeTab, setActiveTab] = useState<"chat" | "conversations">("conversations");
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState<any[]>([]);
@@ -43,19 +45,47 @@ export const ChatPanel = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Unread count
+  const unreadCount = conversations.reduce((acc, c) => acc + (c.unread ? 1 : 0), 0);
+
+  // Toggle Chat via window event
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
     window.addEventListener("toggle-chat", handleToggle);
     return () => window.removeEventListener("toggle-chat", handleToggle);
   }, []);
 
-  // Initialize Socket and Fetch Conversations
+  // Listen for open-private-chat event from anywhere (Chat Room, Friends page, Profile, etc.)
+  useEffect(() => {
+    const handleOpenPrivateChat = (e: any) => {
+      const detail = e.detail;
+      if (!detail?.userId) return;
+      setIsOpen(true);
+      setActiveTab("chat");
+      const targetUserObj = {
+        user: {
+          id: detail.userId,
+          name: detail.username || "Joueur",
+          avatar: detail.avatarUrl,
+          level: detail.level || 1,
+          rating: detail.rating || 1500,
+        },
+      };
+      setSelectedUser(targetUserObj);
+      fetchMessages(detail.userId);
+    };
+
+    window.addEventListener("open-private-chat", handleOpenPrivateChat as any);
+    return () => window.removeEventListener("open-private-chat", handleOpenPrivateChat as any);
+  }, []);
+
+  // Initialize Socket, Presence, and Duel Invite Listeners
   useEffect(() => {
     if (user) {
       const newSocket = io(`${WS_URL}/chat`, { withCredentials: true });
-      // Presence socket: identify + heartbeat so online status stays fresh
-      // (Redis ZSET with TTL — a closed tab expires after ~90s).
+      const duelSocket = io(`${WS_URL}/duel`, { withCredentials: true });
       const presence = io(`${WS_URL}/presence`, { withCredentials: true });
+
       const hb = setInterval(() => {
         if (presence.connected) presence.emit("heartbeat");
       }, 30000);
@@ -69,6 +99,21 @@ export const ChatPanel = () => {
         presence.emit("heartbeat");
       });
 
+      // Listen for duel invite received
+      duelSocket.on("duel_invite_received", (invite: any) => {
+        toast(`⚔️ ${invite.senderUsername || "Un joueur"} vous défie en Duel 1v1 !`, {
+          description: `Difficulté : ${invite.difficulty || "Normal"} - Mise : ${invite.betAmount || 0} pièces`,
+          action: {
+            label: "Accepter le Duel",
+            onClick: () => {
+              window.location.href = `/duel`;
+            },
+          },
+          duration: 12000,
+        });
+      });
+
+      // Listen for incoming private messages
       newSocket.on("receive_message", (msg) => {
         setConversations((prev) => {
           const exists = prev.find((c) => c.user.id === msg.senderId);
@@ -83,11 +128,11 @@ export const ChatPanel = () => {
                 : c,
             );
           }
-          // Fetch conversations again if new user
           fetchConversations();
           return prev;
         });
 
+        // If message is for currently open conversation
         if (selectedUser?.user?.id === msg.senderId) {
           setMessages((prev) => [
             ...prev,
@@ -100,6 +145,26 @@ export const ChatPanel = () => {
               }),
             },
           ]);
+        } else {
+          // Toast notification if chat is closed or chatting with someone else
+          toast(`💬 Message de ${msg.senderName || "un ami"}`, {
+            description: msg.content?.length > 45 ? msg.content.slice(0, 45) + "..." : msg.content,
+            action: {
+              label: "Répondre",
+              onClick: () => {
+                setIsOpen(true);
+                setActiveTab("chat");
+                setSelectedUser({
+                  user: {
+                    id: msg.senderId,
+                    name: msg.senderName || "Ami",
+                    avatar: msg.senderAvatar,
+                  },
+                });
+                fetchMessages(msg.senderId);
+              },
+            },
+          });
         }
       });
 
@@ -135,10 +200,10 @@ export const ChatPanel = () => {
       return () => {
         clearInterval(hb);
         presence.disconnect();
+        duelSocket.disconnect();
         newSocket.close();
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedUser]);
 
   const fetchConversations = async () => {
@@ -208,6 +273,12 @@ export const ChatPanel = () => {
     setInputValue("");
   };
 
+  const handleChallengeDuel = () => {
+    if (!selectedUser?.user) return;
+    toast.success(`⚔️ Défi 1v1 envoyé à ${selectedUser.user.name} !`);
+    window.location.href = `/duel`;
+  };
+
   const handleBlockUser = async () => {
     if (!selectedUser || !user) return;
     if (
@@ -250,24 +321,23 @@ export const ChatPanel = () => {
 
   const ConversationsList = () => (
     <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl relative overflow-hidden">
-      {/* Ambient glow in sidebar */}
       <div className="absolute top-0 left-0 w-full h-32 bg-blue-500/10 blur-[50px] pointer-events-none" />
-      
+
       <div className="p-4 border-b border-white/5 bg-black/20 z-10">
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-gold transition-colors" />
           <input
             type="text"
             placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black/40 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
+            className="w-full bg-black/40 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all shadow-inner text-white placeholder-gray-500"
           />
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
         {filteredConversations.length === 0 && (
-          <p className="text-center text-xs text-muted-foreground mt-4">
+          <p className="text-center text-xs text-muted-foreground mt-6">
             {t("noConversations")}
           </p>
         )}
@@ -278,25 +348,15 @@ export const ChatPanel = () => {
             className={cn(
               "flex items-center gap-3 p-3 rounded-2xl cursor-pointer group transition-all relative z-10",
               selectedUser?.user.id === conv.user.id
-                ? "bg-gradient-to-r from-primary/20 to-transparent border border-primary/30 shadow-[inset_4px_0_0_0_rgb(59,130,246)]"
+                ? "bg-gradient-to-r from-brand-gold/20 to-transparent border border-brand-gold/40 shadow-[inset_4px_0_0_0_#FFCC00]"
                 : "hover:bg-white/5 border border-transparent",
             )}
           >
-            <div className="relative shrink-0">
-              <div className="w-12 h-12 bg-secondary/50 rounded-2xl flex items-center justify-center shadow-lg border border-white/10 overflow-hidden transform group-hover:scale-105 transition-transform">
-                {conv.user.avatar ? (
-                  <img
-                    src={conv.user.avatar}
-                    alt="avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-sm font-bold">
-                    {conv.user.name.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-            </div>
+            <UserAvatar
+              avatarUrl={conv.user.avatar}
+              username={conv.user.name}
+              size="md"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <PlayerIdentity
@@ -305,8 +365,8 @@ export const ChatPanel = () => {
                   className={cn(
                     "font-semibold text-sm truncate transition-colors",
                     selectedUser?.user.id === conv.user.id
-                      ? "text-primary"
-                      : "group-hover:text-primary",
+                      ? "text-brand-gold"
+                      : "group-hover:text-brand-gold text-white",
                     hasPerk(conv.user.perks, "CHAT_VIP") &&
                       "text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 font-black",
                   )}
@@ -318,14 +378,14 @@ export const ChatPanel = () => {
                   <Medal className="w-3 h-3 text-purple-400 shrink-0" />
                 )}
                 {conv.unread && (
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-brand-orange shrink-0 animate-pulse" />
                 )}
               </div>
               <p
                 className={cn(
-                  "text-[10px] truncate",
+                  "text-xs truncate mt-0.5",
                   conv.unread
-                    ? "text-foreground font-bold"
+                    ? "text-brand-gold font-bold"
                     : "text-muted-foreground",
                 )}
               >
@@ -340,7 +400,6 @@ export const ChatPanel = () => {
 
   const ChatMessagesArea = () => (
     <div className="flex flex-col h-full bg-black/20 backdrop-blur-sm relative overflow-hidden">
-      {/* Background elements */}
       <div className="absolute top-1/4 right-0 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-purple-500/5 blur-[80px] pointer-events-none" />
 
@@ -354,19 +413,11 @@ export const ChatPanel = () => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5 backdrop-blur-md z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-secondary/80 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 shadow-lg">
-                {selectedUser.user.avatar ? (
-                  <img
-                    src={selectedUser.user.avatar}
-                    alt="avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="font-bold text-xs">
-                    {selectedUser.user.name.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
+              <UserAvatar
+                avatarUrl={selectedUser.user.avatar}
+                username={selectedUser.user.name}
+                size="md"
+              />
               <div>
                 <div
                   className={cn(
@@ -388,12 +439,23 @@ export const ChatPanel = () => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleBlockUser}
-              className="text-xs text-red-500 hover:underline flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded"
-            >
-              <AlertTriangle className="w-3 h-3" /> Bloquer
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleChallengeDuel}
+                className="px-3 py-1.5 bg-gradient-to-r from-brand-orange to-red-500 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                title="Défier en Duel 1v1"
+              >
+                <Swords className="w-3.5 h-3.5" /> 1v1
+              </button>
+              <button
+                onClick={handleBlockUser}
+                className="text-xs text-red-400 hover:underline flex items-center gap-1 bg-red-500/10 px-2 py-1.5 rounded-xl cursor-pointer"
+                title="Bloquer"
+              >
+                <AlertTriangle className="w-3 h-3" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -417,7 +479,7 @@ export const ChatPanel = () => {
                     className={cn(
                       "px-5 py-3 shadow-lg",
                       isMe
-                        ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-3xl rounded-tr-sm shadow-blue-500/20"
+                        ? "bg-gradient-to-br from-brand-orange to-brand-gold text-brand-navy font-medium rounded-3xl rounded-tr-sm shadow-orange-500/20"
                         : "bg-white/10 backdrop-blur-md border border-white/5 text-white rounded-3xl rounded-tl-sm",
                     )}
                   >
@@ -445,12 +507,12 @@ export const ChatPanel = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder={t("writeMessage")}
-                className="flex-1 bg-white/5 border border-white/10 hover:border-white/20 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all shadow-inner text-white placeholder:text-muted-foreground"
+                className="flex-1 bg-white/5 border border-white/10 hover:border-white/20 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all shadow-inner text-white placeholder:text-muted-foreground"
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim()}
-                className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 text-white rounded-2xl flex items-center justify-center hover:scale-105 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none shrink-0"
+                className="w-12 h-12 bg-gradient-to-br from-brand-gold to-brand-orange text-brand-navy font-bold rounded-2xl flex items-center justify-center hover:scale-105 hover:shadow-[0_0_20px_rgba(255,204,0,0.5)] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none shrink-0 cursor-pointer"
               >
                 <Send className="w-4 h-4 ml-0.5" />
               </button>
@@ -470,11 +532,18 @@ export const ChatPanel = () => {
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setIsOpen(true)}
-            className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white rounded-[2rem] flex items-center justify-center shadow-[0_10px_40px_rgba(79,70,229,0.5)] hover:scale-110 hover:shadow-[0_15px_50px_rgba(79,70,229,0.7)] transition-all relative group overflow-hidden"
+            className="w-16 h-16 bg-gradient-to-br from-[#FF4500] via-[#FF6B33] to-[#FFCC00] text-brand-navy rounded-[2rem] flex items-center justify-center shadow-[0_10px_40px_rgba(255,69,0,0.5)] hover:scale-110 hover:shadow-[0_15px_50px_rgba(255,69,0,0.7)] transition-all relative group overflow-hidden cursor-pointer"
+            title="Messagerie Sociale"
           >
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
-            <div className="absolute inset-0 rounded-[2rem] border-[2px] border-white/20"></div>
-            <MessageCircle className="w-7 h-7 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+            <div className="absolute inset-0 rounded-[2rem] border-[2px] border-white/30"></div>
+            <MessageCircle className="w-7 h-7 relative z-10 text-white group-hover:rotate-12 transition-transform duration-300" />
+            
+            {/* Unread message badge */}
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 text-white text-xs font-black rounded-full flex items-center justify-center border-2 border-brand-navy shadow-lg animate-bounce z-20">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </motion.button>
         )}
       </AnimatePresence>
@@ -486,20 +555,20 @@ export const ChatPanel = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute bottom-0 right-0 w-[380px] md:w-[750px] h-[600px] md:h-[600px] max-h-[calc(100vh-100px)] bg-[#0A0A14]/95 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden"
+            className="absolute bottom-0 right-0 w-[380px] md:w-[750px] h-[600px] md:h-[600px] max-h-[calc(100vh-100px)] bg-[#0A1A38]/95 backdrop-blur-3xl border border-white/15 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden text-white"
           >
             {/* Header */}
-            <div className="h-16 flex items-center justify-between px-6 bg-gradient-to-r from-white/5 to-transparent border-b border-white/5 shrink-0 relative">
-              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+            <div className="h-16 flex items-center justify-between px-6 bg-gradient-to-r from-white/10 to-transparent border-b border-white/10 shrink-0 relative">
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-gold/50 to-transparent"></div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                  <UserCheck className="w-4 h-4 text-blue-400" />
+                <div className="w-8 h-8 rounded-xl bg-brand-gold/20 flex items-center justify-center border border-brand-gold/30">
+                  <MessageCircle className="w-4 h-4 text-brand-gold" />
                 </div>
-                <h3 className="font-black text-lg text-white tracking-tight">MESSAGERIE</h3>
+                <h3 className="font-black text-base text-white tracking-tight">MESSAGERIE SOCIALE</h3>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10 hover:scale-110 transition-all border border-white/5"
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10 hover:scale-110 transition-all border border-white/5 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -515,7 +584,7 @@ export const ChatPanel = () => {
                   {t("loginPromptDesc")}
                 </p>
                 <Link href="/auth" onClick={() => setIsOpen(false)}>
-                  <button className="px-6 py-2 bg-primary text-primary-foreground rounded-full font-bold shadow-lg">
+                  <button className="px-6 py-2 bg-brand-gold text-brand-navy rounded-full font-bold shadow-lg">
                     {t("loginButton")}
                   </button>
                 </Link>
@@ -529,7 +598,7 @@ export const ChatPanel = () => {
                     className={cn(
                       "flex-1 text-sm font-semibold transition-all relative flex items-center justify-center gap-2",
                       activeTab === "conversations"
-                        ? "text-primary"
+                        ? "text-brand-gold"
                         : "text-muted-foreground",
                     )}
                   >
@@ -537,7 +606,7 @@ export const ChatPanel = () => {
                     {activeTab === "conversations" && (
                       <motion.div
                         layoutId="mobiletab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-gold"
                       />
                     )}
                   </button>
@@ -546,7 +615,7 @@ export const ChatPanel = () => {
                     className={cn(
                       "flex-1 text-sm font-semibold transition-all relative flex items-center justify-center gap-2",
                       activeTab === "chat"
-                        ? "text-primary"
+                        ? "text-brand-gold"
                         : "text-muted-foreground",
                     )}
                   >
@@ -554,7 +623,7 @@ export const ChatPanel = () => {
                     {activeTab === "chat" && (
                       <motion.div
                         layoutId="mobiletab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-gold"
                       />
                     )}
                   </button>
@@ -573,7 +642,7 @@ export const ChatPanel = () => {
 
                   {/* Desktop View (Side by Side) */}
                   <div className="hidden md:flex w-full h-full">
-                    <div className="w-[40%] min-w-[240px] max-w-[300px] shrink-0 border-r border-border bg-secondary/5">
+                    <div className="w-[40%] min-w-[240px] max-w-[300px] shrink-0 border-r border-white/10 bg-black/20">
                       <ConversationsList />
                     </div>
                     <div className="flex-1 min-w-0">

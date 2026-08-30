@@ -58,6 +58,7 @@ model User {
   role            Role     @default(MEMBER)
   isBanned        Boolean  @default(false)
   banReason       String?
+  isBot           Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -97,6 +98,8 @@ model User {
   answerVotes      AnswerVote[]
   followedQuestions QuestionFollow[]
   mediaUploads     MediaAsset[]     @relation("UploadedMedia")
+
+  @@index([isBot])
 }
 
 model Profile {
@@ -127,6 +130,13 @@ model Profile {
   currentStreak  Int       @default(0)
   longestStreak  Int       @default(0)
   lastPlayedDate DateTime?
+
+  // Social & Community Identity
+  bio            String?   @db.Text
+  country        String?
+  age            Int?
+  height         Float?
+  weight         Float?
 }
 
 
@@ -583,8 +593,10 @@ model SupportTicket {
   description String       @db.Text
   status      TicketStatus @default(OPEN)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestEmail String?
+  guestName  String?
 
   messages TicketMessage[]
 

@@ -26,22 +26,56 @@ const GAME_MODES_KEY = 'game_modes';
  * the UI until the owner turns them on.
  */
 const DEFAULT_MODES: Record<GameModeKey, GameModeConfig> = {
-  CLASSIC: { enabled: true, minLevel: 1, description: 'Free solo sudoku, any difficulty.' },
-  DAILY: { enabled: true, minLevel: 1, description: 'One shared challenge per day (UTC).' },
-  DUEL: { enabled: true, minLevel: 3, description: 'Ranked 1v1 duels with optional wagers.', maxWager: 500 },
-  FRIEND_DUEL: { enabled: true, minLevel: 3, description: 'Private duels against friends.', maxWager: 500 },
-  TOURNAMENT: { enabled: false, minLevel: 5, description: 'Timed tournaments (coming later).' },
-  SPECTATOR: { enabled: false, minLevel: 1, description: 'Watch live duels (coming later).' },
-  PUZZLE_CHALLENGE: { enabled: false, minLevel: 2, description: 'Curated puzzle challenges (coming later).' },
+  CLASSIC: {
+    enabled: true,
+    minLevel: 1,
+    description: 'Free solo sudoku, any difficulty.',
+  },
+  DAILY: {
+    enabled: true,
+    minLevel: 1,
+    description: 'One shared challenge per day (UTC).',
+  },
+  DUEL: {
+    enabled: true,
+    minLevel: 3,
+    description: 'Ranked 1v1 duels with optional wagers.',
+    maxWager: 500,
+  },
+  FRIEND_DUEL: {
+    enabled: true,
+    minLevel: 3,
+    description: 'Private duels against friends.',
+    maxWager: 500,
+  },
+  TOURNAMENT: {
+    enabled: false,
+    minLevel: 5,
+    description: 'Timed tournaments (coming later).',
+  },
+  SPECTATOR: {
+    enabled: false,
+    minLevel: 1,
+    description: 'Watch live duels (coming later).',
+  },
+  PUZZLE_CHALLENGE: {
+    enabled: false,
+    minLevel: 2,
+    description: 'Curated puzzle challenges (coming later).',
+  },
 };
 
 @Injectable()
 export class GameModesService {
   async getAllModes(): Promise<Record<GameModeKey, GameModeConfig>> {
-    const row = await prisma.siteSettings.findUnique({ where: { key: GAME_MODES_KEY } });
+    const row = await prisma.siteSettings.findUnique({
+      where: { key: GAME_MODES_KEY },
+    });
     if (!row) return structuredClone(DEFAULT_MODES);
     try {
-      const stored = JSON.parse(String(row.value)) as Partial<Record<GameModeKey, Partial<GameModeConfig>>>;
+      const stored = JSON.parse(String(row.value)) as Partial<
+        Record<GameModeKey, Partial<GameModeConfig>>
+      >;
       const merged = structuredClone(DEFAULT_MODES);
       for (const key of Object.keys(DEFAULT_MODES) as GameModeKey[]) {
         if (stored[key]) {
@@ -71,7 +105,8 @@ export class GameModesService {
     const all = await this.getAllModes();
     const merged: GameModeConfig = { ...all[mode as GameModeKey], ...patch };
     if (merged.minLevel < 1) merged.minLevel = 1;
-    if (merged.maxWager !== undefined && merged.maxWager < 0) merged.maxWager = 0;
+    if (merged.maxWager !== undefined && merged.maxWager < 0)
+      merged.maxWager = 0;
     all[mode as GameModeKey] = merged;
 
     await prisma.siteSettings.upsert({

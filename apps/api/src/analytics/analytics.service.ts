@@ -15,13 +15,31 @@ export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
   private static readonly EVENT_NAMES = new Set([
-    'page_view', 'registration', 'login', 'logout',
-    'game_start', 'game_complete', 'daily_start', 'daily_complete',
-    'duel_start', 'duel_complete', 'friend_request', 'friend_accept',
-    'friend_challenge', 'forum_post', 'forum_reply',
-    'question_ask', 'question_answer', 'chat_message',
-    'shop_view', 'purchase', 'ad_impression', 'ad_reward',
-    'achievement_unlock', 'search', 'share',
+    'page_view',
+    'registration',
+    'login',
+    'logout',
+    'game_start',
+    'game_complete',
+    'daily_start',
+    'daily_complete',
+    'duel_start',
+    'duel_complete',
+    'friend_request',
+    'friend_accept',
+    'friend_challenge',
+    'forum_post',
+    'forum_reply',
+    'question_ask',
+    'question_answer',
+    'chat_message',
+    'shop_view',
+    'purchase',
+    'ad_impression',
+    'ad_reward',
+    'achievement_unlock',
+    'search',
+    'share',
   ]);
 
   async track(input: {
@@ -58,12 +76,16 @@ export class AnalyticsService {
         },
       });
     } catch (e) {
-      this.logger.warn(`analytics track failed (${input.name}): ${(e as Error).message}`);
+      this.logger.warn(
+        `analytics track failed (${input.name}): ${(e as Error).message}`,
+      );
     }
   }
 
   /** Aggregate one UTC day of events into AnalyticsDaily rows. Idempotent. */
-  async rollupDaily(dayOverride?: Date): Promise<{ metric: string; value: number }[]> {
+  async rollupDaily(
+    dayOverride?: Date,
+  ): Promise<{ metric: string; value: number }[]> {
     const day = dayOverride ?? new Date(Date.now() - 24 * 3600 * 1000);
     day.setUTCHours(0, 0, 0, 0);
     const next = new Date(day.getTime() + 24 * 3600 * 1000);
@@ -90,7 +112,9 @@ export class AnalyticsService {
 
     for (const r of rows) {
       await prisma.analyticsDaily.upsert({
-        where: { day_metric_dimension: { day, metric: r.metric, dimension: null } } as any,
+        where: {
+          day_metric_dimension: { day, metric: r.metric, dimension: null },
+        } as any,
         update: { value: r.value },
         create: { day, metric: r.metric, dimension: null, value: r.value },
       });
@@ -109,7 +133,10 @@ export class AnalyticsService {
   }
 
   /** Series of a metric over N days, from ROLLUPS only (never raw events). */
-  async getSeries(metric: string, days = 30): Promise<{ day: string; value: number }[]> {
+  async getSeries(
+    metric: string,
+    days = 30,
+  ): Promise<{ day: string; value: number }[]> {
     const from = new Date();
     from.setUTCHours(0, 0, 0, 0);
     from.setUTCDate(from.getUTCDate() - (days - 1));
@@ -121,10 +148,14 @@ export class AnalyticsService {
     });
 
     // Fill gaps with 0 so charts stay continuous
-    const byDay = new Map(rows.map((r) => [r.day.toISOString().slice(0, 10), r.value]));
+    const byDay = new Map(
+      rows.map((r) => [r.day.toISOString().slice(0, 10), r.value]),
+    );
     const series: { day: string; value: number }[] = [];
     for (let i = 0; i < days; i++) {
-      const d = new Date(from.getTime() + i * 24 * 3600 * 1000).toISOString().slice(0, 10);
+      const d = new Date(from.getTime() + i * 24 * 3600 * 1000)
+        .toISOString()
+        .slice(0, 10);
       series.push({ day: d, value: byDay.get(d) ?? 0 });
     }
     return series;
@@ -155,23 +186,34 @@ export class AnalyticsService {
     const totalsPrev7 = await this.getTotals(14); // 14-day totals include the last 7
 
     const prevOnly: Record<string, number> = {};
-    for (const [k, v] of Object.entries(totalsPrev7)) prevOnly[k] = v - (totals7[k] ?? 0);
+    for (const [k, v] of Object.entries(totalsPrev7))
+      prevOnly[k] = v - (totals7[k] ?? 0);
 
     const fr = locale === 'fr';
     const out: string[] = [];
     const MIN_SAMPLE = 20; // below this, a % change is noise -> stay silent
 
-    const compare = (metric: string, labelEn: string, labelFr: string = labelEn) => {
+    const compare = (
+      metric: string,
+      labelEn: string,
+      labelFr: string = labelEn,
+    ) => {
       const now = totals7[metric] ?? 0;
       const before = prevOnly[metric] ?? 0;
       if (now + before < MIN_SAMPLE) return;
       if (before === 0) {
-        if (now > 0) out.push(fr ? `${labelFr} : ${now} cette semaine (aucun la semaine précédente).` : `${labelEn}: ${now} this week (none last week).`);
+        if (now > 0)
+          out.push(
+            fr
+              ? `${labelFr} : ${now} cette semaine (aucun la semaine précédente).`
+              : `${labelEn}: ${now} this week (none last week).`,
+          );
         return;
       }
       const pct = Math.round(((now - before) / before) * 100);
       if (Math.abs(pct) < 3) return; // ignore noise under 3%
-      const dir = pct > 0 ? (fr ? 'en hausse de' : 'up') : (fr ? 'en baisse de' : 'down');
+      const dir =
+        pct > 0 ? (fr ? 'en hausse de' : 'up') : fr ? 'en baisse de' : 'down';
       out.push(
         fr
           ? `${labelFr} : ${dir} ${Math.abs(pct)}% par rapport à la semaine précédente (${before} → ${now}).`
@@ -179,8 +221,14 @@ export class AnalyticsService {
       );
     };
 
-    compare('dau', fr ? 'Utilisateurs actifs quotidiens' : 'Daily active users');
-    compare('daily_complete', fr ? 'Participation au Défi du jour' : 'Daily Challenge participation');
+    compare(
+      'dau',
+      fr ? 'Utilisateurs actifs quotidiens' : 'Daily active users',
+    );
+    compare(
+      'daily_complete',
+      fr ? 'Participation au Défi du jour' : 'Daily Challenge participation',
+    );
     compare('duel_complete', fr ? 'Duels terminés' : 'Duels completed');
     compare('forum_post', fr ? 'Activité du forum' : 'Forum activity');
     compare('question_ask', fr ? 'Questions posées' : 'Questions asked');

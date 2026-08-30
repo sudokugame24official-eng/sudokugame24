@@ -13,8 +13,10 @@ export class ConfigController {
   @Get('features')
   @UseGuards(OptionalJwtAuthGuard)
   async getFeatureFlags(@Req() req: any) {
-    const user = req.user ? { id: req.user.id, role: req.user.role } : undefined;
-    
+    const user = req.user
+      ? { id: req.user.id, role: req.user.role }
+      : undefined;
+
     // Expose only non-sensitive flags to the frontend
     const keys = [
       'SHOP_ENABLED',
@@ -31,7 +33,7 @@ export class ConfigController {
     for (const key of keys) {
       results[key] = await this.featureFlagService.isFeatureEnabled(key, user);
     }
-    
+
     return results;
   }
 

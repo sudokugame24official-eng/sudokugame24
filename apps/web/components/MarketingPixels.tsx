@@ -13,16 +13,10 @@ export default function MarketingPixels() {
     if (savedConsent === "true") {
       setHasConsent(true);
     }
-    // Fetch pixel IDs from backend settings
+    // Fetch pixel IDs from backend settings (public endpoint)
     const fetchPixels = async () => {
       try {
-        const res = await fetch(`${API_URL}/admin/marketing-settings`, {
-          // You might not want to require auth here if it's meant to run for all visitors.
-          // Wait, the API endpoint is protected by AdminGuard!
-          // We need a public endpoint for settings to be readable by the frontend layout.
-          // Oh, wait, the layout runs for all users, including non-logged-in ones.
-          // So we should expose a PUBLIC endpoint to fetch these IDs.
-        });
+        const res = await fetch(`${API_URL}/settings/marketing`);
         if (res.ok) {
           const data = await res.json();
           setPixels(data);
@@ -36,7 +30,7 @@ export default function MarketingPixels() {
 
   return (
     <>
-      {/* Google Analytics */}
+      {/* Google Analytics 4 */}
       {hasConsent && pixels.GA_MEASUREMENT_ID && (
         <>
           <Script
@@ -51,6 +45,33 @@ export default function MarketingPixels() {
               gtag('config', '${pixels.GA_MEASUREMENT_ID}');
             `}
           </Script>
+        </>
+      )}
+
+      {/* Google Tag Manager Container */}
+      {hasConsent && pixels.GTM_CONTAINER_ID && (
+        <Script id="google-tag-manager" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${pixels.GTM_CONTAINER_ID}');
+          `}
+        </Script>
+      )}
+
+      {/* Google AdSense Auto Ads Script (If enabled by Owner) */}
+      {pixels.ADS_ENABLED && (hasConsent || !pixels.ADS_GDPR_CONSENT_REQUIRED) && (
+        <>
+          {pixels.ADSENSE_CLIENT_ID && (
+            <Script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${pixels.ADSENSE_CLIENT_ID}`}
+              crossOrigin="anonymous"
+              strategy="afterInteractive"
+            />
+          )}
         </>
       )}
 

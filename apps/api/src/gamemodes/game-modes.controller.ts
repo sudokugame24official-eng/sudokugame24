@@ -8,7 +8,15 @@ import {
   UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
-import { IsBoolean, IsInt, IsOptional, IsString, Max, Min, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+  MaxLength,
+} from 'class-validator';
 import { GameModesService } from './game-modes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/guards/permission.guard';
@@ -46,7 +54,10 @@ export class GameModesController {
   @RequirePermission('cms.edit')
   @UseInterceptors(AuditLogInterceptor)
   @AuditAction('gamemodes.update')
-  async updateMode(@Param('mode') mode: string, @Body() dto: UpdateGameModeDto) {
+  async updateMode(
+    @Param('mode') mode: string,
+    @Body() dto: UpdateGameModeDto,
+  ) {
     try {
       return await this.gameModesService.updateMode(mode, dto);
     } catch (e) {

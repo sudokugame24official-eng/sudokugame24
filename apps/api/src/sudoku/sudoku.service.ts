@@ -86,7 +86,11 @@ export class SudokuService {
     const solvedBoard = session.puzzle.solvedBoard as number[][];
     let isCorrect = true;
     for (let r = 0; r < 9; r++) {
-      if (!finalBoard[r] || !Array.isArray(finalBoard[r]) || finalBoard[r].length !== 9) {
+      if (
+        !finalBoard[r] ||
+        !Array.isArray(finalBoard[r]) ||
+        finalBoard[r].length !== 9
+      ) {
         throw new BadRequestException('Invalid board row format');
       }
       for (let c = 0; c < 9; c++) {
@@ -112,7 +116,9 @@ export class SudokuService {
       );
     }
 
-    const actualTimeSec = Math.floor((Date.now() - session.startTime.getTime()) / 1000);
+    const actualTimeSec = Math.floor(
+      (Date.now() - session.startTime.getTime()) / 1000,
+    );
     // We allow a small 5-second desync window, but ultimately cap it securely.
     const finalTimeSec = Math.max(actualTimeSec, 0);
 
@@ -133,6 +139,23 @@ export class SudokuService {
         },
       });
       throw new BadRequestException('Suspiciously fast solve time');
+    }
+
+    // Atomic claim of session completion to prevent concurrent double-rewards
+    const claimed = await prisma.gameSession.updateMany({
+      where: {
+        id: sessionId,
+        status: GameStatus.IN_PROGRESS,
+      },
+      data: {
+        status: GameStatus.COMPLETED,
+        endTime: new Date(),
+        durationSec: finalTimeSec,
+      },
+    });
+
+    if (claimed.count === 0) {
+      throw new BadRequestException('Session already completed or conflict');
     }
 
     // Calculate score (won = true)
@@ -169,17 +192,9 @@ export class SudokuService {
         CoinTransactionType.REWARD,
         'ClassicSudoku',
         sessionId,
+        `solo_${sessionId}`,
       );
     }
-
-    await prisma.gameSession.update({
-      where: { id: sessionId },
-      data: {
-        status: GameStatus.COMPLETED,
-        endTime: new Date(),
-        durationSec: finalTimeSec,
-      },
-    });
 
     return {
       success: true,

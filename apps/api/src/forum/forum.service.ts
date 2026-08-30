@@ -111,7 +111,14 @@ export class ForumService {
       include: {
         author: {
           select: {
-            profile: { select: { username: true, avatarUrl: true, level: true, rating: true } },
+            profile: {
+              select: {
+                username: true,
+                avatarUrl: true,
+                level: true,
+                rating: true,
+              },
+            },
             role: true,
             perks: true,
           },
@@ -121,7 +128,14 @@ export class ForumService {
           include: {
             author: {
               select: {
-                profile: { select: { username: true, avatarUrl: true, level: true, rating: true } },
+                profile: {
+                  select: {
+                    username: true,
+                    avatarUrl: true,
+                    level: true,
+                    rating: true,
+                  },
+                },
                 role: true,
                 perks: true,
               },
@@ -183,7 +197,10 @@ export class ForumService {
 
   async createComment(userId: string, postId: string, content: string) {
     void trackEvent({ name: 'forum_reply', userId, metadata: { postId } });
-    const post = await prisma.forumPost.findUnique({ where: { id: postId }, select: { isClosed: true, isLocked: true } });
+    const post = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: { isClosed: true, isLocked: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
     if (post.isClosed || post.isLocked) {
       throw new BadRequestException('Ce sujet est fermé ou verrouillé.');
@@ -330,7 +347,12 @@ export class ForumService {
             ? { isLocked: !post.isLocked }
             : action === 'delete'
               ? { isDeleted: true } // soft delete: restorable
-              : { isDeleted: false, isPinned: false, isClosed: false, isLocked: false };
+              : {
+                  isDeleted: false,
+                  isPinned: false,
+                  isClosed: false,
+                  isLocked: false,
+                };
 
     return prisma.forumPost.update({ where: { id: postId }, data });
   }

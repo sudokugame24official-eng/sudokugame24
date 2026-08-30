@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <filter id="emeraldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#10B981" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="#062419" stroke="url(#emeraldGrad)" stroke-width="4"/>
+  <circle cx="60" cy="60" r="48" fill="#03160F"/>
+  <!-- Chess Knight / Tactician Shield -->
+  <g filter="url(#emeraldGlow)">
+    <path d="M50 35 C50 35 68 32 72 45 C75 55 68 62 68 62 L75 80 L45 80 L48 65 C45 60 42 50 50 35 Z" fill="url(#emeraldGrad)"/>
+    <circle cx="58" cy="45" r="3" fill="#FFF"/>
+    <path d="M42 80 L78 80 L74 85 L46 85 Z" fill="#34D399"/>
+  </g>
+</svg>

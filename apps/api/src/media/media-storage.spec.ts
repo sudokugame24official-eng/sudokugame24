@@ -10,7 +10,10 @@ describe('P1-J: media storage abstraction', () => {
     expect(stored.url).toMatch(/^\/uploads\//);
     expect(stored.sizeBytes).toBe(5);
 
-    const stored2 = await storage.save(Buffer.from('<svg onload=alert(1)>'), 'evil.svg');
+    const stored2 = await storage.save(
+      Buffer.from('<svg onload=alert(1)>'),
+      'evil.svg',
+    );
     expect(stored2.key).not.toBe(stored.key);
 
     await storage.delete(stored.key);
@@ -23,7 +26,9 @@ describe('P1-J: media storage abstraction', () => {
     delete process.env.S3_BUCKET;
     process.env.NODE_ENV = 'production';
     try {
-      expect(() => createMediaStorage()).toThrow('media storage is not configured');
+      expect(() => createMediaStorage()).toThrow(
+        'media storage is not configured',
+      );
     } finally {
       process.env.NODE_ENV = prevNodeEnv;
       if (prevBucket) process.env.S3_BUCKET = prevBucket;

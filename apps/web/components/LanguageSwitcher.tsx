@@ -6,9 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export const SUPPORTED_LOCALES = [
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "fr", label: "Français", flag: "🇫🇷" },
-  { code: "de", label: "Deutsch", flag: "🇩🇪" },
+  { code: "fr", label: "Français", short: "FR", flag: "🇫🇷" },
+  { code: "en", label: "English", short: "EN", flag: "🇬🇧" },
+  { code: "de", label: "Deutsch", short: "DE", flag: "🇩🇪" },
 ] as const;
 
 type LocaleCode = (typeof SUPPORTED_LOCALES)[number]["code"];
@@ -16,7 +16,7 @@ type LocaleCode = (typeof SUPPORTED_LOCALES)[number]["code"];
 function getCurrentLocale(pathname: string): LocaleCode {
   const segment = pathname.split("/")[1];
   const found = SUPPORTED_LOCALES.find((l) => l.code === segment);
-  return found ? found.code : "en";
+  return found ? found.code : "fr";
 }
 
 function switchPathLocale(pathname: string, newLocale: string): string {
@@ -33,10 +33,11 @@ function switchPathLocale(pathname: string, newLocale: string): string {
 }
 
 interface LanguageSwitcherProps {
-  compact?: boolean; // For mobile: show only flag+chevron
+  compact?: boolean;
+  className?: string;
 }
 
-export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ compact = false, className }: LanguageSwitcherProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -74,28 +75,25 @@ export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn("relative inline-block", className)}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label={`Language: ${currentLang.label}. Change language.`}
+        aria-label={`Langue : ${currentLang.label} (${currentLang.flag}). Changer de langue.`}
         className={cn(
-          "flex items-center gap-1.5 text-white hover:text-brand-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold rounded-lg p-2",
-          isOpen && "text-brand-gold",
+          "flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 hover:border-brand-gold/50 text-white transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold cursor-pointer",
+          isOpen && "border-brand-gold bg-brand-gold/10 text-brand-gold",
         )}
       >
-        <Globe className="w-4 h-4 shrink-0" />
-        {!compact && (
-          <span className="text-sm font-bold hidden xl:inline">
-            {currentLang.flag} {currentLang.label}
-          </span>
-        )}
-        {compact && <span className="text-sm">{currentLang.flag}</span>}
+        <span className="text-base leading-none select-none">{currentLang.flag}</span>
+        <span className="text-xs font-black uppercase tracking-wider text-white/90">
+          {compact ? currentLang.short : currentLang.label}
+        </span>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 shrink-0 transition-transform",
-            isOpen && "rotate-180",
+            "w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200",
+            isOpen && "rotate-180 text-brand-gold",
           )}
         />
       </button>
@@ -104,36 +102,50 @@ export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
         {isOpen && (
           <motion.ul
             role="listbox"
-            aria-label="Select language"
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            aria-label="Sélectionner une langue"
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-12 w-44 bg-brand-navy-light border border-brand-gold/30 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden z-[100] flex flex-col py-1"
+            className="absolute right-0 top-full mt-2 w-48 bg-[#0A2A5C] border-2 border-brand-gold/30 rounded-2xl shadow-[0_15px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[100] flex flex-col p-1.5"
           >
-            {SUPPORTED_LOCALES.map((locale) => (
-              <li
-                key={locale.code}
-                role="option"
-                aria-selected={locale.code === currentLocale}
-              >
-                <button
-                  onClick={() => handleSelect(locale.code)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors text-left hover:bg-white/10",
-                    locale.code === currentLocale
-                      ? "text-brand-gold bg-brand-gold/5"
-                      : "text-white",
-                  )}
+            <div className="px-3 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Globe className="w-3 h-3 text-brand-gold" /> Langues
+              </span>
+              <span className="text-[9px] font-bold bg-brand-gold/20 text-brand-gold px-1.5 py-0.5 rounded">3</span>
+            </div>
+            {SUPPORTED_LOCALES.map((locale) => {
+              const isSelected = locale.code === currentLocale;
+              return (
+                <li
+                  key={locale.code}
+                  role="option"
+                  aria-selected={isSelected}
                 >
-                  <span className="text-base">{locale.flag}</span>
-                  <span className="flex-1">{locale.label}</span>
-                  {locale.code === currentLocale && (
-                    <Check className="w-4 h-4 text-brand-gold shrink-0" />
-                  )}
-                </button>
-              </li>
-            ))}
+                  <button
+                    onClick={() => handleSelect(locale.code)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                      isSelected
+                        ? "text-white bg-brand-gold/20 border border-brand-gold/40 shadow-sm"
+                        : "text-gray-200 hover:text-white hover:bg-white/10",
+                    )}
+                  >
+                    <span className="text-lg leading-none select-none">{locale.flag}</span>
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className="font-bold">{locale.label}</span>
+                      <span className="text-[10px] font-mono font-black uppercase text-gray-400 ml-2">
+                        {locale.short}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-brand-gold shrink-0" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </motion.ul>
         )}
       </AnimatePresence>

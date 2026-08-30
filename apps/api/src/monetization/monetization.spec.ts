@@ -9,11 +9,12 @@ jest.mock('@repo/database', () => ({
       upsert: jest.fn(),
     },
     purchase: { findMany: jest.fn().mockResolvedValue([]) },
-    coinTransaction: { aggregate: jest.fn().mockResolvedValue({ _sum: { amount: null } }) },
+    coinTransaction: {
+      aggregate: jest.fn().mockResolvedValue({ _sum: { amount: null } }),
+    },
   },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { prisma } = require('@repo/database');
 
 describe('P1-F/G: monetization — flag unification + ad slot config', () => {
@@ -25,16 +26,16 @@ describe('P1-F/G: monetization — flag unification + ad slot config', () => {
   });
 
   it('reads the CANONICAL ADS_ENABLED key first', async () => {
-    (prisma.featureFlag.findUnique as jest.Mock).mockImplementation(({ where }) =>
-      where.key === 'ADS_ENABLED' ? { enabled: true } : null,
+    (prisma.featureFlag.findUnique as jest.Mock).mockImplementation(
+      ({ where }) => (where.key === 'ADS_ENABLED' ? { enabled: true } : null),
     );
 
     await expect(service.isFeatureEnabled('ADS_ENABLED')).resolves.toBe(true);
   });
 
   it('falls back to the legacy ENABLE_ADS key when canonical is absent', async () => {
-    (prisma.featureFlag.findUnique as jest.Mock).mockImplementation(({ where }) =>
-      where.key === 'ENABLE_ADS' ? { enabled: true } : null,
+    (prisma.featureFlag.findUnique as jest.Mock).mockImplementation(
+      ({ where }) => (where.key === 'ENABLE_ADS' ? { enabled: true } : null),
     );
 
     await expect(service.isFeatureEnabled('ADS_ENABLED')).resolves.toBe(true);
@@ -43,11 +44,15 @@ describe('P1-F/G: monetization — flag unification + ad slot config', () => {
   it('unknown flags stay disabled (fail-closed)', async () => {
     (prisma.featureFlag.findUnique as jest.Mock).mockResolvedValue(null);
 
-    await expect(service.isFeatureEnabled('DOES_NOT_EXIST')).resolves.toBe(false);
+    await expect(service.isFeatureEnabled('DOES_NOT_EXIST')).resolves.toBe(
+      false,
+    );
   });
 
   it('upserts a full ad slot config (all new P1-F/G fields pass through)', async () => {
-    (prisma.adSlotConfig.upsert as jest.Mock).mockResolvedValue({ slotName: 'home_leaderboard' });
+    (prisma.adSlotConfig.upsert as jest.Mock).mockResolvedValue({
+      slotName: 'home_leaderboard',
+    });
 
     await service.updateAdConfig('home_leaderboard', {
       enabled: true,
@@ -63,12 +68,21 @@ describe('P1-F/G: monetization — flag unification + ad slot config', () => {
 
     const call = (prisma.adSlotConfig.upsert as jest.Mock).mock.calls[0][0];
     expect(call.where.slotName).toBe('home_leaderboard');
-    expect(call.update).toMatchObject({ placement: 'leaderboard', height: 90, frequencyCap: 3 });
-    expect(call.create).toMatchObject({ slotName: 'home_leaderboard', enabled: true });
+    expect(call.update).toMatchObject({
+      placement: 'leaderboard',
+      height: 90,
+      frequencyCap: 3,
+    });
+    expect(call.create).toMatchObject({
+      slotName: 'home_leaderboard',
+      enabled: true,
+    });
   });
 
   it('public ad config reports the global flag AND the slot config', async () => {
-    (prisma.featureFlag.findUnique as jest.Mock).mockResolvedValue({ enabled: true });
+    (prisma.featureFlag.findUnique as jest.Mock).mockResolvedValue({
+      enabled: true,
+    });
     (prisma.adSlotConfig.findUnique as jest.Mock).mockResolvedValue({
       slotName: 'forum_sidebar',
       enabled: false,

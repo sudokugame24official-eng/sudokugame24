@@ -7,7 +7,11 @@ import { JwtService } from '@nestjs/jwt';
 
 jest.mock('@repo/database', () => ({
   prisma: {
-    privateMessage: { findMany: jest.fn(), updateMany: jest.fn(), create: jest.fn() },
+    privateMessage: {
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
+      create: jest.fn(),
+    },
     friendship: { findFirst: jest.fn() },
     profile: { findUnique: jest.fn() },
     user: { findUnique: jest.fn() },
@@ -37,7 +41,10 @@ describe('P1-M: multi-instance chat delivery', () => {
       sendMessage: jest.fn().mockResolvedValue({ id: 'm1', content: 'hi' }),
       markConversationRead: jest.fn().mockResolvedValue({}),
     };
-    gateway = new ChatGateway(chatService as any, { getClient: () => ({}) } as any);
+    gateway = new ChatGateway(
+      chatService as any,
+      { getClient: () => ({}) } as any,
+    );
     server = makeServer();
     (gateway as any).server = server;
     client = {
@@ -55,9 +62,16 @@ describe('P1-M: multi-instance chat delivery', () => {
   });
 
   it('send_message delivers to the RECIPIENT ROOM, not a local socket map', async () => {
-    await gateway.handleSendMessage({ receiverId: 'user-B', content: 'hello' }, client);
+    await gateway.handleSendMessage(
+      { receiverId: 'user-B', content: 'hello' },
+      client,
+    );
 
-    expect(chatService.sendMessage).toHaveBeenCalledWith('user-A', 'user-B', 'hello');
+    expect(chatService.sendMessage).toHaveBeenCalledWith(
+      'user-A',
+      'user-B',
+      'hello',
+    );
     // THE multi-instance assertion: delivery targets the room, which the
     // Redis adapter resolves on ANY instance (the old code looked up a local
     // Map and silently dropped cross-instance messages).
@@ -70,12 +84,18 @@ describe('P1-M: multi-instance chat delivery', () => {
     expect(server.to).toHaveBeenCalledWith('user_user-B');
 
     await gateway.handleMarkRead({ conversationWith: 'user-B' }, client);
-    expect(chatService.markConversationRead).toHaveBeenCalledWith('user-A', 'user-B');
+    expect(chatService.markConversationRead).toHaveBeenCalledWith(
+      'user-A',
+      'user-B',
+    );
   });
 
   it('unauthenticated sockets cannot send messages', async () => {
     const anon = { id: 'anon', data: {}, emit: jest.fn() };
-    await gateway.handleSendMessage({ receiverId: 'x', content: 'y' }, anon as any);
+    await gateway.handleSendMessage(
+      { receiverId: 'x', content: 'y' },
+      anon as any,
+    );
     expect(chatService.sendMessage).not.toHaveBeenCalled();
   });
 });
@@ -103,19 +123,22 @@ describe('P1-M: presence gateway (ZSET + handshake auth)', () => {
   });
 
   it('registers a handshake middleware that verifies the JWT', () => {
-    presence.afterInit(server as any);
+    presence.afterInit(server);
     expect(server.use).toHaveBeenCalled();
     const middleware = server.use.mock.calls[0][0];
     const next = jest.fn();
     const token = jwtService.sign({ sub: 'user-1' });
-    const socket = { handshake: { auth: { token }, headers: {} }, data: {} as any };
+    const socket = {
+      handshake: { auth: { token }, headers: {} },
+      data: {} as any,
+    };
     middleware(socket, next);
     expect(socket.data.userId).toBe('user-1');
     expect(next).toHaveBeenCalledWith();
   });
 
   it('rejects handshakes without a token', () => {
-    presence.afterInit(server as any);
+    presence.afterInit(server);
     const middleware = server.use.mock.calls[0][0];
     const next = jest.fn();
     middleware({ handshake: { auth: {}, headers: {} }, data: {} }, next);
@@ -131,16 +154,24 @@ describe('P1-M: presence gateway (ZSET + handshake auth)', () => {
     };
     await presence.handleConnection(client as any);
     expect(client.join).toHaveBeenCalledWith('user_user-1');
-    expect(redis.zadd).toHaveBeenCalledWith('presence:online_zset', expect.any(Number), 'user-1');
+    expect(redis.zadd).toHaveBeenCalledWith(
+      'presence:online_zset',
+      expect.any(Number),
+      'user-1',
+    );
   });
 
   it('disconnect marks offline ONLY when it was the last socket', async () => {
     const client = { id: 's1', data: { userId: 'user-1' } };
-    server.in.mockReturnValue({ fetchSockets: jest.fn().mockResolvedValue([{ id: 's2' }]) });
+    server.in.mockReturnValue({
+      fetchSockets: jest.fn().mockResolvedValue([{ id: 's2' }]),
+    });
     await presence.handleDisconnect(client as any);
     expect(redis.zrem).not.toHaveBeenCalled(); // another device still connected
 
-    server.in.mockReturnValue({ fetchSockets: jest.fn().mockResolvedValue([]) });
+    server.in.mockReturnValue({
+      fetchSockets: jest.fn().mockResolvedValue([]),
+    });
     await presence.handleDisconnect(client as any);
     expect(redis.zrem).toHaveBeenCalledWith('presence:online_zset', 'user-1');
   });

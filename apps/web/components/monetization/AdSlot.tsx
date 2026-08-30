@@ -1,22 +1,30 @@
 "use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useAdContext } from "../../context/AdContext";
 import { API_URL } from "@/lib/api";
 
-/**
- * P1-F/G: real, DB-driven ad slot.
- *
- * - Renders NOTHING unless: global flag on + slot enabled + consent (if
- *   required) + AdSense client id configured (NEXT_PUBLIC_ADSENSE_CLIENT) +
- *   the slot has an ad unit id. No fake placeholder ads, ever.
- * - CLS-safe: the container reserves dimensions before the ad loads.
- * - Lazy: the AdSense push happens only when the slot enters the viewport
- *   (IntersectionObserver) unless lazyLoad=false on the slot config.
- * - Device targeting honored client-side (ALL/DESKTOP/MOBILE).
- */
+const FORBIDDEN_PLACEMENTS = [
+  "grid",
+  "sudoku_grid",
+  "numpad",
+  "keypad",
+  "timer",
+  "pause_button",
+  "mistake_counter",
+  "hint_button",
+  "duel_battle_bar",
+  "duel_controls",
+  "countdown",
+  "auth_form",
+  "checkout",
+  "payment_confirmation",
+  "chat_input",
+  "primary_navigation",
+  "language_selector",
+];
 
-// Default reserved heights per format (CLS-safe when slot has no explicit dims)
 const FORMAT_DIMS: Record<string, { minHeight: number }> = {
   leaderboard: { minHeight: 90 },
   horizontal: { minHeight: 90 },
@@ -31,18 +39,43 @@ declare global {
   }
 }
 
-export default function AdSlot({ slotName, className = "" }: { slotName: string; className?: string }) {
-  const { hasConsent, isLoading } = useAdContext();
+interface AdSlotProps {
+  slotName: string;
+  className?: string;
+  placementOverride?: string;
+}
+
+export default function AdSlot({
+  slotName,
+  className = "",
+  placementOverride,
+}: AdSlotProps) {
+  const {
+    hasConsent,
+    isLoading,
+    isAdAllowedOnCurrentPage,
+    isUserEligibleForAds,
+    publisherId: contextPublisherId,
+  } = useAdContext();
+
   const [slotConfig, setSlotConfig] = useState<any>(null);
   const [globalEnabled, setGlobalEnabled] = useState(false);
   const [visible, setVisible] = useState(false);
   const [pushed, setPushed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Fetch this slot's live configuration (flag + slot) from the public API
+  // Safety Check: Reject forbidden placements immediately
+  const activePlacement = (
+    placementOverride || slotConfig?.placement || slotName
+  ).toLowerCase();
+
+  const isForbidden = FORBIDDEN_PLACEMENTS.some((forbidden) =>
+    activePlacement.includes(forbidden),
+  );
+
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/monetization/ad-config/${encodeURIComponent(slotName)}`)
+    fetch(`${API_URL}/monetization/ad-config?slotName=${encodeURIComponent(slotName)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled || !data) return;
@@ -55,7 +88,7 @@ export default function AdSlot({ slotName, className = "" }: { slotName: string;
     };
   }, [slotName]);
 
-  // Lazy loading: observe visibility once we know the slot will render
+  // Lazy loading observer
   useEffect(() => {
     if (!ref.current) return;
     if (slotConfig?.lazyLoad === false) {
@@ -75,14 +108,31 @@ export default function AdSlot({ slotName, className = "" }: { slotName: string;
     return () => obs.disconnect();
   }, [slotConfig]);
 
-  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT; // e.g. "ca-pub-XXXX..."
+  const client =
+    slotConfig?.publisherId ||
+    contextPublisherId ||
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const isTablet =
+    typeof window !== "undefined" &&
+    window.innerWidth >= 768 &&
+    window.innerWidth < 1024;
+
   const device = slotConfig?.deviceTarget || "ALL";
-  const deviceOk = device === "ALL" || (device === "MOBILE" && isMobile) || (device === "DESKTOP" && !isMobile);
+  const deviceOk =
+    device === "ALL" ||
+    (device === "MOBILE" && isMobile) ||
+    (device === "TABLET" && isTablet) ||
+    (device === "DESKTOP" && !isMobile && !isTablet);
+
   const consentOk = slotConfig?.consentRequired === false || hasConsent;
 
-  const enabled =
+  const isEnabled =
     !isLoading &&
+    !isForbidden &&
+    isAdAllowedOnCurrentPage &&
+    isUserEligibleForAds &&
     globalEnabled &&
     slotConfig?.enabled === true &&
     deviceOk &&
@@ -91,18 +141,17 @@ export default function AdSlot({ slotName, className = "" }: { slotName: string;
     !!slotConfig?.adSlotId &&
     slotConfig?.provider === "GoogleAdSense";
 
-  // Push to AdSense exactly once, when visible
   useEffect(() => {
-    if (!enabled || !visible || pushed) return;
+    if (!isEnabled || !visible || pushed) return;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       setPushed(true);
     } catch (e) {
       console.error("AdSense push failed", e);
     }
-  }, [enabled, visible, pushed]);
+  }, [isEnabled, visible, pushed]);
 
-  if (!enabled) return null;
+  if (!isEnabled) return null;
 
   const dims = FORMAT_DIMS[slotConfig.format] ?? { minHeight: 120 };
   const reservedHeight = slotConfig.height || dims.minHeight;
@@ -110,19 +159,31 @@ export default function AdSlot({ slotName, className = "" }: { slotName: string;
   return (
     <div
       ref={ref}
-      className={`ad-container w-full flex justify-center items-center my-4 ${className}`}
-      style={{ minHeight: reservedHeight, ...(slotConfig.width ? { maxWidth: slotConfig.width } : {}) }}
+      className={`ad-container w-full flex flex-col justify-center items-center my-6 relative overflow-hidden transition-all ${className}`}
+      style={{
+        minHeight: reservedHeight + 20,
+        ...(slotConfig.width ? { maxWidth: slotConfig.width } : {}),
+      }}
       aria-label="advertisement"
     >
-      {/* Real AdSense unit — rendered only with a configured publisher + unit id */}
+      {/* Clear Policy Compliant Label */}
+      <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60 mb-1 select-none">
+        Publicité
+      </span>
+
       <ins
         className="adsbygoogle"
-        style={{ display: "block", minHeight: reservedHeight }}
+        style={{
+          display: "block",
+          minHeight: reservedHeight,
+          width: slotConfig.width ? `${slotConfig.width}px` : "100%",
+        }}
         data-ad-client={client}
         data-ad-slot={slotConfig.adSlotId}
         data-ad-format={slotConfig.format || "auto"}
         data-full-width-responsive="true"
       />
+
       <Script
         src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
         crossOrigin="anonymous"

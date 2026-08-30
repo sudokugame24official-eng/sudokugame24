@@ -8,9 +8,22 @@ interface User {
   id: string;
   email: string;
   role: string;
+  perks?: Array<{ perkType: string; expiresAt?: string | null }>;
   profile?: {
     username: string;
     avatarUrl?: string;
+    level?: number;
+    coins?: number;
+    rating?: number;
+    currentStreak?: number;
+    gamesPlayed?: number;
+    gamesWon?: number;
+    bio?: string;
+    country?: string;
+    age?: number;
+    height?: number;
+    weight?: number;
+    perks?: Array<{ perkType: string; expiresAt?: string | null }>;
   };
 }
 

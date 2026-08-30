@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { UserAvatar } from "@/components/UserAvatar";
 
 interface Friend {
   id: string;
@@ -223,16 +224,12 @@ export default function FriendsPage() {
                   className="bg-brand-navy-light/70 border border-white/10 p-5 rounded-2xl backdrop-blur-md flex items-center justify-between gap-4 shadow-md hover:border-brand-cyan/40 transition-all"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-orange to-brand-gold flex items-center justify-center font-black text-lg text-brand-navy shadow-inner">
-                        {friend.username.charAt(0).toUpperCase()}
-                      </div>
-                      <span
-                        className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-brand-navy ${
-                          friend.isOnline ? "bg-green-400" : "bg-gray-500"
-                        }`}
-                      />
-                    </div>
+                    <UserAvatar
+                      avatarUrl={friend.avatarUrl}
+                      username={friend.username}
+                      size="md"
+                      isOnline={friend.isOnline}
+                    />
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-black text-base">{friend.username}</span>
@@ -258,19 +255,30 @@ export default function FriendsPage() {
                     <Link href={`/duel`}>
                       <button
                         title={t("challenge1v1")}
-                        className="p-2.5 bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan hover:bg-brand-cyan hover:text-brand-navy rounded-xl font-bold transition-all shadow"
+                        className="p-2.5 bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan hover:bg-brand-cyan hover:text-brand-navy rounded-xl font-bold transition-all shadow cursor-pointer"
                       >
                         <Swords className="w-4 h-4" />
                       </button>
                     </Link>
-                    <Link href={`/chat`}>
-                      <button
-                        title={t("sendMessage")}
-                        className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-all"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </button>
-                    </Link>
+                    <button
+                      onClick={() => {
+                        window.dispatchEvent(
+                          new CustomEvent("open-private-chat", {
+                            detail: {
+                              userId: friend.id,
+                              username: friend.username,
+                              avatarUrl: friend.avatarUrl,
+                              level: friend.level,
+                              rating: friend.rating,
+                            },
+                          })
+                        );
+                      }}
+                      title={t("sendMessage")}
+                      className="p-2.5 bg-brand-gold/20 border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-navy rounded-xl font-bold transition-all shadow cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
                   </div>
                 </motion.div>
               ))

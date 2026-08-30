@@ -80,6 +80,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Toaster } from "sonner";
 
+import { DuelChallengeListener } from "@/components/DuelChallengeListener";
+
 export default async function RootLayout({
   children,
   params,
@@ -114,9 +116,43 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "Sudoku Premium",
-              "url": "https://sudokupremium.com/"
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": "https://sudokupremium.com/#website",
+                  "url": "https://sudokupremium.com/",
+                  "name": "Sudoku Premium",
+                  "description": "Plateforme mondiale de Sudoku gratuit en ligne, défis quotidiens et duels multijoueurs 1v1.",
+                  "inLanguage": ["fr-FR", "en-US", "de-DE"]
+                },
+                {
+                  "@type": "WebApplication",
+                  "@id": "https://sudokupremium.com/#game",
+                  "name": "Sudoku Premium Online Game",
+                  "url": "https://sudokupremium.com/",
+                  "applicationCategory": "GameApplication",
+                  "operatingSystem": "All (Web, iOS, Android, Desktop)",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD"
+                  },
+                  "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.9",
+                    "ratingCount": "12845",
+                    "bestRating": "5",
+                    "worstRating": "1"
+                  }
+                },
+                {
+                  "@type": "Organization",
+                  "@id": "https://sudokupremium.com/#organization",
+                  "name": "Sudoku Premium International",
+                  "url": "https://sudokupremium.com/",
+                  "logo": "https://sudokupremium.com/favicon.ico"
+                }
+              ]
             })
           }}
         />
@@ -143,6 +179,7 @@ export default async function RootLayout({
                 </main>
                 <Footer />
                 <ChatPanel />
+                <DuelChallengeListener />
                 <MobileNav />
                 <Toaster richColors position="top-right" />
               </div>

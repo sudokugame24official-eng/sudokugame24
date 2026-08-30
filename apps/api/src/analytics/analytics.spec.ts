@@ -2,11 +2,15 @@ import { AnalyticsService } from './analytics.service';
 
 jest.mock('@repo/database', () => ({
   prisma: {
-    analyticsEvent: { create: jest.fn(), groupBy: jest.fn(), findMany: jest.fn() },
+    analyticsEvent: {
+      create: jest.fn(),
+      groupBy: jest.fn(),
+      findMany: jest.fn(),
+    },
     analyticsDaily: { upsert: jest.fn(), findMany: jest.fn() },
   },
 }));
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const { prisma } = require('@repo/database');
 
 describe('P1-V: analytics engine', () => {
@@ -18,7 +22,7 @@ describe('P1-V: analytics engine', () => {
   });
 
   it('drops UNKNOWN event names (no free-form table bloat)', async () => {
-    await service.track({ name: 'arbitrary_thing' } as any);
+    await service.track({ name: 'arbitrary_thing' });
     expect(prisma.analyticsEvent.create).not.toHaveBeenCalled();
   });
 
@@ -38,7 +42,9 @@ describe('P1-V: analytics engine', () => {
   });
 
   it('track NEVER throws (analytics must not take the game down)', async () => {
-    (prisma.analyticsEvent.create as jest.Mock).mockRejectedValue(new Error('db down'));
+    (prisma.analyticsEvent.create as jest.Mock).mockRejectedValue(
+      new Error('db down'),
+    );
     await expect(service.track({ name: 'login' })).resolves.toBeUndefined();
   });
 
@@ -48,7 +54,9 @@ describe('P1-V: analytics engine', () => {
       { name: 'duel_complete', _count: { id: 12 } },
     ]);
     (prisma.analyticsEvent.findMany as jest.Mock).mockResolvedValue([
-      { userId: 'u1' }, { userId: 'u2' }, { userId: 'u3' },
+      { userId: 'u1' },
+      { userId: 'u2' },
+      { userId: 'u3' },
     ]);
 
     const rows = await service.rollupDaily();
@@ -71,29 +79,33 @@ describe('P1-V: analytics engine', () => {
 
   it('insights stay SILENT on small samples and noisy changes', async () => {
     // 5 events this week, 4 before -> below MIN_SAMPLE (20)
-    (prisma.analyticsDaily.findMany as jest.Mock).mockImplementation(({ where }) => {
-      const from = where.day.gte.getTime();
-      const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
-      return Promise.resolve(
-        from < weekAgo
-          ? [{ metric: 'dau', value: 9 }] // 4 previous + 5 current = totals14
-          : [{ metric: 'dau', value: 5 }],
-      );
-    });
+    (prisma.analyticsDaily.findMany as jest.Mock).mockImplementation(
+      ({ where }) => {
+        const from = where.day.gte.getTime();
+        const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+        return Promise.resolve(
+          from < weekAgo
+            ? [{ metric: 'dau', value: 9 }] // 4 previous + 5 current = totals14
+            : [{ metric: 'dau', value: 5 }],
+        );
+      },
+    );
     const insights = await service.getInsights('en');
     expect(insights).toEqual([]);
   });
 
   it('insights emit a plain sentence with period + numbers on real change', async () => {
-    (prisma.analyticsDaily.findMany as jest.Mock).mockImplementation(({ where }) => {
-      const from = where.day.gte.getTime();
-      const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
-      return Promise.resolve(
-        from < weekAgo
-          ? [{ metric: 'daily_complete', value: 220 }] // 100 previous + 120 current
-          : [{ metric: 'daily_complete', value: 120 }],
-      );
-    });
+    (prisma.analyticsDaily.findMany as jest.Mock).mockImplementation(
+      ({ where }) => {
+        const from = where.day.gte.getTime();
+        const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+        return Promise.resolve(
+          from < weekAgo
+            ? [{ metric: 'daily_complete', value: 220 }] // 100 previous + 120 current
+            : [{ metric: 'daily_complete', value: 120 }],
+        );
+      },
+    );
     const insights = await service.getInsights('en');
     expect(insights).toHaveLength(1);
     expect(insights[0]).toContain('Daily Challenge participation');

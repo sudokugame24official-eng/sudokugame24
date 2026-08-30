@@ -57,55 +57,216 @@ export default function AdminLayout({
     }
   }, [loading, isStaff, lang, router]);
 
-  // 10 Logical Admin Groups matching Owner Control Center architecture
+  // 11 Logical Owner Groups matching World-Class Owner Control Center architecture
+  const adminLabels: Record<string, Record<string, string>> = {
+    fr: {
+      "Overview": "1. Vue d'Ensemble",
+      "Dashboard": "Tableau de bord",
+      "Analytics": "Statistiques Globales",
+      "Live Activity": "Activité en Direct",
+      "System Health": "Santé Système",
+      "Play & Games": "2. Jeux & Modes",
+      "Game Modes": "Modes de Jeu",
+      "Daily Challenge": "Défi Quotidien",
+      "Duel Settings": "Paramètres de Duel",
+      "Community": "3. Communauté & Joueurs",
+      "Users": "Gestion des Utilisateurs",
+      "Moderation": "Modération & Signalements",
+      "Forum": "Forum & Sujets Officiels",
+      "Support Tickets": "Support & Tickets",
+      "Content": "4. Contenu & Médias",
+      "CMS Articles": "Articles & Blog",
+      "Media Library": "Médiathèque",
+      "SEO & Growth": "5. SEO & Croissance",
+      "SEO Control": "Contrôle SEO & Métas",
+      "Marketing": "6. Marketing & Tracking",
+      "Marketing Integrations": "Pixels & Intégrations",
+      "Monetization": "7. Monétisation & Boutique",
+      "Shop & Products": "Boutique & Produits",
+      "Coin Economy": "Économie de Pièces",
+      "Google Ads": "Publicités Google Ads",
+      "Communication": "8. Communication & Emails",
+      "Email Templates": "Modèles d'Emails",
+      "Appearance": "9. Apparence & Marque",
+      "Theme Studio": "Studio de Thème",
+      "Homepage Builder": "Constructeur d'Accueil",
+      "Security & Governance": "10. Sécurité & Gouvernance",
+      "Roles & Permissions": "Rôles & Permissions",
+      "Audit Logs": "Journaux d'Audit",
+      "System": "11. Système & Maintenance",
+      "Feature Flags": "Fonctionnalités & Flags",
+      "Settings": "Paramètres Généraux",
+      "logout": "Déconnexion",
+      "ownerDashboard": "Owner Control Center — Sudoku Business OS",
+      "unknown": "Inconnu",
+      "loading": "Chargement du Control Center…",
+      "accessDenied": "Accès réservé au Propriétaire",
+      "accessDeniedDesc": "Cette section nécessite les privilèges d'administration."
+    },
+    de: {
+      "Overview": "1. Übersicht",
+      "Dashboard": "Dashboard",
+      "Analytics": "Globale Analytik",
+      "Live Activity": "Live-Aktivität",
+      "System Health": "Systemstatus",
+      "Play & Games": "2. Spiele & Modi",
+      "Game Modes": "Spielmodi",
+      "Daily Challenge": "Tägliche Herausforderung",
+      "Duel Settings": "Duell-Einstellungen",
+      "Community": "3. Community & Spieler",
+      "Users": "Benutzerverwaltung",
+      "Moderation": "Moderation & Berichte",
+      "Forum": "Forum & Themen",
+      "Support Tickets": "Support-Tickets",
+      "Content": "4. Inhalt & Medien",
+      "CMS Articles": "CMS-Artikel & Blog",
+      "Media Library": "Medienbibliothek",
+      "SEO & Growth": "5. SEO & Wachstum",
+      "SEO Control": "SEO-Verwaltung & Metas",
+      "Marketing": "6. Marketing & Tracking",
+      "Marketing Integrations": "Pixel & Integrationen",
+      "Monetization": "7. Monetarisierung & Shop",
+      "Shop & Products": "Shop & Produkte",
+      "Coin Economy": "Münzwirtschaft",
+      "Google Ads": "Google Ads Werbung",
+      "Communication": "8. Kommunikation & E-Mails",
+      "Email Templates": "E-Mail-Vorlagen",
+      "Appearance": "9. Erscheinungsbild & Marke",
+      "Theme Studio": "Theme-Studio",
+      "Homepage Builder": "Startseiten-Builder",
+      "Security & Governance": "10. Sicherheit & Governance",
+      "Roles & Permissions": "Rollen & Berechtigungen",
+      "Audit Logs": "Audit-Protokolle",
+      "System": "11. System & Wartung",
+      "Feature Flags": "Feature-Flags",
+      "Settings": "Allgemeine Einstellungen",
+      "logout": "Abmelden",
+      "ownerDashboard": "Owner Control Center — Sudoku Business OS",
+      "unknown": "Unbekannt",
+      "loading": "Wird geladen…",
+      "accessDenied": "Zugriff verweigert",
+      "accessDeniedDesc": "Dieser Bereich ist dem Administrationsteam vorbehalten."
+    },
+    en: {
+      "Overview": "1. Overview",
+      "Dashboard": "Dashboard",
+      "Analytics": "Global Analytics",
+      "Live Activity": "Live Activity",
+      "System Health": "System Health",
+      "Play & Games": "2. Play & Games",
+      "Game Modes": "Game Modes",
+      "Daily Challenge": "Daily Challenge",
+      "Duel Settings": "Duel Settings",
+      "Community": "3. Community & Players",
+      "Users": "Users Management",
+      "Moderation": "Moderation & Reports",
+      "Forum": "Forum & Official Topics",
+      "Support Tickets": "Support Tickets",
+      "Content": "4. Content & Media",
+      "CMS Articles": "CMS Articles & Blog",
+      "Media Library": "Media Library",
+      "SEO & Growth": "5. SEO & Growth",
+      "SEO Control": "SEO Control & Metas",
+      "Marketing": "6. Marketing & Tracking",
+      "Marketing Integrations": "Pixels & Integrations",
+      "Monetization": "7. Monetization & Shop",
+      "Shop & Products": "Shop & Products",
+      "Coin Economy": "Coin Economy",
+      "Google Ads": "Google Ads",
+      "Communication": "8. Communication & Emails",
+      "Email Templates": "Email Templates",
+      "Appearance": "9. Appearance & Branding",
+      "Theme Studio": "Theme Studio",
+      "Homepage Builder": "Homepage Builder",
+      "Security & Governance": "10. Security & Governance",
+      "Roles & Permissions": "Roles & Permissions",
+      "Audit Logs": "Audit Logs",
+      "System": "11. System & Maintenance",
+      "Feature Flags": "Feature Flags",
+      "Settings": "General Settings",
+      "logout": "Log Out",
+      "ownerDashboard": "Owner Control Center — Sudoku Business OS",
+      "unknown": "Unknown",
+      "loading": "Loading Control Center…",
+      "accessDenied": "Access Denied",
+      "accessDeniedDesc": "This section is restricted to the administration team."
+    }
+  };
+
+  const tAdmin = (key: string) =>
+    adminLabels[lang]?.[key] || adminLabels["en"]?.[key] || key;
+
+  // 11 Complete Owner Control Center Navigation Groups
   const menuSections = [
     {
-      title: "Overview",
+      title: tAdmin("Overview"),
       items: [
-        { name: "Dashboard", path: "", icon: LayoutDashboard },
-        { name: "Analytics", path: "/analytics", icon: BarChart },
-        { name: "System Health", path: "/system/health", icon: Server },
+        { name: tAdmin("Dashboard"), path: "", icon: LayoutDashboard },
+        { name: tAdmin("Analytics"), path: "/analytics", icon: BarChart },
+        { name: tAdmin("System Health"), path: "/system/health", icon: Server },
       ],
     },
     {
-      title: "Play & Games",
+      title: tAdmin("Play & Games"),
       items: [
-        { name: "Game Modes", path: "/modes", icon: Gamepad2 },
-        { name: "Daily Challenge", path: "/daily", icon: CalendarDays },
+        { name: tAdmin("Game Modes"), path: "/modes", icon: Gamepad2 },
+        { name: tAdmin("Daily Challenge"), path: "/daily", icon: CalendarDays },
       ],
     },
     {
-      title: "Community & Support",
+      title: tAdmin("Community"),
       items: [
-        { name: "Users", path: "/users", icon: Users },
-        { name: "Moderation", path: "/moderation", icon: ShieldAlert },
-        { name: "Forum", path: "/forum", icon: MessageSquare },
-        { name: "Support Tickets", path: "/support", icon: LifeBuoy },
+        { name: tAdmin("Users"), path: "/users", icon: Users },
+        { name: tAdmin("Moderation"), path: "/moderation", icon: ShieldAlert },
+        { name: tAdmin("Forum"), path: "/forum", icon: MessageSquare },
+        { name: tAdmin("Support Tickets"), path: "/support", icon: LifeBuoy },
       ],
     },
     {
-      title: "Content & Media",
+      title: tAdmin("Content"),
       items: [
-        { name: "CMS Articles", path: "/content", icon: FileText },
-        { name: "Media Library", path: "/media", icon: ImageIcon },
+        { name: tAdmin("CMS Articles"), path: "/content", icon: FileText },
+        { name: tAdmin("Media Library"), path: "/media", icon: ImageIcon },
       ],
     },
     {
-      title: "Monetization & Growth",
+      title: tAdmin("SEO & Growth"),
       items: [
-        { name: "Shop & Perks", path: "/shop", icon: ShoppingCart },
-        { name: "Monetization & Ads", path: "/monetization", icon: DollarSign },
-        { name: "SEO Control", path: "/seo", icon: Megaphone },
+        { name: tAdmin("SEO Control"), path: "/seo", icon: Megaphone },
       ],
     },
     {
-      title: "Appearance & Settings",
+      title: tAdmin("Marketing"),
       items: [
-        { name: "Theme Studio", path: "/theme", icon: Palette },
-        { name: "Homepage Builder", path: "/homepage", icon: LayoutDashboard },
-        { name: "Feature Flags", path: "/features", icon: ToggleLeft },
-        { name: "Audit Logs", path: "/audit", icon: ScrollText },
-        { name: "Settings", path: "/settings", icon: Settings },
+        { name: tAdmin("Marketing Integrations"), path: "/marketing", icon: DollarSign },
+      ],
+    },
+    {
+      title: tAdmin("Monetization"),
+      items: [
+        { name: tAdmin("Google Ads"), path: "/ads", icon: DollarSign },
+        { name: tAdmin("Coin Economy"), path: "/monetization", icon: DollarSign },
+        { name: tAdmin("Shop & Products"), path: "/shop", icon: ShoppingCart },
+      ],
+    },
+    {
+      title: tAdmin("Appearance"),
+      items: [
+        { name: tAdmin("Theme Studio"), path: "/theme", icon: Palette },
+        { name: tAdmin("Homepage Builder"), path: "/homepage", icon: LayoutDashboard },
+      ],
+    },
+    {
+      title: tAdmin("Security & Governance"),
+      items: [
+        { name: tAdmin("Audit Logs"), path: "/audit", icon: ScrollText },
+      ],
+    },
+    {
+      title: tAdmin("System"),
+      items: [
+        { name: tAdmin("Feature Flags"), path: "/features", icon: ToggleLeft },
+        { name: tAdmin("Settings"), path: "/settings", icon: Settings },
       ],
     },
   ];
@@ -126,7 +287,7 @@ export default function AdminLayout({
   if (loading) {
     return (
       <div className="min-h-screen bg-[#020F24] text-white flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">Chargement…</p>
+        <p className="text-muted-foreground animate-pulse">{tAdmin("loading")}</p>
       </div>
     );
   }
@@ -136,9 +297,9 @@ export default function AdminLayout({
       <div className="min-h-screen bg-[#020F24] text-white flex items-center justify-center">
         <div className="text-center">
           <Lock className="w-12 h-12 mx-auto mb-4 text-red-500" />
-          <h1 className="text-2xl font-black mb-2">Accès refusé</h1>
+          <h1 className="text-2xl font-black mb-2">{tAdmin("accessDenied")}</h1>
           <p className="text-muted-foreground">
-            Cette section est réservée à l&apos;équipe d&apos;administration.
+            {tAdmin("accessDeniedDesc")}
           </p>
         </div>
       </div>
@@ -203,7 +364,7 @@ export default function AdminLayout({
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-bold truncate">
-                {user?.profile?.username || user?.email || "Inconnu"}
+                {user?.profile?.username || user?.email || tAdmin("unknown")}
               </p>
               <p className="text-xs text-primary truncate font-medium">{user?.role}</p>
             </div>
@@ -212,7 +373,7 @@ export default function AdminLayout({
             onClick={logout}
             className="mt-4 flex items-center justify-center gap-2 w-full py-2 text-sm text-muted-foreground hover:text-white transition-colors"
           >
-            <LogOut className="w-4 h-4" /> Déconnexion
+            <LogOut className="w-4 h-4" /> {tAdmin("logout")}
           </button>
         </div>
       </aside>
@@ -220,7 +381,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-20 bg-card/40 border-b border-white/10 backdrop-blur-2xl flex items-center justify-between px-8 shrink-0">
-          <h2 className="text-xl font-black hidden md:block">Owner Dashboard</h2>
+          <h2 className="text-xl font-black hidden md:block">{tAdmin("ownerDashboard")}</h2>
         </header>
 
         <div className="flex-1 overflow-y-auto p-8">

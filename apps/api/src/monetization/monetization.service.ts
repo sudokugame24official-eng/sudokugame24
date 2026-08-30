@@ -28,7 +28,9 @@ export class MonetizationService {
     // ADS_ENABLED for the same concept. Canonical keys win, legacy keys are
     // read only when the canonical one is absent.
     if (key === 'ADS_ENABLED') {
-      const legacy = await prisma.featureFlag.findUnique({ where: { key: 'ENABLE_ADS' } });
+      const legacy = await prisma.featureFlag.findUnique({
+        where: { key: 'ENABLE_ADS' },
+      });
       return legacy?.enabled ?? false;
     }
     return false;
@@ -68,23 +70,26 @@ export class MonetizationService {
    * P1-F/G: full DB-driven ad slot configuration (upsert by slotName).
    * Defaults keep ads OFF; the owner enables per-slot when ready.
    */
-  async updateAdConfig(slotName: string, data: {
-    provider?: string;
-    enabled?: boolean;
-    publisherId?: string;
-    adSlotId?: string;
-    deviceTarget?: string;
-    pageTarget?: string;
-    placement?: string;
-    format?: string;
-    width?: number;
-    height?: number;
-    lazyLoad?: boolean;
-    consentRequired?: boolean;
-    frequencyCap?: number;
-    experimentGroup?: string;
-    priority?: number;
-  }) {
+  async updateAdConfig(
+    slotName: string,
+    data: {
+      provider?: string;
+      enabled?: boolean;
+      publisherId?: string;
+      adSlotId?: string;
+      deviceTarget?: string;
+      pageTarget?: string;
+      placement?: string;
+      format?: string;
+      width?: number;
+      height?: number;
+      lazyLoad?: boolean;
+      consentRequired?: boolean;
+      frequencyCap?: number;
+      experimentGroup?: string;
+      priority?: number;
+    },
+  ) {
     const config = await prisma.adSlotConfig.upsert({
       where: { slotName },
       update: data,

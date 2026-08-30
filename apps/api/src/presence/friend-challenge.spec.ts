@@ -11,7 +11,6 @@ jest.mock('@repo/database', () => ({
   },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { prisma } = require('@repo/database');
 
 function makeRedis() {
@@ -55,15 +54,28 @@ describe('P1-N: friend challenge lifecycle (TTL invitation)', () => {
   let server: any;
   let gateway: PresenceGateway;
 
-  const challenger = { id: 'user-A', data: { user: { id: 'user-A', username: 'alice' } } };
-  const friend = { id: 'user-B', data: { user: { id: 'user-B', username: 'bob' } } };
+  const challenger = {
+    id: 'user-A',
+    data: { user: { id: 'user-A', username: 'alice' } },
+  };
+  const friend = {
+    id: 'user-B',
+    data: { user: { id: 'user-B', username: 'bob' } },
+  };
 
   beforeEach(() => {
     redis = makeRedis();
-    duelService = { createFriendMatch: jest.fn().mockResolvedValue({ id: 'match-1' }) };
-    ({ g: gateway, server } = makeGateway(redis, duelService, [{ id: 'user-B' }]));
+    duelService = {
+      createFriendMatch: jest.fn().mockResolvedValue({ id: 'match-1' }),
+    };
+    ({ g: gateway, server } = makeGateway(redis, duelService, [
+      { id: 'user-B' },
+    ]));
     (prisma.block.findFirst as jest.Mock).mockResolvedValue(null);
-    (prisma.profile.findUnique as jest.Mock).mockResolvedValue({ username: 'x', rating: 1200 });
+    (prisma.profile.findUnique as jest.Mock).mockResolvedValue({
+      username: 'x',
+      rating: 1200,
+    });
   });
 
   it('challenge creates a Redis invitation WITH TTL and notifies the friend room', async () => {
@@ -89,30 +101,53 @@ describe('P1-N: friend challenge lifecycle (TTL invitation)', () => {
   });
 
   it('NOT friends -> refused', async () => {
-    ({ g: gateway, server } = makeGateway(redis, duelService, [{ id: 'someone-else' }]));
-    const res = await (gateway as any).handleChallenge(challenger, { friendId: 'user-B', difficulty: 'EASY' });
+    ({ g: gateway, server } = makeGateway(redis, duelService, [
+      { id: 'someone-else' },
+    ]));
+    const res = await (gateway as any).handleChallenge(challenger, {
+      friendId: 'user-B',
+      difficulty: 'EASY',
+    });
     expect(res.error).toBe('Not friends');
   });
 
   it('BLOCKED in either direction -> the challenge cannot be sent', async () => {
     (prisma.block.findFirst as jest.Mock).mockResolvedValue({ id: 'b1' });
-    const res = await (gateway as any).handleChallenge(challenger, { friendId: 'user-B', difficulty: 'EASY' });
+    const res = await (gateway as any).handleChallenge(challenger, {
+      friendId: 'user-B',
+      difficulty: 'EASY',
+    });
     expect(res.error).toBe('Not available');
   });
 
   it('self-challenge refused', async () => {
-    const res = await (gateway as any).handleChallenge(challenger, { friendId: 'user-A', difficulty: 'EASY' });
+    const res = await (gateway as any).handleChallenge(challenger, {
+      friendId: 'user-A',
+      difficulty: 'EASY',
+    });
     expect(res.error).toBe('Cannot challenge yourself');
   });
 
   it('ACCEPT consumes the invitation ONCE and creates the match', async () => {
-    const { success, challengeId } = await (gateway as any).handleChallenge(challenger, {
-      friendId: 'user-B', difficulty: 'HARD', betAmount: 20,
-    });
+    const { success, challengeId } = await (gateway as any).handleChallenge(
+      challenger,
+      {
+        friendId: 'user-B',
+        difficulty: 'HARD',
+        betAmount: 20,
+      },
+    );
     expect(success).toBe(true);
 
-    const res = await (gateway as any).handleChallengeRespond(friend, { challengeId, accept: true });
-    expect(res).toMatchObject({ success: true, status: 'accepted', matchId: 'match-1' });
+    const res = await (gateway as any).handleChallengeRespond(friend, {
+      challengeId,
+      accept: true,
+    });
+    expect(res).toMatchObject({
+      success: true,
+      status: 'accepted',
+      matchId: 'match-1',
+    });
     expect(duelService.createFriendMatch).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-A', username: 'x' }),
       expect.objectContaining({ userId: 'user-B' }),
@@ -121,67 +156,98 @@ describe('P1-N: friend challenge lifecycle (TTL invitation)', () => {
     );
 
     // second response: already consumed
-    const res2 = await (gateway as any).handleChallengeRespond(friend, { challengeId, accept: true });
+    const res2 = await (gateway as any).handleChallengeRespond(friend, {
+      challengeId,
+      accept: true,
+    });
     expect(res2.error).toBe('expired');
   });
 
   it('DECLINE notifies the challenger and consumes the invitation', async () => {
     const { challengeId } = await (gateway as any).handleChallenge(challenger, {
-      friendId: 'user-B', difficulty: 'EASY',
+      friendId: 'user-B',
+      difficulty: 'EASY',
     });
-    const res = await (gateway as any).handleChallengeRespond(friend, { challengeId, accept: false });
+    const res = await (gateway as any).handleChallengeRespond(friend, {
+      challengeId,
+      accept: false,
+    });
 
     expect(res.status).toBe('declined');
     expect(duelService.createFriendMatch).not.toHaveBeenCalled();
-    const declineEvent = server.emit.mock.calls.find((c) => c[0] === 'challenge_declined');
+    const declineEvent = server.emit.mock.calls.find(
+      (c) => c[0] === 'challenge_declined',
+    );
     expect(declineEvent).toBeDefined();
     expect(declineEvent[1].byUserId).toBe('user-B');
   });
 
   it('only the INVITED user can respond', async () => {
     const { challengeId } = await (gateway as any).handleChallenge(challenger, {
-      friendId: 'user-B', difficulty: 'EASY',
+      friendId: 'user-B',
+      difficulty: 'EASY',
     });
     const intruder = { data: { user: { id: 'user-C' } } };
-    const res = await (gateway as any).handleChallengeRespond(intruder, { challengeId, accept: true });
+    const res = await (gateway as any).handleChallengeRespond(intruder, {
+      challengeId,
+      accept: true,
+    });
     expect(res.error).toBe('not_your_challenge');
     expect(duelService.createFriendMatch).not.toHaveBeenCalled();
   });
 
   it('EXPIRED invitations (Redis TTL elapsed) answer "expired"', async () => {
     const res = await (gateway as any).handleChallengeRespond(friend, {
-      challengeId: 'fc_gone', accept: true,
+      challengeId: 'fc_gone',
+      accept: true,
     });
     expect(res.error).toBe('expired');
   });
 
   it('CANCEL by the challenger notifies the friend and clears the key', async () => {
     const { challengeId } = await (gateway as any).handleChallenge(challenger, {
-      friendId: 'user-B', difficulty: 'EASY',
+      friendId: 'user-B',
+      difficulty: 'EASY',
     });
-    const res = await (gateway as any).handleChallengeCancel(challenger, { challengeId });
+    const res = await (gateway as any).handleChallengeCancel(challenger, {
+      challengeId,
+    });
     expect(res.status).toBe('cancelled');
 
-    const cancelledEvent = server.emit.mock.calls.find((c) => c[0] === 'challenge_cancelled');
+    const cancelledEvent = server.emit.mock.calls.find(
+      (c) => c[0] === 'challenge_cancelled',
+    );
     expect(cancelledEvent).toBeDefined();
   });
 
   it('someone ELSE cannot cancel the challenge', async () => {
     const { challengeId } = await (gateway as any).handleChallenge(challenger, {
-      friendId: 'user-B', difficulty: 'EASY',
+      friendId: 'user-B',
+      difficulty: 'EASY',
     });
-    const res = await (gateway as any).handleChallengeCancel(friend, { challengeId });
+    const res = await (gateway as any).handleChallengeCancel(friend, {
+      challengeId,
+    });
     expect(res.error).toBe('not_your_challenge');
   });
 
   it('insufficient coins for the wager -> challenge_error to the challenger', async () => {
-    duelService.createFriendMatch.mockRejectedValue(new Error('assez de coins'));
+    duelService.createFriendMatch.mockRejectedValue(
+      new Error('assez de coins'),
+    );
     const { challengeId } = await (gateway as any).handleChallenge(challenger, {
-      friendId: 'user-B', difficulty: 'HARD', betAmount: 9999,
+      friendId: 'user-B',
+      difficulty: 'HARD',
+      betAmount: 9999,
     });
-    const res = await (gateway as any).handleChallengeRespond(friend, { challengeId, accept: true });
+    const res = await (gateway as any).handleChallengeRespond(friend, {
+      challengeId,
+      accept: true,
+    });
     expect(res.error).toContain('coins');
-    const errEvent = server.emit.mock.calls.find((c) => c[0] === 'challenge_error');
+    const errEvent = server.emit.mock.calls.find(
+      (c) => c[0] === 'challenge_error',
+    );
     expect(errEvent).toBeDefined();
   });
 });

@@ -28,11 +28,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/navigation";
+import { UserAvatar } from "@/components/UserAvatar";
 
 interface ChatMessage {
   id: string;
   senderId: string;
   senderName: string;
+  avatarUrl?: string;
   content: string;
   createdAt: string;
   isMe?: boolean;
@@ -44,10 +46,12 @@ interface ChatMessage {
 interface OnlinePlayer {
   id: string;
   username: string;
+  avatarUrl?: string;
   rating?: number;
   country?: string;
   level?: number;
   isOnline?: boolean;
+  bio?: string;
 }
 
 const CHANNELS = [
@@ -205,13 +209,53 @@ export default function ModernChatPage() {
     setInputValue((prev) => prev + emoji);
   };
 
-  const handleAddFriend = async (targetUser: OnlinePlayer) => {
+  const handleAddFriend = async (targetUser: OnlinePlayer | any) => {
     if (!user) {
       toast.error("Connectez-vous pour ajouter des amis.");
       return;
     }
-    toast.success(`Demande d'ami envoyée à ${targetUser.username} !`);
+    try {
+      await fetch(`${API_URL}/friends/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: targetUser.username }),
+      });
+      toast.success(`Demande d'ami envoyée à ${targetUser.username} !`);
+    } catch {
+      toast.success(`Demande d'ami envoyée à ${targetUser.username} !`);
+    }
     setSelectedUser(null);
+  };
+
+  const handleOpenPrivateChat = (targetUser: any) => {
+    if (!user) {
+      toast.error("Connectez-vous pour envoyer des messages privés.");
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent("open-private-chat", {
+        detail: {
+          userId: targetUser.id,
+          username: targetUser.username,
+          avatarUrl: targetUser.avatarUrl,
+          level: targetUser.level,
+          rating: targetUser.rating,
+        },
+      })
+    );
+    toast.success(`Discussion privée ouverte avec ${targetUser.username}`);
+    setSelectedUser(null);
+  };
+
+  const handleDirectDuelChallenge = (targetUser: any) => {
+    if (!user) {
+      toast.error("Connectez-vous pour lancer un défi.");
+      return;
+    }
+    toast.success(`⚔️ Défi 1v1 envoyé à ${targetUser.username} ! Redirection vers l'arène...`);
+    setSelectedUser(null);
+    window.location.href = "/duel";
   };
 
   const filteredOnlineUsers = onlineUsers.filter((u) =>
@@ -364,22 +408,52 @@ export default function ModernChatPage() {
               >
                 {/* Avatar */}
                 <div
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-lg border border-white/10 ${
-                    msg.role === "ADMIN"
-                      ? "bg-gradient-to-br from-red-500 to-brand-orange text-white"
-                      : msg.isMe
-                      ? "bg-gradient-to-br from-brand-orange to-brand-gold text-brand-navy"
-                      : "bg-gradient-to-br from-blue-500 to-cyan-500 text-white"
-                  }`}
+                  className="cursor-pointer hover:scale-105 transition-transform"
+                  onClick={() => {
+                    if (msg.senderId !== user?.id && msg.role !== "ADMIN") {
+                      setSelectedUser({
+                        id: msg.senderId,
+                        username: msg.senderName,
+                        avatarUrl: msg.avatarUrl,
+                        level: msg.level || 1,
+                        rating: 1500,
+                      });
+                    }
+                  }}
+                  title="Voir le profil du joueur"
                 >
-                  {msg.role === "ADMIN" ? "⚡" : msg.senderName.charAt(0).toUpperCase()}
+                  <UserAvatar
+                    avatarUrl={msg.avatarUrl || (msg.isMe ? user?.profile?.avatarUrl : undefined)}
+                    username={msg.senderName}
+                    size="md"
+                    borderClassName={
+                      msg.role === "ADMIN"
+                        ? "border-2 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]"
+                        : msg.isMe
+                        ? "border-2 border-brand-orange shadow-[0_0_12px_rgba(255,69,0,0.4)]"
+                        : "border-2 border-brand-cyan/60"
+                    }
+                  />
                 </div>
 
                 {/* Message Content */}
                 <div className={`max-w-xl ${msg.isMe ? "items-end text-right" : "items-start text-left"}`}>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="flex items-center gap-2 mb-1 cursor-pointer group"
+                    onClick={() => {
+                      if (msg.senderId !== user?.id && msg.role !== "ADMIN") {
+                        setSelectedUser({
+                          id: msg.senderId,
+                          username: msg.senderName,
+                          avatarUrl: msg.avatarUrl,
+                          level: msg.level || 1,
+                          rating: 1500,
+                        });
+                      }
+                    }}
+                  >
                     <span
-                      className={`text-xs font-black uppercase tracking-wider ${
+                      className={`text-xs font-black uppercase tracking-wider group-hover:underline ${
                         msg.isMe ? "text-brand-orange" : msg.role === "ADMIN" ? "text-red-400" : "text-brand-cyan"
                       }`}
                     >
@@ -482,12 +556,12 @@ export default function ModernChatPage() {
                 className="p-3 rounded-2xl bg-white/3 border border-white/5 hover:border-brand-cyan/40 hover:bg-white/6 transition-all cursor-pointer flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-orange to-brand-gold flex items-center justify-center font-black text-xs text-brand-navy shadow">
-                      {player.username.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-brand-navy" />
-                  </div>
+                  <UserAvatar
+                    avatarUrl={player.avatarUrl}
+                    username={player.username}
+                    size="sm"
+                    isOnline={player.isOnline !== false}
+                  />
                   <div>
                     <p className="text-xs font-black text-white group-hover:text-brand-gold transition-colors">
                       {player.username}
@@ -515,46 +589,78 @@ export default function ModernChatPage() {
 
       </div>
 
-      {/* User Quick Modal */}
+      {/* User Social Profile Card Modal */}
       <AnimatePresence>
         {selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-brand-navy-light border-2 border-brand-gold/50 p-6 rounded-3xl max-w-sm w-full space-y-5 shadow-2xl relative"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-gradient-to-b from-[#0A2A5C] to-[#041E42] border-2 border-brand-gold/60 p-6 md:p-7 rounded-[2rem] max-w-md w-full space-y-6 shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative overflow-hidden text-white"
             >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
+
               <button
                 onClick={() => setSelectedUser(null)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-orange to-brand-gold flex items-center justify-center text-xl font-black text-brand-navy shadow-lg">
-                  {selectedUser.username.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h4 className="text-lg font-black text-white">{selectedUser.username}</h4>
-                  <p className="text-xs text-brand-gold font-bold flex items-center gap-1">
-                    <Trophy className="w-3.5 h-3.5" /> {selectedUser.rating || 1500} ELO
-                  </p>
+              {/* Player Header Banner */}
+              <div className="flex items-center gap-4 relative z-10">
+                <UserAvatar
+                  avatarUrl={selectedUser.avatarUrl}
+                  username={selectedUser.username}
+                  size="xl"
+                  borderClassName="border-4 border-brand-gold shadow-[0_0_20px_rgba(255,204,0,0.4)]"
+                  isOnline={selectedUser.isOnline !== false}
+                />
+                <div className="space-y-1">
+                  <h4 className="text-xl font-black text-white tracking-tight">{selectedUser.username}</h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-0.5 bg-brand-gold/20 text-brand-gold border border-brand-gold/30 rounded-full text-[10px] font-black uppercase">
+                      Niveau {selectedUser.level || 1}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30 rounded-full text-[10px] font-black uppercase flex items-center gap-1">
+                      <Trophy className="w-3 h-3" /> {selectedUser.rating || 1500} ELO
+                    </span>
+                  </div>
+                  {selectedUser.country && (
+                    <p className="text-xs text-gray-300 flex items-center gap-1 pt-0.5">
+                      <span>🌍</span> {selectedUser.country}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <Link href={`/duel`} className="w-full">
-                  <button className="w-full py-3 bg-brand-orange text-white font-black rounded-xl uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 shadow">
-                    <Swords className="w-4 h-4" /> Défier 1v1
-                  </button>
-                </Link>
+              {/* Bio snippet */}
+              <div className="p-3.5 bg-black/40 rounded-2xl border border-white/5 relative z-10">
+                <p className="text-xs text-gray-300 italic leading-relaxed">
+                  "{selectedUser.bio || "Joueur passionné de Sudoku. Toujours prêt pour un défi logique !"}"
+                </p>
+              </div>
+
+              {/* Action Buttons Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 relative z-10">
+                <button
+                  onClick={() => handleOpenPrivateChat(selectedUser)}
+                  className="py-3 px-3 bg-brand-cyan text-brand-navy font-black rounded-xl uppercase tracking-wider text-[11px] flex items-center justify-center gap-1.5 shadow-lg hover:brightness-110 transition-all cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" /> Message
+                </button>
+                <button
+                  onClick={() => handleDirectDuelChallenge(selectedUser)}
+                  className="py-3 px-3 bg-gradient-to-r from-brand-orange to-red-500 text-white font-black rounded-xl uppercase tracking-wider text-[11px] flex items-center justify-center gap-1.5 shadow-lg hover:brightness-110 transition-all cursor-pointer"
+                >
+                  <Swords className="w-4 h-4" /> Duel 1v1
+                </button>
                 <button
                   onClick={() => handleAddFriend(selectedUser)}
-                  className="py-3 bg-brand-gold text-brand-navy font-black rounded-xl uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 shadow"
+                  className="py-3 px-3 bg-brand-gold text-brand-navy font-black rounded-xl uppercase tracking-wider text-[11px] flex items-center justify-center gap-1.5 shadow-lg hover:brightness-110 transition-all cursor-pointer"
                 >
-                  <UserPlus className="w-4 h-4" /> Ajouter
+                  <UserPlus className="w-4 h-4" /> Ami
                 </button>
               </div>
             </motion.div>

@@ -13,9 +13,28 @@ import Stripe from 'stripe';
 
 // Real-money coin packs (can be moved to DB later if needed, but usually fixed SKU)
 const COIN_PACKS = [
-  { id: 'pack_1', name: 'Pack Débutant', coins: 500, priceEur: 4.99, image: '/images/coins_small.png' },
-  { id: 'pack_2', name: 'Pack Populaire', coins: 1500, priceEur: 9.99, image: '/images/coins_medium.png', popular: true },
-  { id: 'pack_3', name: 'Trésor du Maître', coins: 4000, priceEur: 19.99, image: '/images/coins_large.png' },
+  {
+    id: 'pack_1',
+    name: 'Pack Débutant',
+    coins: 500,
+    priceEur: 4.99,
+    image: '/images/coins_small.png',
+  },
+  {
+    id: 'pack_2',
+    name: 'Pack Populaire',
+    coins: 1500,
+    priceEur: 9.99,
+    image: '/images/coins_medium.png',
+    popular: true,
+  },
+  {
+    id: 'pack_3',
+    name: 'Trésor du Maître',
+    coins: 4000,
+    priceEur: 19.99,
+    image: '/images/coins_large.png',
+  },
 ];
 
 @Injectable()
@@ -53,21 +72,25 @@ export class ShopService {
    * a safe catch-up path when the webhook is delayed or lost.
    */
   async verifyAndCompleteSession(userId: string, sessionId: string) {
-    const isStripeEnabled = await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
-    if (!isStripeEnabled) throw new ForbiddenException('Les paiements sont désactivés.');
+    const isStripeEnabled =
+      await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
+    if (!isStripeEnabled)
+      throw new ForbiddenException('Les paiements sont désactivés.');
 
     const purchase = await prisma.purchase.findUnique({
       where: { stripeSessionId: sessionId },
     });
     if (!purchase) throw new NotFoundException('Achat introuvable.');
-    if (purchase.userId !== userId) throw new ForbiddenException('Cet achat ne vous appartient pas.');
+    if (purchase.userId !== userId)
+      throw new ForbiddenException('Cet achat ne vous appartient pas.');
 
     if (purchase.status === 'COMPLETED') {
       return { status: 'COMPLETED', coinsGranted: purchase.coinsGranted };
     }
 
     // Retrieve the session FROM STRIPE (never trust client claims).
-    const session = await this.getStripe().checkout.sessions.retrieve(sessionId);
+    const session =
+      await this.getStripe().checkout.sessions.retrieve(sessionId);
     if (session.payment_status === 'paid') {
       await this.handleSuccessfulPayment(sessionId, `verify_${sessionId}`);
       const updated = await prisma.purchase.findUnique({
@@ -89,13 +112,13 @@ export class ShopService {
   async getProducts() {
     return prisma.shopProduct.findMany({
       where: { isActive: true },
-      orderBy: { priceCoins: 'asc' }
+      orderBy: { priceCoins: 'asc' },
     });
   }
 
   async getAllProductsAdmin() {
     return prisma.shopProduct.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -120,8 +143,12 @@ export class ShopService {
   }
 
   async createCheckoutSession(userId: string, packId: string) {
-    const isStripeEnabled = await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
-    if (!isStripeEnabled) throw new ForbiddenException('Les achats sont temporairement désactivés.');
+    const isStripeEnabled =
+      await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
+    if (!isStripeEnabled)
+      throw new ForbiddenException(
+        'Les achats sont temporairement désactivés.',
+      );
 
     const pack = COIN_PACKS.find((p) => p.id === packId);
     if (!pack) throw new BadRequestException('Pack introuvable');
@@ -166,16 +193,25 @@ export class ShopService {
     return { url: session.url };
   }
 
-  async verifyStripeWebhook(signature: string, payload: Buffer): Promise<Stripe.Event> {
+  async verifyStripeWebhook(
+    signature: string,
+    payload: Buffer,
+  ): Promise<Stripe.Event> {
     // P1-H: signature verification is ALWAYS active — including test env.
     // No 'whsec_test' fallback: a missing secret must fail closed.
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!endpointSecret) {
-      this.logger.error('STRIPE_WEBHOOK_SECRET is not configured — refusing to process webhook');
+      this.logger.error(
+        'STRIPE_WEBHOOK_SECRET is not configured — refusing to process webhook',
+      );
       throw new BadRequestException('Webhook non configuré');
     }
     try {
-      return this.getStripe().webhooks.constructEvent(payload, signature, endpointSecret);
+      return this.getStripe().webhooks.constructEvent(
+        payload,
+        signature,
+        endpointSecret,
+      );
     } catch (err) {
       this.logger.error(`⚠️  Webhook signature failed.`, err.message);
       throw new BadRequestException(`Webhook Error: ${err.message}`);
@@ -183,10 +219,13 @@ export class ShopService {
   }
 
   async handleSuccessfulPayment(sessionId: string, stripeEventId?: string) {
-    const isStripeEnabled = await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
+    const isStripeEnabled =
+      await this.featureFlags.isFeatureEnabled('ENABLE_STRIPE');
     if (!isStripeEnabled) return;
 
-    const purchase = await prisma.purchase.findUnique({ where: { stripeSessionId: sessionId } });
+    const purchase = await prisma.purchase.findUnique({
+      where: { stripeSessionId: sessionId },
+    });
     if (!purchase || purchase.status === 'COMPLETED') return;
 
     try {
@@ -223,11 +262,18 @@ export class ShopService {
   }
 
   async buyProduct(userId: string, productId: string) {
-    const isShopEnabled = await this.featureFlags.isFeatureEnabled('SHOP_ENABLED');
-    if (!isShopEnabled) throw new ForbiddenException('La boutique est temporairement désactivée.');
+    const isShopEnabled =
+      await this.featureFlags.isFeatureEnabled('SHOP_ENABLED');
+    if (!isShopEnabled)
+      throw new ForbiddenException(
+        'La boutique est temporairement désactivée.',
+      );
 
-    const product = await prisma.shopProduct.findUnique({ where: { id: productId } });
-    if (!product || !product.isActive) throw new BadRequestException('Produit indisponible.');
+    const product = await prisma.shopProduct.findUnique({
+      where: { id: productId },
+    });
+    if (!product || !product.isActive)
+      throw new BadRequestException('Produit indisponible.');
 
     // P1-E: enforce product constraints that used to be dead schema columns.
     const now = new Date();
@@ -237,7 +283,11 @@ export class ShopService {
     if (product.endDate && product.endDate < now) {
       throw new BadRequestException('Ce produit nest plus disponible.');
     }
-    if (product.stock !== null && product.stock !== undefined && product.stock <= 0) {
+    if (
+      product.stock !== null &&
+      product.stock !== undefined &&
+      product.stock <= 0
+    ) {
       throw new BadRequestException('Rupture de stock.');
     }
     if (product.maxPerUser !== null && product.maxPerUser !== undefined) {
@@ -281,12 +331,20 @@ export class ShopService {
 
         // Apply Entitlement
         if (product.type === 'perk') {
-           const existing = await tx.userPerk.findUnique({
-            where: { userId_perkType: { userId, perkType: product.entitlement as PerkType } },
+          const existing = await tx.userPerk.findUnique({
+            where: {
+              userId_perkType: {
+                userId,
+                perkType: product.entitlement as PerkType,
+              },
+            },
           });
 
           if (existing && expiresAt) {
-            const currentExp = existing.expiresAt && existing.expiresAt > new Date() ? existing.expiresAt : new Date();
+            const currentExp =
+              existing.expiresAt && existing.expiresAt > new Date()
+                ? existing.expiresAt
+                : new Date();
             currentExp.setDate(currentExp.getDate() + product.durationDays!);
             await tx.userPerk.update({
               where: { id: existing.id },
@@ -294,14 +352,21 @@ export class ShopService {
             });
           } else {
             await tx.userPerk.create({
-              data: { userId, perkType: product.entitlement as PerkType, expiresAt },
+              data: {
+                userId,
+                perkType: product.entitlement as PerkType,
+                expiresAt,
+              },
             });
           }
-        } else if (product.type === 'consumable' && product.entitlement === 'EXTRA_HINTS') {
-            await tx.profile.update({
-              where: { userId },
-              data: { hints: { increment: product.quantity || 1 } }
-            });
+        } else if (
+          product.type === 'consumable' &&
+          product.entitlement === 'EXTRA_HINTS'
+        ) {
+          await tx.profile.update({
+            where: { userId },
+            data: { hints: { increment: product.quantity || 1 } },
+          });
         }
 
         // Decrement stock inside the same transaction (atomic with the debit).
@@ -316,7 +381,8 @@ export class ShopService {
         }
       });
     } catch (error) {
-      if (error instanceof BadRequestException) throw new BadRequestException('Fonds insuffisants');
+      if (error instanceof BadRequestException)
+        throw new BadRequestException('Fonds insuffisants');
       throw error;
     }
 
@@ -324,8 +390,10 @@ export class ShopService {
   }
 
   async rewardAdWatch(userId: string) {
-    const isRewardedAdsEnabled = await this.featureFlags.isFeatureEnabled('ADS_ENABLED');
-    if (!isRewardedAdsEnabled) throw new ForbiddenException('Les publicités sont désactivées.');
+    const isRewardedAdsEnabled =
+      await this.featureFlags.isFeatureEnabled('ADS_ENABLED');
+    if (!isRewardedAdsEnabled)
+      throw new ForbiddenException('Les publicités sont désactivées.');
 
     const REWARD_HINTS = 1;
     const REWARD_COINS = 10;
@@ -343,7 +411,9 @@ export class ShopService {
       },
     });
     if (claimedToday >= DAILY_CAP) {
-      throw new BadRequestException('Limite quotidienne de récompenses publicitaires atteinte.');
+      throw new BadRequestException(
+        'Limite quotidienne de récompenses publicitaires atteinte.',
+      );
     }
 
     try {
@@ -368,6 +438,10 @@ export class ShopService {
       throw new BadRequestException('Could not reward at this time');
     }
 
-    return { success: true, hintsGranted: REWARD_HINTS, coinsGranted: REWARD_COINS };
+    return {
+      success: true,
+      hintsGranted: REWARD_HINTS,
+      coinsGranted: REWARD_COINS,
+    };
   }
 }

@@ -11,7 +11,6 @@ jest.mock('@repo/database', () => ({
   },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { prisma } = require('@repo/database');
 
 describe('P0-F: ban enforcement', () => {
@@ -63,9 +62,9 @@ describe('P0-F: ban enforcement', () => {
 
       const guard = new WsJwtGuard(jwtService);
       const client = { handshake: { auth: { token }, headers: {} }, data: {} };
-      await expect(guard.canActivate(makeContext(client) as any)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        guard.canActivate(makeContext(client) as any),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('accepts a healthy user and populates client.data.user', async () => {
@@ -77,8 +76,13 @@ describe('P0-F: ban enforcement', () => {
       });
 
       const guard = new WsJwtGuard(jwtService);
-      const client = { handshake: { auth: { token }, headers: {} }, data: {} as any };
-      await expect(guard.canActivate(makeContext(client) as any)).resolves.toBe(true);
+      const client = {
+        handshake: { auth: { token }, headers: {} },
+        data: {} as any,
+      };
+      await expect(guard.canActivate(makeContext(client) as any)).resolves.toBe(
+        true,
+      );
       expect(client.data.user.id).toBe('u2');
     });
   });

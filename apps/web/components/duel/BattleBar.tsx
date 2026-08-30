@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PlayerIdentity } from "../PlayerIdentity";
 
 interface BattleBarProps {
-  player1: { id: string; username: string; score: number; level?: number };
-  player2: { id: string; username: string; score: number; level?: number };
+  player1: { id: string; username: string; score: number; level?: number; avatarUrl?: string | null };
+  player2: { id: string; username: string; score: number; level?: number; avatarUrl?: string | null };
   onPlayerClick?: (e: React.MouseEvent, user: { id: string; username: string }) => void;
 }
 
@@ -39,6 +39,7 @@ export const BattleBar: React.FC<BattleBarProps> = ({ player1, player2, onPlayer
         <div className="flex flex-col items-start gap-1 relative cursor-pointer" onClick={(e) => onPlayerClick?.(e, player1)}>
           <PlayerIdentity
             username={player1.username}
+            avatarUrl={player1.avatarUrl}
             level={player1.level || 1}
             size="lg"
           />
@@ -71,6 +72,7 @@ export const BattleBar: React.FC<BattleBarProps> = ({ player1, player2, onPlayer
         <div className="flex flex-col items-end gap-1 relative cursor-pointer" onClick={(e) => onPlayerClick?.(e, player2)}>
           <PlayerIdentity
             username={player2.username}
+            avatarUrl={player2.avatarUrl}
             level={player2.level || 1}
             size="lg"
           />

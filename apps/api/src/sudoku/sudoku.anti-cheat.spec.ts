@@ -11,7 +11,6 @@ jest.mock('@repo/database', () => {
   };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { prisma } = require('@repo/database');
 
 const progressionStub = { awardXP: jest.fn() } as any;
@@ -34,7 +33,7 @@ describe('Sudoku solo anti-cheat (P0-D regression)', () => {
       id: 'session-1',
     });
 
-    const res = await service.startSession('user-1', 'MEDIUM' as any);
+    const res = await service.startSession('user-1', 'MEDIUM');
 
     expect(res).toHaveProperty('sessionId', 'session-1');
     expect(res).toHaveProperty('initialBoard');
@@ -47,9 +46,10 @@ describe('Sudoku solo anti-cheat (P0-D regression)', () => {
     (prisma.sudokuPuzzle.create as jest.Mock).mockResolvedValue({ id: 'p2' });
     (prisma.gameSession.create as jest.Mock).mockResolvedValue({ id: 's2' });
 
-    await service.startSession('user-1', 'EASY' as any);
+    await service.startSession('user-1', 'EASY');
 
-    const createCall = (prisma.sudokuPuzzle.create as jest.Mock).mock.calls[0][0];
+    const createCall = (prisma.sudokuPuzzle.create as jest.Mock).mock
+      .calls[0][0];
     expect(createCall.data.solvedBoard).toBeDefined();
     expect(createCall.data.initialBoard).toBeDefined();
   });

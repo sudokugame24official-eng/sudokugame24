@@ -92,25 +92,27 @@ describe('CoinLedgerService - Integration & Concurrency', () => {
 
       for (let i = 0; i < TOTAL_REQUESTS; i++) {
         promises.push(
-          service.credit(
-            testUserId,
-            50,
-            CoinTransactionType.DAILY_REWARD,
-            'Test_Idempotency',
-            `reward_req_${i}`,
-            idempotencyKey,
-          ).catch(e => {
-            if (
-              e.status === 409 ||
-              e.status === 400 ||
-              e.name === 'ConflictException' ||
-              e.name === 'PrismaClientKnownRequestError' ||
-              e.message?.includes('Transaction')
-            ) {
-              return { success: false, error: e };
-            }
-            throw e;
-          })
+          service
+            .credit(
+              testUserId,
+              50,
+              CoinTransactionType.DAILY_REWARD,
+              'Test_Idempotency',
+              `reward_req_${i}`,
+              idempotencyKey,
+            )
+            .catch((e) => {
+              if (
+                e.status === 409 ||
+                e.status === 400 ||
+                e.name === 'ConflictException' ||
+                e.name === 'PrismaClientKnownRequestError' ||
+                e.message?.includes('Transaction')
+              ) {
+                return { success: false, error: e };
+              }
+              throw e;
+            }),
         );
       }
 

@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Param,
-  Req,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Param, Req } from '@nestjs/common';
 import { SudokuService } from './sudoku.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -19,7 +12,7 @@ export class SudokuController {
 
   @Post('start')
   async startSession(@Req() req: any, @Body() dto: StartSessionDto) {
-    return this.sudokuService.startSession(req.user.id, dto.difficulty as Difficulty);
+    return this.sudokuService.startSession(req.user.id, dto.difficulty);
   }
 
   @Post(':sessionId/submit')

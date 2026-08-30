@@ -6,13 +6,31 @@ import { prisma } from '@repo/database';
  * analytics must not take the game down.
  */
 const EVENT_NAMES = new Set([
-  'page_view', 'registration', 'login', 'logout',
-  'game_start', 'game_complete', 'daily_start', 'daily_complete',
-  'duel_start', 'duel_complete', 'friend_request', 'friend_accept',
-  'friend_challenge', 'forum_post', 'forum_reply',
-  'question_ask', 'question_answer', 'chat_message',
-  'shop_view', 'purchase', 'ad_impression', 'ad_reward',
-  'achievement_unlock', 'search', 'share',
+  'page_view',
+  'registration',
+  'login',
+  'logout',
+  'game_start',
+  'game_complete',
+  'daily_start',
+  'daily_complete',
+  'duel_start',
+  'duel_complete',
+  'friend_request',
+  'friend_accept',
+  'friend_challenge',
+  'forum_post',
+  'forum_reply',
+  'question_ask',
+  'question_answer',
+  'chat_message',
+  'shop_view',
+  'purchase',
+  'ad_impression',
+  'ad_reward',
+  'achievement_unlock',
+  'search',
+  'share',
 ]);
 
 export async function trackEvent(input: {

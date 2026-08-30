@@ -86,4 +86,3 @@ export class DailyController {
     return this.dailyService.getLeaderboard(challengeId);
   }
 }
-

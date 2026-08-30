@@ -1,4 +1,12 @@
-import { IsString, IsOptional, MinLength, MaxLength, IsEnum, IsInt, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  IsEnum,
+  IsInt,
+  Min,
+} from 'class-validator';
 
 export class TechniqueBaseDto {
   @IsString()

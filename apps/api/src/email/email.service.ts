@@ -97,4 +97,25 @@ export class EmailService {
       return false;
     }
   }
+
+  async sendRawEmail(toEmail: string, subject: string, htmlContent: string) {
+    try {
+      const mailOptions = {
+        from:
+          process.env.EMAIL_FROM || '"Sudoku Platform" <noreply@sudoku.com>',
+        to: toEmail,
+        subject,
+        html: htmlContent,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(
+        `Raw Email sent to ${toEmail} - Message ID: ${info.messageId}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to send raw email to ${toEmail}`, error);
+      return false;
+    }
+  }
 }

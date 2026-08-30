@@ -49,6 +49,12 @@ export class MarketingService {
     this.logger.log('Running weekly ranking emails...');
     try {
       const topUsers = await prisma.profile.findMany({
+        where: {
+          user: {
+            isBot: false,
+            isBanned: false,
+          },
+        },
         orderBy: { rating: 'desc' },
         take: 100,
         include: { user: true },

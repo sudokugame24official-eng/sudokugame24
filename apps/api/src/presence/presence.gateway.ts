@@ -142,7 +142,8 @@ export class PresenceGateway
   @SubscribeMessage('challenge_friend')
   async handleChallenge(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { friendId: string; difficulty: string; betAmount?: number },
+    @MessageBody()
+    payload: { friendId: string; difficulty: string; betAmount?: number },
   ) {
     const userId = client.data.user.id;
     const username = client.data.user.username;
@@ -238,7 +239,11 @@ export class PresenceGateway
 
     try {
       const match = await this.duelService.createFriendMatch(
-        { userId: challenge.fromId, username: p1.username, rating: p1.rating ?? 1200 },
+        {
+          userId: challenge.fromId,
+          username: p1.username,
+          rating: p1.rating ?? 1200,
+        },
         { userId, username: p2.username, rating: p2.rating ?? 1200 },
         challenge.difficulty,
         challenge.betAmount,
@@ -342,7 +347,11 @@ export class PresenceGateway
     if (!acquired) return;
     try {
       const cutoff = Date.now() - HEARTBEAT_TTL_SEC * 1000;
-      const removed = await redis.zremrangebyscore(PRESENCE_KEY, '-inf', cutoff);
+      const removed = await redis.zremrangebyscore(
+        PRESENCE_KEY,
+        '-inf',
+        cutoff,
+      );
       if (removed > 0) {
         this.logger.log(`presence sweep: removed ${removed} stale users`);
       }

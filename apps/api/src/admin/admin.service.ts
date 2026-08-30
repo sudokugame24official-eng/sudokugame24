@@ -2,16 +2,26 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { prisma, Role, TicketStatus, CoinTransactionType } from '@repo/database';
+import {
+  prisma,
+  Role,
+  TicketStatus,
+  CoinTransactionType,
+} from '@repo/database';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private readonly coinLedger: CoinLedgerService) {}
+  constructor(
+    private readonly coinLedger: CoinLedgerService,
+    private readonly emailService: EmailService,
+  ) {}
 
   // --- AUDIT LOGS ---
   /**
@@ -63,6 +73,7 @@ export class AdminService {
     search?: string;
     role?: string;
     banned?: boolean;
+    isBot?: boolean;
     page?: number;
     pageSize?: number;
   }) {
@@ -79,6 +90,7 @@ export class AdminService {
     }
     if (params.role) where.role = params.role;
     if (params.banned !== undefined) where.isBanned = params.banned;
+    if (params.isBot !== undefined) where.isBot = params.isBot;
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -89,6 +101,7 @@ export class AdminService {
           role: true,
           isBanned: true,
           banReason: true,
+          isBot: true,
           createdAt: true,
           profile: {
             select: {
@@ -108,7 +121,13 @@ export class AdminService {
       prisma.user.count({ where }),
     ]);
 
-    return { users, total, page, pageSize, pageCount: Math.ceil(total / pageSize) };
+    return {
+      users,
+      total,
+      page,
+      pageSize,
+      pageCount: Math.ceil(total / pageSize),
+    };
   }
 
   /**
@@ -185,7 +204,11 @@ export class AdminService {
     };
   }
 
-  async updateUserRole(admin: { id: string; role: Role }, targetUserId: string, newRole: Role) {
+  async updateUserRole(
+    admin: { id: string; role: Role },
+    targetUserId: string,
+    newRole: Role,
+  ) {
     const adminRole = admin.role;
     if (adminRole !== Role.SUPER_ADMIN && adminRole !== Role.ADMIN) {
       throw new ForbiddenException();
@@ -220,7 +243,11 @@ export class AdminService {
     });
   }
 
-  async banUser(admin: { id: string; role: Role }, targetUserId: string, reason: string) {
+  async banUser(
+    admin: { id: string; role: Role },
+    targetUserId: string,
+    reason: string,
+  ) {
     const adminRole = admin.role;
     const target = await prisma.user.findUnique({
       where: { id: targetUserId },
@@ -306,10 +333,60 @@ export class AdminService {
     const message = await prisma.ticketMessage.create({
       data: { content, ticketId, authorId: adminId },
     });
+
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: { select: { id: true, email: true, profile: { select: { username: true } } } },
+      },
+    });
+
     await prisma.supportTicket.updateMany({
       where: { id: ticketId, status: TicketStatus.OPEN },
       data: { status: TicketStatus.IN_PROGRESS },
     });
+
+    // 1. If Registered User -> Send In-App Notification / Message
+    if (ticket?.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: ticket.userId,
+          type: 'SYSTEM',
+          title: `Réponse du Support : ${ticket.title}`,
+          content: `L'équipe de support a répondu à votre ticket : "${content.slice(0, 100)}..."`,
+          link: '/contact',
+        },
+      });
+      this.logger.log(`In-app notification created for user ${ticket.userId} for ticket ${ticketId}`);
+    }
+
+    // 2. If Guest (or registered email delivery) -> Send direct Email
+    const targetEmail = ticket?.user?.email || ticket?.guestEmail;
+    const targetName = ticket?.user?.profile?.username || ticket?.guestName || 'Joueur';
+
+    if (targetEmail) {
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; background-color: #020F24; color: #ffffff; padding: 24px; border-radius: 12px;">
+          <h2 style="color: #FFCC00; margin-top: 0;">Réponse de l'Équipe Support Sudoku</h2>
+          <p>Bonjour <strong>${targetName}</strong>,</p>
+          <p>Notre équipe d'assistance a répondu à votre demande :</p>
+          <blockquote style="background: rgba(255,255,255,0.05); border-left: 4px solid #FF4500; padding: 12px; margin: 16px 0; color: #f0f0f0;">
+            ${content}
+          </blockquote>
+          <p style="color: #a0aec0; font-size: 12px; margin-top: 24px;">
+            Ticket #${ticketId.slice(-6).toUpperCase()} — ${ticket?.title}
+          </p>
+        </div>
+      `;
+
+      await this.emailService.sendRawEmail(
+        targetEmail,
+        `[Support Sudoku] Réponse à votre ticket : ${ticket?.title}`,
+        emailHtml,
+      );
+      this.logger.log(`Support response email dispatched to ${targetEmail}`);
+    }
+
     return message;
   }
 
@@ -328,8 +405,12 @@ export class AdminService {
   async getReports() {
     return prisma.report.findMany({
       include: {
-        reporter: { select: { email: true, profile: { select: { username: true } } } },
-        reported: { select: { email: true, profile: { select: { username: true } } } },
+        reporter: {
+          select: { email: true, profile: { select: { username: true } } },
+        },
+        reported: {
+          select: { email: true, profile: { select: { username: true } } },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -372,11 +453,11 @@ export class AdminService {
     const recentActivityLimit = new Date(Date.now() - 15 * 60 * 1000); // 15 mins active
     const onlineUsers = await prisma.user.count({
       where: {
-        profile: { lastPlayedDate: { gte: recentActivityLimit } }
-      }
+        profile: { lastPlayedDate: { gte: recentActivityLimit } },
+      },
     });
-    
-    // We can't perfectly track forum viewers without Redis, so we estimate based on recent forum posts/activity, 
+
+    // We can't perfectly track forum viewers without Redis, so we estimate based on recent forum posts/activity,
     // but to avoid mocks we just return a 0 if we don't have accurate tracking.
     const usersInForum = 0;
 
@@ -516,7 +597,12 @@ export class AdminService {
   }
 
   // --- FINANCIAL RECONCILIATION & MANAGEMENT ---
-  async grantCoins(adminId: string, userId: string, amount: number, reason: string) {
+  async grantCoins(
+    adminId: string,
+    userId: string,
+    amount: number,
+    reason: string,
+  ) {
     // We assume the caller already checked permissions (economy.adjust)
     try {
       await this.coinLedger.credit(
@@ -525,9 +611,9 @@ export class AdminService {
         CoinTransactionType.ADMIN_GRANT,
         'Admin',
         adminId,
-        `admin_grant_${adminId}_${userId}_${Date.now()}`
+        `admin_grant_${adminId}_${userId}_${Date.now()}`,
       );
-      
+
       // We don't need to manually create an audit log here if the controller uses @AuditAction,
       // but creating a secondary audit log inside the service is safer for financial transactions.
       await prisma.auditLog.create({
@@ -535,11 +621,14 @@ export class AdminService {
           actorId: adminId,
           action: 'GRANT_COINS',
           target: userId,
-          newValue: JSON.stringify({ amount, reason })
-        }
+          newValue: JSON.stringify({ amount, reason }),
+        },
       });
-      
-      return { success: true, message: `Successfully granted ${amount} coins to ${userId}` };
+
+      return {
+        success: true,
+        message: `Successfully granted ${amount} coins to ${userId}`,
+      };
     } catch (e) {
       this.logger.error(`Failed to grant coins to ${userId}`, e);
       throw new ForbiddenException('Failed to grant coins.');
@@ -549,36 +638,81 @@ export class AdminService {
   async verifyFinancialIntegrity() {
     const users = await prisma.user.findMany({ select: { id: true } });
     let totalMismatches = 0;
-    
+
     for (const user of users) {
-      const profile = await prisma.profile.findUnique({ where: { userId: user.id } });
+      const profile = await prisma.profile.findUnique({
+        where: { userId: user.id },
+      });
       const transactions = await prisma.coinTransaction.aggregate({
         where: { userId: user.id },
-        _sum: { amount: true }
+        _sum: { amount: true },
       });
-      
+
       const calculatedBalance = transactions._sum.amount || 0;
       if (profile && profile.coins !== calculatedBalance) {
         totalMismatches++;
-        this.logger.warn(`User ${user.id} balance mismatch: Ledger=${calculatedBalance}, Profile=${profile.coins}`);
+        this.logger.warn(
+          `User ${user.id} balance mismatch: Ledger=${calculatedBalance}, Profile=${profile.coins}`,
+        );
       }
     }
 
     if (totalMismatches > 0) {
-      return { success: false, message: `Reconciliation failed: ${totalMismatches} mismatches found.` };
+      return {
+        success: false,
+        message: `Reconciliation failed: ${totalMismatches} mismatches found.`,
+      };
     }
-    return { success: true, message: 'Reconciliation passed. All ledgers match profile balances.' };
+    return {
+      success: true,
+      message: 'Reconciliation passed. All ledgers match profile balances.',
+    };
   }
 
   // --- AD MANAGEMENT ---
+  // Forbidden placements list to enforce Google AdSense policies & prevent gameplay disruption
+  private static readonly FORBIDDEN_PLACEMENTS = [
+    'grid',
+    'sudoku_grid',
+    'numpad',
+    'keypad',
+    'timer',
+    'pause_button',
+    'mistake_counter',
+    'hint_button',
+    'duel_battle_bar',
+    'duel_controls',
+    'countdown',
+    'auth_form',
+    'checkout',
+    'payment_confirmation',
+    'chat_input',
+    'primary_navigation',
+    'language_selector',
+  ];
+
   async getAdSlots() {
-    return prisma.adSlotConfig.findMany();
+    return prisma.adSlotConfig.findMany({
+      orderBy: { priority: 'desc' },
+    });
   }
 
-  async updateAdSlot(slotName: string, data: any) {
-    // P1-F/G: full-field ad slot configuration (undefined fields are ignored
-    // by Prisma, so partial updates are safe).
-    return prisma.adSlotConfig.upsert({
+  async updateAdSlot(slotName: string, data: any, adminId?: string) {
+    // 1. Safety Check: Verify placement is not forbidden
+    if (data.placement) {
+      const normalizedPlacement = data.placement.toLowerCase().trim();
+      if (AdminService.FORBIDDEN_PLACEMENTS.includes(normalizedPlacement)) {
+        throw new BadRequestException(
+          `Forbidden ad placement: '${data.placement}'. Ads cannot be placed over game controls, timer, numpad, grid, or critical actions.`,
+        );
+      }
+    }
+
+    const previous = await prisma.adSlotConfig.findUnique({
+      where: { slotName },
+    });
+
+    const updated = await prisma.adSlotConfig.upsert({
       where: { slotName },
       update: {
         ...data,
@@ -590,6 +724,106 @@ export class AdminService {
         ...data,
       },
     });
+
+    // Record audit log for rollback support
+    if (adminId) {
+      await prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'ads.update_slot',
+          target: slotName,
+          oldValue: previous ? (previous as any) : null,
+          newValue: updated as any,
+        },
+      });
+    }
+
+    return updated;
+  }
+
+  async disableAllAds(adminId: string) {
+    // Turn off all ad feature flags while preserving slot configs
+    await Promise.all([
+      prisma.featureFlag.upsert({
+        where: { key: 'ENABLE_ADS' },
+        update: { enabled: false },
+        create: { key: 'ENABLE_ADS', enabled: false },
+      }),
+      prisma.featureFlag.upsert({
+        where: { key: 'ADS_ENABLED' },
+        update: { enabled: false },
+        create: { key: 'ADS_ENABLED', enabled: false },
+      }),
+      prisma.featureFlag.upsert({
+        where: { key: 'ENABLE_REWARDED_ADS' },
+        update: { enabled: false },
+        create: { key: 'ENABLE_REWARDED_ADS', enabled: false },
+      }),
+    ]);
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: adminId,
+        action: 'ads.disable_all',
+        target: 'GLOBAL_ADS',
+        newValue: { enabled: false, timestamp: new Date().toISOString() },
+      },
+    });
+
+    this.logger.warn(`All advertisements disabled globally by admin ${adminId}`);
+    return {
+      success: true,
+      message: 'Toutes les publicités ont été désactivées avec succès.',
+    };
+  }
+
+  async getAdAuditHistory(limit = 50) {
+    return prisma.auditLog.findMany({
+      where: {
+        action: {
+          in: ['ads.update_slot', 'ads.disable_all', 'ads.rollback', 'settings.update'],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  async rollbackAdConfig(adminId: string, auditLogId: string) {
+    const log = await prisma.auditLog.findUnique({
+      where: { id: auditLogId },
+    });
+
+    if (!log || !log.oldValue) {
+      throw new NotFoundException('Audit log entry not found or contains no previous state.');
+    }
+
+    const previousState = log.oldValue as any;
+
+    if (log.action === 'ads.update_slot' && log.target) {
+      await prisma.adSlotConfig.update({
+        where: { slotName: log.target },
+        data: previousState,
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'ads.rollback',
+          target: log.target,
+          newValue: previousState,
+          referenceId: auditLogId,
+        },
+      });
+
+      return {
+        success: true,
+        message: `Emplacement ${log.target} restauré à son état précédent.`,
+        restoredConfig: previousState,
+      };
+    }
+
+    throw new BadRequestException('Unsupported rollback action');
   }
 
   // --- EMAIL TEMPLATES ---
@@ -602,22 +836,37 @@ export class AdminService {
         data: [
           {
             name: 'WELCOME_EMAIL',
-            subject: 'Bienvenue sur Sudoku Premium, {{username}} !',
-            htmlContent: `<h2>Bienvenue sur Sudoku Premium !</h2><p>Bonjour <strong>{{username}}</strong>,</p><p>Votre compte a bien été créé. Rejoignez des milliers de joueurs en ligne pour résoudre des grilles quotidiennes et participer à des duels classés.</p><p>À bientôt sur <a href="http://localhost:3000">Sudoku Premium</a> !</p>`,
+            subject: 'Welcome to {{siteName}}, {{username}}!',
+            htmlContent: `<h2>Welcome to {{siteName}}!</h2><p>Hello <strong>{{username}}</strong>,</p><p>Your account has been successfully created. Join thousands of players online to solve daily challenges, learn new solving techniques, and participate in competitive duels.</p><p><a href="http://localhost:3000" style="background-color:#FF4500;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:bold;">Play Sudoku Now</a></p><p>See you soon on {{siteName}}!</p><p>Need help? Contact us at {{supportEmail}}.</p>`,
+          },
+          {
+            name: 'EMAIL_VERIFICATION',
+            subject: 'Verify your email address - {{siteName}}',
+            htmlContent: `<h2>Verify your email address</h2><p>Hello <strong>{{username}}</strong>,</p><p>Thank you for registering on {{siteName}}. Please verify your email address to unlock full member features and save your global ranking:</p><p><a href="{{verificationLink}}" style="background-color:#FF4500;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:bold;">Verify My Account</a></p><p>If the button above does not work, copy and paste this link into your browser:<br>{{verificationLink}}</p><p>This verification link will expire in 24 hours.</p><p>Best regards,<br>The {{siteName}} Team</p>`,
+          },
+          {
+            name: 'PASSWORD_RESET',
+            subject: 'Reset your password - {{siteName}}',
+            htmlContent: `<h2>Password Reset Request</h2><p>Hello <strong>{{username}}</strong>,</p><p>We received a request to reset your password on {{siteName}}.</p><p><a href="{{resetLink}}" style="background-color:#FF4500;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:bold;">Reset Password</a></p><p>If you did not request this password reset, please ignore this email or contact {{supportEmail}} immediately.</p><p>This link expires in 1 hour.</p><p>The {{siteName}} Team</p>`,
           },
           {
             name: 'DUEL_INVITATION',
-            subject: 'Défi Sudoku 1v1 de {{username}}',
-            htmlContent: `<h2>Vous avez été défié en duel !</h2><p><strong>{{username}}</strong> (Elo: {{elo}}) vous invite à un match de Sudoku en direct.</p><p><a href="http://localhost:3000/duel">Rejoindre le duel</a></p>`,
+            subject: 'Sudoku 1v1 Duel Challenge from {{username}}',
+            htmlContent: `<h2>You have been challenged to a duel!</h2><p><strong>{{username}}</strong> (Elo: {{elo}}) invites you to a live Sudoku duel match.</p><p><a href="http://localhost:3000/duel" style="background-color:#FFCC00;color:#020F24;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:bold;">Join the Duel</a></p><p>See you on the leaderboard!</p>`,
           },
         ],
       });
-      templates = await prisma.emailTemplate.findMany({ orderBy: { name: 'asc' } });
+      templates = await prisma.emailTemplate.findMany({
+        orderBy: { name: 'asc' },
+      });
     }
     return templates;
   }
 
-  async updateEmailTemplate(id: string, data: { subject: string; htmlContent: string }) {
+  async updateEmailTemplate(
+    id: string,
+    data: { subject: string; htmlContent: string },
+  ) {
     return prisma.emailTemplate.update({
       where: { id },
       data: {
@@ -630,8 +879,13 @@ export class AdminService {
   async testEmailTemplate(id: string, adminId: string) {
     const template = await prisma.emailTemplate.findUnique({ where: { id } });
     if (!template) throw new NotFoundException('Template not found');
-    this.logger.log(`Test email triggered for template ${template.name} by admin ${adminId}`);
-    return { success: true, message: `Email de test simulé pour ${template.name}` };
+    this.logger.log(
+      `Test email triggered for template ${template.name} by admin ${adminId}`,
+    );
+    return {
+      success: true,
+      message: `Email de test simulé pour ${template.name}`,
+    };
   }
 
   // --- SYSTEM HEALTH ---

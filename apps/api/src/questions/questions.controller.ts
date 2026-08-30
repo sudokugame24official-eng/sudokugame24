@@ -11,7 +11,17 @@ import {
   Request,
   ParseIntPipe,
 } from '@nestjs/common';
-import { IsString, IsInt, Min, Max, MinLength, MaxLength, IsArray, IsIn, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  Min,
+  Max,
+  MinLength,
+  MaxLength,
+  IsArray,
+  IsIn,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/guards/permission.guard';
@@ -49,7 +59,14 @@ export class AcceptDto {
 }
 
 export class ReportDto {
-  @IsIn(['SPAM', 'HARASSMENT', 'OFFENSIVE_CONTENT', 'SCAM', 'INAPPROPRIATE', 'OTHER'])
+  @IsIn([
+    'SPAM',
+    'HARASSMENT',
+    'OFFENSIVE_CONTENT',
+    'SCAM',
+    'INAPPROPRIATE',
+    'OTHER',
+  ])
   reason!: string;
   @IsOptional() @IsString() @MaxLength(2000) description?: string;
 }
@@ -82,7 +99,10 @@ export class QuestionsController {
   }
 
   @Get(':slug')
-  async getBySlug(@Param('slug') slug: string, @Query('trackView') trackView?: string) {
+  async getBySlug(
+    @Param('slug') slug: string,
+    @Query('trackView') trackView?: string,
+  ) {
     return this.questionsService.getQuestionBySlug(slug, trackView !== 'false');
   }
 
@@ -100,36 +120,62 @@ export class QuestionsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  async update(@Request() req, @Param('id') id: string, @Body() dto: UpdateQuestionDto) {
+  async update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: UpdateQuestionDto,
+  ) {
     return this.questionsService.updateQuestion(
-      req.user.id, id, dto, MOD_ROLES.includes(req.user.role),
+      req.user.id,
+      id,
+      dto,
+      MOD_ROLES.includes(req.user.role),
     );
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Request() req, @Param('id') id: string) {
-    return this.questionsService.deleteQuestion(req.user.id, id, MOD_ROLES.includes(req.user.role));
+    return this.questionsService.deleteQuestion(
+      req.user.id,
+      id,
+      MOD_ROLES.includes(req.user.role),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/answers')
-  async answer(@Request() req, @Param('id') id: string, @Body() dto: CreateAnswerDto) {
+  async answer(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: CreateAnswerDto,
+  ) {
     return this.questionsService.createAnswer(req.user.id, id, dto.body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('answers/:answerId')
-  async updateAnswer(@Request() req, @Param('answerId') answerId: string, @Body() dto: CreateAnswerDto) {
+  async updateAnswer(
+    @Request() req,
+    @Param('answerId') answerId: string,
+    @Body() dto: CreateAnswerDto,
+  ) {
     return this.questionsService.updateAnswer(
-      req.user.id, answerId, dto.body, MOD_ROLES.includes(req.user.role),
+      req.user.id,
+      answerId,
+      dto.body,
+      MOD_ROLES.includes(req.user.role),
     );
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('answers/:answerId')
   async deleteAnswer(@Request() req, @Param('answerId') answerId: string) {
-    return this.questionsService.deleteAnswer(req.user.id, answerId, MOD_ROLES.includes(req.user.role));
+    return this.questionsService.deleteAnswer(
+      req.user.id,
+      answerId,
+      MOD_ROLES.includes(req.user.role),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -140,15 +186,26 @@ export class QuestionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('answers/:answerId/vote')
-  async voteAnswer(@Request() req, @Param('answerId') answerId: string, @Body() dto: VoteDto) {
+  async voteAnswer(
+    @Request() req,
+    @Param('answerId') answerId: string,
+    @Body() dto: VoteDto,
+  ) {
     return this.questionsService.voteAnswer(req.user.id, answerId, dto.value);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/accept')
-  async accept(@Request() req, @Param('id') id: string, @Body() dto: AcceptDto) {
+  async accept(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: AcceptDto,
+  ) {
     return this.questionsService.acceptAnswer(
-      req.user.id, id, dto.answerId, MOD_ROLES.includes(req.user.role),
+      req.user.id,
+      id,
+      dto.answerId,
+      MOD_ROLES.includes(req.user.role),
     );
   }
 
@@ -160,8 +217,17 @@ export class QuestionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/report')
-  async report(@Request() req, @Param('id') id: string, @Body() dto: ReportDto) {
-    return this.questionsService.reportQuestion(req.user.id, id, dto.reason, dto.description);
+  async report(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: ReportDto,
+  ) {
+    return this.questionsService.reportQuestion(
+      req.user.id,
+      id,
+      dto.reason,
+      dto.description,
+    );
   }
 
   // --- Moderation ---
@@ -171,7 +237,11 @@ export class QuestionsController {
   @UseInterceptors(AuditLogInterceptor)
   @AuditAction('questions.moderate')
   @Post(':id/moderate')
-  async moderate(@Request() req, @Param('id') id: string, @Body() dto: ModerateDto) {
+  async moderate(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: ModerateDto,
+  ) {
     return this.questionsService.moderate(req.user.id, id, dto.action as any);
   }
 }

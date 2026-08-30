@@ -13,15 +13,20 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     if (!process.env.REDIS_URL) {
-      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+      if (
+        process.env.NODE_ENV === 'production' ||
+        process.env.NODE_ENV === 'staging'
+      ) {
         throw new Error(
           'REDIS_URL is required in production/staging: refusing to silently fall back to ioredis-mock ' +
-          '(cross-instance pub/sub, matchmaking locks and duel state would break).',
+            '(cross-instance pub/sub, matchmaking locks and duel state would break).',
         );
       }
       const RedisMock = require('ioredis-mock');
       this.client = new RedisMock();
-      this.logger.warn('Using ioredis-mock because REDIS_URL is not provided (development only)');
+      this.logger.warn(
+        'Using ioredis-mock because REDIS_URL is not provided (development only)',
+      );
     } else {
       this.client = new Redis(process.env.REDIS_URL, {
         maxRetriesPerRequest: null,

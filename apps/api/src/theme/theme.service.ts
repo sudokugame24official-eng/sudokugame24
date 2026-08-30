@@ -51,7 +51,9 @@ const KEY_PREVIOUS = 'theme_previous';
 export class ThemeService {
   /** Public: the live theme. Falls back to defaults (never null). */
   async getPublished(): Promise<ThemeConfig> {
-    const row = await prisma.siteSettings.findUnique({ where: { key: KEY_PUBLISHED } });
+    const row = await prisma.siteSettings.findUnique({
+      where: { key: KEY_PUBLISHED },
+    });
     if (!row) return { ...DEFAULT_THEME };
     try {
       return this.sanitize(JSON.parse(String(row.value)));
@@ -61,7 +63,9 @@ export class ThemeService {
   }
 
   async getDraft(): Promise<ThemeConfig> {
-    const row = await prisma.siteSettings.findUnique({ where: { key: KEY_DRAFT } });
+    const row = await prisma.siteSettings.findUnique({
+      where: { key: KEY_DRAFT },
+    });
     if (!row) return this.getPublished();
     try {
       return this.sanitize(JSON.parse(String(row.value)));
@@ -72,11 +76,18 @@ export class ThemeService {
 
   async saveDraft(patch: Partial<ThemeConfig>): Promise<ThemeConfig> {
     const current = await this.getDraft();
-    const merged = this.sanitize({ ...current, ...patch, colors: { ...current.colors, ...(patch.colors || {}) } });
+    const merged = this.sanitize({
+      ...current,
+      ...patch,
+      colors: { ...current.colors, ...(patch.colors || {}) },
+    });
     await prisma.siteSettings.upsert({
       where: { key: KEY_DRAFT },
       update: { value: JSON.stringify(merged, undefined as any) },
-      create: { key: KEY_DRAFT, value: JSON.stringify(merged, undefined as any) },
+      create: {
+        key: KEY_DRAFT,
+        value: JSON.stringify(merged, undefined as any),
+      },
     });
     return merged;
   }
@@ -84,7 +95,9 @@ export class ThemeService {
   /** Publish: draft becomes live, current live is kept for rollback. */
   async publish(): Promise<ThemeConfig> {
     const draft = await this.getDraft();
-    const currentRow = await prisma.siteSettings.findUnique({ where: { key: KEY_PUBLISHED } });
+    const currentRow = await prisma.siteSettings.findUnique({
+      where: { key: KEY_PUBLISHED },
+    });
     const published = await this.getPublished();
 
     await prisma.$transaction(async (tx) => {
@@ -98,7 +111,10 @@ export class ThemeService {
       await tx.siteSettings.upsert({
         where: { key: KEY_PUBLISHED },
         update: { value: JSON.stringify(draft, undefined as any) },
-        create: { key: KEY_PUBLISHED, value: JSON.stringify(draft, undefined as any) },
+        create: {
+          key: KEY_PUBLISHED,
+          value: JSON.stringify(draft, undefined as any),
+        },
       });
     });
     return published; // caller sees what was replaced
@@ -106,9 +122,13 @@ export class ThemeService {
 
   /** Rollback: swap published <-> previous. */
   async rollback(): Promise<ThemeConfig> {
-    const prevRow = await prisma.siteSettings.findUnique({ where: { key: KEY_PREVIOUS } });
+    const prevRow = await prisma.siteSettings.findUnique({
+      where: { key: KEY_PREVIOUS },
+    });
     if (!prevRow) throw new Error('Aucune version précédente à restaurer.');
-    const currentRow = await prisma.siteSettings.findUnique({ where: { key: KEY_PUBLISHED } });
+    const currentRow = await prisma.siteSettings.findUnique({
+      where: { key: KEY_PUBLISHED },
+    });
 
     await prisma.$transaction(async (tx) => {
       if (currentRow) {
@@ -136,13 +156,29 @@ export class ThemeService {
       return /^[0-9%\.\,\s\-a-z#]+$/i.test(s) ? s : fallback;
     };
     return {
-      brandName: typeof input?.brandName === 'string' ? input.brandName.slice(0, 60) : DEFAULT_THEME.brandName,
-      logoUrl: typeof input?.logoUrl === 'string' && /^https?:\/\//.test(input.logoUrl) ? input.logoUrl.slice(0, 500) : null,
-      faviconUrl: typeof input?.faviconUrl === 'string' && /^https?:\/\//.test(input.faviconUrl) ? input.faviconUrl.slice(0, 500) : null,
+      brandName:
+        typeof input?.brandName === 'string'
+          ? input.brandName.slice(0, 60)
+          : DEFAULT_THEME.brandName,
+      logoUrl:
+        typeof input?.logoUrl === 'string' && /^https?:\/\//.test(input.logoUrl)
+          ? input.logoUrl.slice(0, 500)
+          : null,
+      faviconUrl:
+        typeof input?.faviconUrl === 'string' &&
+        /^https?:\/\//.test(input.faviconUrl)
+          ? input.faviconUrl.slice(0, 500)
+          : null,
       colors: {
         primary: cssSafe(input?.colors?.primary, DEFAULT_THEME.colors.primary),
-        primaryForeground: cssSafe(input?.colors?.primaryForeground, DEFAULT_THEME.colors.primaryForeground),
-        background: cssSafe(input?.colors?.background, DEFAULT_THEME.colors.background),
+        primaryForeground: cssSafe(
+          input?.colors?.primaryForeground,
+          DEFAULT_THEME.colors.primaryForeground,
+        ),
+        background: cssSafe(
+          input?.colors?.background,
+          DEFAULT_THEME.colors.background,
+        ),
         surface: cssSafe(input?.colors?.surface, DEFAULT_THEME.colors.surface),
         text: cssSafe(input?.colors?.text, DEFAULT_THEME.colors.text),
         border: cssSafe(input?.colors?.border, DEFAULT_THEME.colors.border),

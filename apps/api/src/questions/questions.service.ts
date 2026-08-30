@@ -65,10 +65,24 @@ export class QuestionsService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         select: {
-          id: true, slug: true, title: true, body: true, tags: true,
-          views: true, score: true, answerCount: true, hasAccepted: true,
-          isClosed: true, isPinned: true, createdAt: true, lastActivityAt: true,
-          author: { select: { profile: { select: { username: true, avatarUrl: true } } } },
+          id: true,
+          slug: true,
+          title: true,
+          body: true,
+          tags: true,
+          views: true,
+          score: true,
+          answerCount: true,
+          hasAccepted: true,
+          isClosed: true,
+          isPinned: true,
+          createdAt: true,
+          lastActivityAt: true,
+          author: {
+            select: {
+              profile: { select: { username: true, avatarUrl: true } },
+            },
+          },
         },
       }),
       prisma.question.count({ where }),
@@ -86,11 +100,25 @@ export class QuestionsService {
     const question = await prisma.question.findUnique({
       where: { slug },
       include: {
-        author: { select: { id: true, profile: { select: { username: true, avatarUrl: true } } } },
+        author: {
+          select: {
+            id: true,
+            profile: { select: { username: true, avatarUrl: true } },
+          },
+        },
         answers: {
-          orderBy: [{ isAccepted: 'desc' }, { score: 'desc' }, { createdAt: 'asc' }],
+          orderBy: [
+            { isAccepted: 'desc' },
+            { score: 'desc' },
+            { createdAt: 'asc' },
+          ],
           include: {
-            author: { select: { id: true, profile: { select: { username: true, avatarUrl: true } } } },
+            author: {
+              select: {
+                id: true,
+                profile: { select: { username: true, avatarUrl: true } },
+              },
+            },
           },
         },
         _count: { select: { followers: true } },
@@ -100,7 +128,10 @@ export class QuestionsService {
 
     if (incrementViews) {
       await prisma.question
-        .update({ where: { id: question.id }, data: { views: { increment: 1 } } })
+        .update({
+          where: { id: question.id },
+          data: { views: { increment: 1 } },
+        })
         .catch(() => undefined);
     }
     return question;
@@ -108,15 +139,29 @@ export class QuestionsService {
 
   // --- Authenticated ---
 
-  async createQuestion(userId: string, data: { title: string; body: string; tags: string[] }) {
-    void trackEvent({ name: 'question_ask', userId, metadata: { tags: data.tags } });
+  async createQuestion(
+    userId: string,
+    data: { title: string; body: string; tags: string[] },
+  ) {
+    void trackEvent({
+      name: 'question_ask',
+      userId,
+      metadata: { tags: data.tags },
+    });
     if (data.title.length < 10 || data.title.length > 180) {
-      throw new BadRequestException('Le titre doit contenir entre 10 et 180 caractères.');
+      throw new BadRequestException(
+        'Le titre doit contenir entre 10 et 180 caractères.',
+      );
     }
     if (data.body.length < 20 || data.body.length > 20000) {
-      throw new BadRequestException('La question doit contenir entre 20 et 20000 caractères.');
+      throw new BadRequestException(
+        'La question doit contenir entre 20 et 20000 caractères.',
+      );
     }
-    const cleanTags = data.tags.slice(0, 5).map((t) => t.toLowerCase().trim()).filter(Boolean);
+    const cleanTags = data.tags
+      .slice(0, 5)
+      .map((t) => t.toLowerCase().trim())
+      .filter(Boolean);
 
     return prisma.question.create({
       data: {
@@ -129,23 +174,38 @@ export class QuestionsService {
     });
   }
 
-  async updateQuestion(userId: string, questionId: string, data: { title?: string; body?: string; tags?: string[] }, isModerator = false) {
+  async updateQuestion(
+    userId: string,
+    questionId: string,
+    data: { title?: string; body?: string; tags?: string[] },
+    isModerator = false,
+  ) {
     const q = await prisma.question.findUnique({ where: { id: questionId } });
     if (!q) throw new NotFoundException('Question introuvable');
     if (q.authorId !== userId && !isModerator) throw new ForbiddenException();
-    if (q.isLocked && !isModerator) throw new ForbiddenException('Question verrouillée.');
+    if (q.isLocked && !isModerator)
+      throw new ForbiddenException('Question verrouillée.');
 
     return prisma.question.update({
       where: { id: questionId },
       data: {
         ...(data.title && { title: data.title }),
         ...(data.body && { body: data.body }),
-        ...(data.tags && { tags: data.tags.slice(0, 5).map((t) => t.toLowerCase().trim()).filter(Boolean) }),
+        ...(data.tags && {
+          tags: data.tags
+            .slice(0, 5)
+            .map((t) => t.toLowerCase().trim())
+            .filter(Boolean),
+        }),
       },
     });
   }
 
-  async deleteQuestion(userId: string, questionId: string, isModerator = false) {
+  async deleteQuestion(
+    userId: string,
+    questionId: string,
+    isModerator = false,
+  ) {
     const q = await prisma.question.findUnique({ where: { id: questionId } });
     if (!q) throw new NotFoundException('Question introuvable');
     if (q.authorId !== userId && !isModerator) throw new ForbiddenException();
@@ -154,12 +214,19 @@ export class QuestionsService {
   }
 
   async createAnswer(userId: string, questionId: string, body: string) {
-    void trackEvent({ name: 'question_answer', userId, metadata: { questionId } });
+    void trackEvent({
+      name: 'question_answer',
+      userId,
+      metadata: { questionId },
+    });
     const q = await prisma.question.findUnique({ where: { id: questionId } });
     if (!q) throw new NotFoundException('Question introuvable');
-    if (q.isClosed || q.isLocked) throw new ForbiddenException('Question fermée ou verrouillée.');
+    if (q.isClosed || q.isLocked)
+      throw new ForbiddenException('Question fermée ou verrouillée.');
     if (body.length < 5 || body.length > 20000) {
-      throw new BadRequestException('La réponse doit contenir entre 5 et 20000 caractères.');
+      throw new BadRequestException(
+        'La réponse doit contenir entre 5 et 20000 caractères.',
+      );
     }
 
     const [answer] = await prisma.$transaction([
@@ -172,7 +239,12 @@ export class QuestionsService {
     return answer;
   }
 
-  async updateAnswer(userId: string, answerId: string, body: string, isModerator = false) {
+  async updateAnswer(
+    userId: string,
+    answerId: string,
+    body: string,
+    isModerator = false,
+  ) {
     const a = await prisma.answer.findUnique({ where: { id: answerId } });
     if (!a) throw new NotFoundException('Réponse introuvable');
     if (a.authorId !== userId && !isModerator) throw new ForbiddenException();
@@ -187,7 +259,10 @@ export class QuestionsService {
       prisma.answer.delete({ where: { id: answerId } }),
       prisma.question.update({
         where: { id: a.questionId },
-        data: { answerCount: { decrement: 1 }, ...(a.isAccepted ? { hasAccepted: false } : {}) },
+        data: {
+          answerCount: { decrement: 1 },
+          ...(a.isAccepted ? { hasAccepted: false } : {}),
+        },
       }),
     ]);
     return { success: true };
@@ -198,18 +273,24 @@ export class QuestionsService {
    * Score maintained transactionally with the unique vote row.
    */
   async voteQuestion(userId: string, questionId: string, value: number) {
-    if (value !== 1 && value !== -1) throw new BadRequestException('Vote invalide.');
+    if (value !== 1 && value !== -1)
+      throw new BadRequestException('Vote invalide.');
 
     return prisma.$transaction(async (tx) => {
-      const q = await tx.question.findUnique({ where: { id: questionId }, select: { authorId: true, isLocked: true } });
+      const q = await tx.question.findUnique({
+        where: { id: questionId },
+        select: { authorId: true, isLocked: true },
+      });
       if (!q) throw new NotFoundException('Question introuvable');
-      if (q.authorId === userId) throw new ForbiddenException('On ne vote pas pour sa propre question.');
+      if (q.authorId === userId)
+        throw new ForbiddenException('On ne vote pas pour sa propre question.');
       if (q.isLocked) throw new ForbiddenException('Question verrouillée.');
 
       const existing = await tx.questionVote.findUnique({
         where: { questionId_userId: { questionId, userId } },
       });
-      if (existing?.value === value) return { score: undefined, changed: false };
+      if (existing?.value === value)
+        return { score: undefined, changed: false };
 
       let delta = value;
       if (existing) {
@@ -226,17 +307,23 @@ export class QuestionsService {
   }
 
   async voteAnswer(userId: string, answerId: string, value: number) {
-    if (value !== 1 && value !== -1) throw new BadRequestException('Vote invalide.');
+    if (value !== 1 && value !== -1)
+      throw new BadRequestException('Vote invalide.');
 
     return prisma.$transaction(async (tx) => {
-      const a = await tx.answer.findUnique({ where: { id: answerId }, select: { authorId: true, questionId: true } });
+      const a = await tx.answer.findUnique({
+        where: { id: answerId },
+        select: { authorId: true, questionId: true },
+      });
       if (!a) throw new NotFoundException('Réponse introuvable');
-      if (a.authorId === userId) throw new ForbiddenException('On ne vote pas pour sa propre réponse.');
+      if (a.authorId === userId)
+        throw new ForbiddenException('On ne vote pas pour sa propre réponse.');
 
       const existing = await tx.answerVote.findUnique({
         where: { answerId_userId: { answerId, userId } },
       });
-      if (existing?.value === value) return { score: undefined, changed: false };
+      if (existing?.value === value)
+        return { score: undefined, changed: false };
 
       let delta = value;
       if (existing) {
@@ -253,21 +340,39 @@ export class QuestionsService {
   }
 
   /** Only the question author (or a moderator) can accept an answer. */
-  async acceptAnswer(userId: string, questionId: string, answerId: string, isModerator = false) {
+  async acceptAnswer(
+    userId: string,
+    questionId: string,
+    answerId: string,
+    isModerator = false,
+  ) {
     const q = await prisma.question.findUnique({ where: { id: questionId } });
     if (!q) throw new NotFoundException('Question introuvable');
     if (q.authorId !== userId && !isModerator) {
-      throw new ForbiddenException('Seul l’auteur de la question peut accepter une réponse.');
+      throw new ForbiddenException(
+        'Seul l’auteur de la question peut accepter une réponse.',
+      );
     }
     const a = await prisma.answer.findUnique({ where: { id: answerId } });
     if (!a || a.questionId !== questionId) {
-      throw new BadRequestException('Cette réponse n’appartient pas à la question.');
+      throw new BadRequestException(
+        'Cette réponse n’appartient pas à la question.',
+      );
     }
 
     await prisma.$transaction([
-      prisma.answer.updateMany({ where: { questionId, isAccepted: true }, data: { isAccepted: false } }),
-      prisma.answer.update({ where: { id: answerId }, data: { isAccepted: true } }),
-      prisma.question.update({ where: { id: questionId }, data: { hasAccepted: true } }),
+      prisma.answer.updateMany({
+        where: { questionId, isAccepted: true },
+        data: { isAccepted: false },
+      }),
+      prisma.answer.update({
+        where: { id: answerId },
+        data: { isAccepted: true },
+      }),
+      prisma.question.update({
+        where: { id: questionId },
+        data: { hasAccepted: true },
+      }),
     ]);
     return { success: true };
   }
@@ -284,8 +389,16 @@ export class QuestionsService {
     return { following: true };
   }
 
-  async reportQuestion(userId: string, questionId: string, reason: string, description?: string) {
-    const q = await prisma.question.findUnique({ where: { id: questionId }, select: { id: true } });
+  async reportQuestion(
+    userId: string,
+    questionId: string,
+    reason: string,
+    description?: string,
+  ) {
+    const q = await prisma.question.findUnique({
+      where: { id: questionId },
+      select: { id: true },
+    });
     if (!q) throw new NotFoundException('Question introuvable');
     await prisma.report.create({
       data: {
@@ -302,7 +415,11 @@ export class QuestionsService {
 
   // --- Moderation ---
 
-  async moderate(userId: string, questionId: string, action: 'pin' | 'close' | 'lock' | 'restore') {
+  async moderate(
+    userId: string,
+    questionId: string,
+    action: 'pin' | 'close' | 'lock' | 'restore',
+  ) {
     const q = await prisma.question.findUnique({ where: { id: questionId } });
     if (!q) throw new NotFoundException('Question introuvable');
 

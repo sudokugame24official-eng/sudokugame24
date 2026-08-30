@@ -1,0 +1,11 @@
+{
+  "domain": "sudokugame24.com",
+  "backupName": "backup-sudokugame24-2026-08-29_20-48-21.sql.gz.enc",
+  "timestamp": "2026-08-29T20:48:21.214Z",
+  "sizeBytes": 66343,
+  "checksumSha256": "85d058e0322a53a3e3b5d8ea237026d20069ecb814930bf3aa68f7cb605b77f4",
+  "encryption": "AES-256-GCM",
+  "compression": "gzip",
+  "status": "SUCCESS",
+  "durationMs": 5490
+}

@@ -17,17 +17,53 @@ import { CoinTransactionType } from '@repo/database';
 // Bot difficulty configuration
 export type BotDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
-export const BOT_CONFIGS: Record<BotDifficulty, {
-  baseDelay: number;
-  variance: number;
-  mistakeChance: number;
-  names: string[];
-  eloRange: [number, number];
-  label: string;
-}> = {
-  EASY:   { baseDelay: 5000, variance: 2000, mistakeChance: 0.35, names: ['NoviceBot', 'BegBot_77', 'SlowPoke', 'LearnerBot', 'PuzzleNewbie'], eloRange: [800,  1100], label: 'Facile' },
-  MEDIUM: { baseDelay: 2800, variance: 1200, mistakeChance: 0.15, names: ['Alex_99', 'SudokuKing', 'MasterMind', 'LogicBeast', 'PuzzleSolver'], eloRange: [1200, 1500], label: 'Moyen' },
-  HARD:   { baseDelay: 1400, variance: 600,  mistakeChance: 0.04, names: ['ProGamerX', 'Brainiac_22', 'GrandMaster', 'NeuralSolver', 'UltraBot'],  eloRange: [1600, 1900], label: 'Difficile' },
+export const BOT_CONFIGS: Record<
+  BotDifficulty,
+  {
+    baseDelay: number;
+    variance: number;
+    mistakeChance: number;
+    names: string[];
+    eloRange: [number, number];
+    label: string;
+  }
+> = {
+  EASY: {
+    baseDelay: 5000,
+    variance: 2000,
+    mistakeChance: 0.35,
+    names: ['NoviceBot', 'BegBot_77', 'SlowPoke', 'LearnerBot', 'PuzzleNewbie'],
+    eloRange: [800, 1100],
+    label: 'Facile',
+  },
+  MEDIUM: {
+    baseDelay: 2800,
+    variance: 1200,
+    mistakeChance: 0.15,
+    names: [
+      'Alex_99',
+      'SudokuKing',
+      'MasterMind',
+      'LogicBeast',
+      'PuzzleSolver',
+    ],
+    eloRange: [1200, 1500],
+    label: 'Moyen',
+  },
+  HARD: {
+    baseDelay: 1400,
+    variance: 600,
+    mistakeChance: 0.04,
+    names: [
+      'ProGamerX',
+      'Brainiac_22',
+      'GrandMaster',
+      'NeuralSolver',
+      'UltraBot',
+    ],
+    eloRange: [1600, 1900],
+    label: 'Difficile',
+  },
 };
 
 export interface QueuedPlayer {
@@ -168,7 +204,12 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
 
   private async saveLobby(lobby: DuelLobby) {
     const redis = this.redisService.getClient();
-    await redis.set(`duel:lobby:${lobby.id}`, JSON.stringify(lobby), 'EX', 3600);
+    await redis.set(
+      `duel:lobby:${lobby.id}`,
+      JSON.stringify(lobby),
+      'EX',
+      3600,
+    );
     await redis.sadd('duel:lobby_ids', lobby.id);
   }
 
@@ -381,9 +422,17 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
   ) {
     if (betAmount > 0) {
       try {
-        await this.coinLedger.debit(userId, betAmount, CoinTransactionType.DUEL_WAGER, 'DuelBotWager', userId);
+        await this.coinLedger.debit(
+          userId,
+          betAmount,
+          CoinTransactionType.DUEL_WAGER,
+          'DuelBotWager',
+          userId,
+        );
       } catch {
-        socket.emit('chat_error', { message: 'Fonds insuffisants pour cette mise.' });
+        socket.emit('chat_error', {
+          message: 'Fonds insuffisants pour cette mise.',
+        });
         return;
       }
     }
@@ -415,15 +464,29 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Pick a random bot username & elo for the given difficulty level. */
-  private pickBotProfile(level: BotDifficulty): { username: string; elo: number } {
+  private pickBotProfile(level: BotDifficulty): {
+    username: string;
+    elo: number;
+  } {
     const cfg = BOT_CONFIGS[level];
     const username = cfg.names[Math.floor(Math.random() * cfg.names.length)];
-    const elo = Math.floor(cfg.eloRange[0] + Math.random() * (cfg.eloRange[1] - cfg.eloRange[0]));
+    const elo = Math.floor(
+      cfg.eloRange[0] + Math.random() * (cfg.eloRange[1] - cfg.eloRange[0]),
+    );
     return { username, elo };
   }
 
-  async sendInvite(socket: Socket, senderId: string, senderUsername: string, targetUsername: string, difficulty: Difficulty, betAmount: number) {
-    const targetProfile = await prisma.profile.findFirst({ where: { username: { equals: targetUsername, mode: 'insensitive' } } });
+  async sendInvite(
+    socket: Socket,
+    senderId: string,
+    senderUsername: string,
+    targetUsername: string,
+    difficulty: Difficulty,
+    betAmount: number,
+  ) {
+    const targetProfile = await prisma.profile.findFirst({
+      where: { username: { equals: targetUsername, mode: 'insensitive' } },
+    });
     if (!targetProfile) {
       socket.emit('chat_error', { message: 'Utilisateur introuvable.' });
       return;
@@ -431,7 +494,13 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
 
     if (betAmount > 0) {
       try {
-        await this.coinLedger.debit(senderId, betAmount, CoinTransactionType.DUEL_WAGER, 'DuelInvite', senderId);
+        await this.coinLedger.debit(
+          senderId,
+          betAmount,
+          CoinTransactionType.DUEL_WAGER,
+          'DuelInvite',
+          senderId,
+        );
       } catch (err) {
         socket.emit('chat_error', { message: 'Fonds insuffisants.' });
         return;
@@ -451,17 +520,29 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     };
 
     const redis = this.redisService.getClient();
-    await redis.set(`duel:invite:${inviteId}`, JSON.stringify(invite), 'EX', 120);
+    await redis.set(
+      `duel:invite:${inviteId}`,
+      JSON.stringify(invite),
+      'EX',
+      120,
+    );
 
     // Join room for this user so we can track if they disconnect before the duel starts
     void socket.join(`user_${senderId}`);
     await this.setUserSocket(senderId, socket.id);
 
-    this.server.to(`user_${targetProfile.userId}`).emit('duel_invite_received', invite);
+    this.server
+      .to(`user_${targetProfile.userId}`)
+      .emit('duel_invite_received', invite);
     socket.emit('chat_success', { message: 'Invitation envoyée !' });
   }
 
-  async acceptInvite(socket: Socket, targetId: string, targetUsername: string, inviteId: string) {
+  async acceptInvite(
+    socket: Socket,
+    targetId: string,
+    targetUsername: string,
+    inviteId: string,
+  ) {
     const redis = this.redisService.getClient();
     const inviteStr = await redis.get(`duel:invite:${inviteId}`);
     if (!inviteStr) {
@@ -470,12 +551,20 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     }
 
     const invite = JSON.parse(inviteStr);
-    
+
     if (invite.betAmount > 0) {
       try {
-        await this.coinLedger.debit(targetId, invite.betAmount, CoinTransactionType.DUEL_WAGER, 'DuelJoin', targetId);
+        await this.coinLedger.debit(
+          targetId,
+          invite.betAmount,
+          CoinTransactionType.DUEL_WAGER,
+          'DuelJoin',
+          targetId,
+        );
       } catch (err) {
-        socket.emit('chat_error', { message: 'Fonds insuffisants pour accepter.' });
+        socket.emit('chat_error', {
+          message: 'Fonds insuffisants pour accepter.',
+        });
         return;
       }
     }
@@ -571,11 +660,17 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       allowSpectators: boolean;
       allowSpectatorChat: boolean;
     },
-    rating: number
+    rating: number,
   ) {
     if (settings.betAmount > 0) {
       try {
-        await this.coinLedger.debit(userId, settings.betAmount, CoinTransactionType.DUEL_WAGER, 'DuelLobbyCreate', userId);
+        await this.coinLedger.debit(
+          userId,
+          settings.betAmount,
+          CoinTransactionType.DUEL_WAGER,
+          'DuelLobbyCreate',
+          userId,
+        );
       } catch (err) {
         socket.emit('chat_error', { message: 'Fonds insuffisants.' });
         return;
@@ -677,7 +772,7 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     userId: string,
     username: string,
     lobbyId: string,
-    asSpectator: boolean
+    asSpectator: boolean,
   ) {
     const lobby = await this.getLobby(lobbyId);
     if (!lobby) {
@@ -691,15 +786,25 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (asSpectator && !lobby.settings.allowSpectators) {
-      socket.emit('chat_error', { message: 'Les spectateurs ne sont pas autorisés sur cette table.' });
+      socket.emit('chat_error', {
+        message: 'Les spectateurs ne sont pas autorisés sur cette table.',
+      });
       return;
     }
 
     if (!asSpectator && lobby.settings.betAmount > 0) {
       try {
-        await this.coinLedger.debit(userId, lobby.settings.betAmount, CoinTransactionType.DUEL_WAGER, 'DuelLobbyJoin', userId);
+        await this.coinLedger.debit(
+          userId,
+          lobby.settings.betAmount,
+          CoinTransactionType.DUEL_WAGER,
+          'DuelLobbyJoin',
+          userId,
+        );
       } catch (err) {
-        socket.emit('chat_error', { message: 'Fonds insuffisants pour rejoindre.' });
+        socket.emit('chat_error', {
+          message: 'Fonds insuffisants pour rejoindre.',
+        });
         return;
       }
     }
@@ -808,7 +913,9 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     if (!lobby) return;
 
     if (lobby.creatorId !== userId) {
-      socket.emit('chat_error', { message: "Seul le créateur peut démarrer la partie." });
+      socket.emit('chat_error', {
+        message: 'Seul le créateur peut démarrer la partie.',
+      });
       return;
     }
 
@@ -876,12 +983,25 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
 
           // Emit bot_offer with available bot levels and a 15s countdown
           this.server.to(`user_${player.userId}`).emit('bot_offer', {
-            message: 'Aucun adversaire trouvé. Voulez-vous jouer contre un bot ?',
+            message:
+              'Aucun adversaire trouvé. Voulez-vous jouer contre un bot ?',
             timeoutMs: 15000,
             levels: [
-              { key: 'EASY',   label: BOT_CONFIGS.EASY.label,   eloRange: BOT_CONFIGS.EASY.eloRange },
-              { key: 'MEDIUM', label: BOT_CONFIGS.MEDIUM.label, eloRange: BOT_CONFIGS.MEDIUM.eloRange },
-              { key: 'HARD',   label: BOT_CONFIGS.HARD.label,   eloRange: BOT_CONFIGS.HARD.eloRange },
+              {
+                key: 'EASY',
+                label: BOT_CONFIGS.EASY.label,
+                eloRange: BOT_CONFIGS.EASY.eloRange,
+              },
+              {
+                key: 'MEDIUM',
+                label: BOT_CONFIGS.MEDIUM.label,
+                eloRange: BOT_CONFIGS.MEDIUM.eloRange,
+              },
+              {
+                key: 'HARD',
+                label: BOT_CONFIGS.HARD.label,
+                eloRange: BOT_CONFIGS.HARD.eloRange,
+              },
             ],
           });
         }
@@ -939,8 +1059,14 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     // Both players must have enough coins for the wager (if any)
     if (betAmount > 0) {
       const [w1, w2] = await Promise.all([
-        prisma.profile.findUnique({ where: { userId: p1.userId }, select: { coins: true } }),
-        prisma.profile.findUnique({ where: { userId: p2.userId }, select: { coins: true } }),
+        prisma.profile.findUnique({
+          where: { userId: p1.userId },
+          select: { coins: true },
+        }),
+        prisma.profile.findUnique({
+          where: { userId: p2.userId },
+          select: { coins: true },
+        }),
       ]);
       if ((w1?.coins ?? 0) < betAmount || (w2?.coins ?? 0) < betAmount) {
         throw new Error('Un des joueurs n’a pas assez de coins pour ce pari.');
@@ -948,8 +1074,24 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     }
 
     return this.startDuel(
-      { socketId: 'friend-match', userId: p1.userId, username: p1.username, difficulty: difficulty as any, betAmount, rating: p1.rating, joinedAt: Date.now() },
-      { socketId: 'friend-match', userId: p2.userId, username: p2.username, difficulty: difficulty as any, betAmount, rating: p2.rating, joinedAt: Date.now() },
+      {
+        socketId: 'friend-match',
+        userId: p1.userId,
+        username: p1.username,
+        difficulty: difficulty as any,
+        betAmount,
+        rating: p1.rating,
+        joinedAt: Date.now(),
+      },
+      {
+        socketId: 'friend-match',
+        userId: p2.userId,
+        username: p2.username,
+        difficulty: difficulty as any,
+        betAmount,
+        rating: p2.rating,
+        joinedAt: Date.now(),
+      },
       false,
     );
   }
@@ -977,7 +1119,9 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
         player2Id: isBotMatch ? null : p2.userId,
         status: GameStatus.IN_PROGRESS,
         startTime: new Date(Date.now() + 3000), // +3 seconds for 3,2,1,Go!
-        spectatorMode: lobby?.settings.allowSpectators ? SpectatorMode.ALL : SpectatorMode.NONE,
+        spectatorMode: lobby?.settings.allowSpectators
+          ? SpectatorMode.ALL
+          : SpectatorMode.NONE,
         hasTimer: lobby?.settings.hasTimer ?? true,
         timeLimitSec: lobby?.settings.timeLimitSec ?? null,
         allowSpectators: lobby?.settings.allowSpectators ?? true,
@@ -985,9 +1129,11 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    const botProfile = isBotMatch ? this.pickBotProfile(botDifficulty ?? 'MEDIUM') : null;
+    const botProfile = isBotMatch
+      ? this.pickBotProfile(botDifficulty ?? 'MEDIUM')
+      : null;
     const botUsername = isBotMatch ? p2.username : undefined;
-    const botElo      = isBotMatch ? p2.rating    : undefined;
+    const botElo = isBotMatch ? p2.rating : undefined;
 
     const activeDuel: ActiveDuel = {
       id: match.id,
@@ -1005,13 +1151,17 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       botUsername,
       botElo,
       startTime: Date.now() + 3000, // +3 seconds for animation
-      spectatorMode: lobby?.settings.allowSpectators ? SpectatorMode.ALL : SpectatorMode.NONE,
+      spectatorMode: lobby?.settings.allowSpectators
+        ? SpectatorMode.ALL
+        : SpectatorMode.NONE,
       mutedSpectators: [],
       lastMoveTimeP1: 0,
       lastMoveTimeP2: 0,
       riskScoreP1: 0,
       riskScoreP2: 0,
-      ownersBoard: Array(9).fill(null).map(() => Array(9).fill(null)),
+      ownersBoard: Array(9)
+        .fill(null)
+        .map(() => Array(9).fill(null)),
       comboP1: 0,
       comboP2: 0,
       settings: lobby?.settings,
@@ -1033,7 +1183,9 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
         isBot: isBotMatch,
         botDifficulty: isBotMatch ? (botDifficulty ?? 'MEDIUM') : undefined,
         botElo: isBotMatch ? p2.rating : undefined,
-        botLabel: isBotMatch ? BOT_CONFIGS[botDifficulty ?? 'MEDIUM'].label : undefined,
+        botLabel: isBotMatch
+          ? BOT_CONFIGS[botDifficulty ?? 'MEDIUM'].label
+          : undefined,
       },
       isBotMatch,
       settings: activeDuel.settings,
@@ -1044,7 +1196,7 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     // For server-side forced joining via adapter, we use server.in('user_id').socketsJoin(`match_${match.id}`)
     this.server.in(`user_${p1.userId}`).socketsJoin(`match_${match.id}`);
     this.server.to(`user_${p1.userId}`).emit('duel_start', payload);
-    
+
     if (!isBotMatch) {
       this.server.in(`user_${p2.userId}`).socketsJoin(`match_${match.id}`);
       this.server.to(`user_${p2.userId}`).emit('duel_start', payload);
@@ -1056,7 +1208,10 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     return match;
   }
 
-  private startBotLoop(matchId: string, botDifficulty: BotDifficulty = 'MEDIUM') {
+  private startBotLoop(
+    matchId: string,
+    botDifficulty: BotDifficulty = 'MEDIUM',
+  ) {
     const cfg = BOT_CONFIGS[botDifficulty];
 
     const scheduleNextMove = async () => {
@@ -1092,12 +1247,16 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
           let chosenCell: { r: number; c: number };
           if (botDifficulty === 'HARD') {
             // Prefer cells not yet claimed by player1 (opportunistic)
-            const unclaimed = emptyCells.filter(({ r, c }) => !duel.ownersBoard[r][c]);
-            chosenCell = unclaimed.length > 0
-              ? unclaimed[Math.floor(Math.random() * unclaimed.length)]
-              : emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const unclaimed = emptyCells.filter(
+              ({ r, c }) => !duel.ownersBoard[r][c],
+            );
+            chosenCell =
+              unclaimed.length > 0
+                ? unclaimed[Math.floor(Math.random() * unclaimed.length)]
+                : emptyCells[Math.floor(Math.random() * emptyCells.length)];
           } else {
-            chosenCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            chosenCell =
+              emptyCells[Math.floor(Math.random() * emptyCells.length)];
           }
 
           const { r, c } = chosenCell;
@@ -1127,10 +1286,17 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
   ) {
     const now = Date.now();
     try {
-      const result = await this.atomicHandleMove(matchId, userId, row, col, value, now);
+      const result = await this.atomicHandleMove(
+        matchId,
+        userId,
+        row,
+        col,
+        value,
+        now,
+      );
       if (result.error) return;
       if (result.isSus) this.logger.warn('Suspicious move');
-      
+
       const payload = {
         row,
         col,
@@ -1192,7 +1358,9 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       if (attempt > 0) {
         // Jittered backoff: reduce retry storms under contention
         // (2 players + bot loop can conflict on the same key).
-        await new Promise((res) => setTimeout(res, Math.floor(Math.random() * 8) + 1));
+        await new Promise((res) =>
+          setTimeout(res, Math.floor(Math.random() * 8) + 1),
+        );
       }
       // Dedicated connection: WATCH is connection-scoped and must not be
       // shared with other in-flight commands on the pool client.
@@ -1459,7 +1627,11 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    void trackEvent({ name: 'duel_complete', userId: winnerId && winnerId !== 'BOT' ? winnerId : duel.player1Id, metadata: { matchId: duel.id, isBot: winnerId === 'BOT' } });
+    void trackEvent({
+      name: 'duel_complete',
+      userId: winnerId && winnerId !== 'BOT' ? winnerId : duel.player1Id,
+      metadata: { matchId: duel.id, isBot: winnerId === 'BOT' },
+    });
     await prisma.duelMatch.update({
       where: { id: duel.id },
       data: {
@@ -1493,17 +1665,25 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
 
     const [p1Profile, p2Profile] = await Promise.all([
       prisma.profile.findUnique({ where: { userId: duel.player1Id } }),
-      duel.player2Id ? prisma.profile.findUnique({ where: { userId: duel.player2Id } }) : null,
+      duel.player2Id
+        ? prisma.profile.findUnique({ where: { userId: duel.player2Id } })
+        : null,
     ]);
 
     socket.emit('duel_start', {
       matchId: duel.id,
       board: duel.currentBoard,
       ownersBoard: duel.ownersBoard,
-      player1: { id: duel.player1Id, username: p1Profile?.username || 'Player 1', score: duel.scoreP1 },
+      player1: {
+        id: duel.player1Id,
+        username: p1Profile?.username || 'Player 1',
+        score: duel.scoreP1,
+      },
       player2: {
         id: duel.player2Id || 'BOT',
-        username: duel.isBotMatch ? (duel.botUsername || 'Sudoku Bot') : (p2Profile?.username || 'Player 2'),
+        username: duel.isBotMatch
+          ? duel.botUsername || 'Sudoku Bot'
+          : p2Profile?.username || 'Player 2',
         score: duel.scoreP2,
         isBot: duel.isBotMatch,
         botDifficulty: duel.botDifficulty,

@@ -26,7 +26,9 @@ export class LocalMediaStorage implements MediaStorage {
   private readonly publicPrefix: string;
 
   constructor(baseDir?: string, publicPrefix = '/uploads') {
-    this.baseDir = baseDir || path.join(__dirname, '..', '..', '..', 'web', 'public', 'uploads');
+    this.baseDir =
+      baseDir ||
+      path.join(__dirname, '..', '..', '..', 'web', 'public', 'uploads');
     this.publicPrefix = publicPrefix;
   }
 
@@ -35,7 +37,11 @@ export class LocalMediaStorage implements MediaStorage {
     const fullPath = path.join(this.baseDir, key);
     await fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
     await fs.promises.writeFile(fullPath, buffer);
-    return { key, url: `${this.publicPrefix}/${key}`, sizeBytes: buffer.length };
+    return {
+      key,
+      url: `${this.publicPrefix}/${key}`,
+      sizeBytes: buffer.length,
+    };
   }
 
   async delete(key: string): Promise<void> {
@@ -63,7 +69,7 @@ export class S3MediaStorage implements MediaStorage {
   async save(): Promise<StoredFile> {
     throw new BadRequestException(
       'Stockage S3 non configuré : renseignez S3_BUCKET, S3_REGION, S3_PUBLIC_URL ' +
-      'et installez @aws-sdk/client-s3 (voir OWNER_HANDOVER.md, section Media).',
+        'et installez @aws-sdk/client-s3 (voir OWNER_HANDOVER.md, section Media).',
     );
   }
 
@@ -73,16 +79,25 @@ export class S3MediaStorage implements MediaStorage {
 }
 
 export function createMediaStorage(): MediaStorage {
-  const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  const s3Configured = !!(process.env.S3_BUCKET && process.env.S3_REGION && process.env.S3_PUBLIC_URL);
+  const isProd =
+    process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+  const s3Configured = !!(
+    process.env.S3_BUCKET &&
+    process.env.S3_REGION &&
+    process.env.S3_PUBLIC_URL
+  );
 
   if (s3Configured) {
-    return new S3MediaStorage(process.env.S3_BUCKET!, process.env.S3_REGION!, process.env.S3_PUBLIC_URL!);
+    return new S3MediaStorage(
+      process.env.S3_BUCKET!,
+      process.env.S3_REGION!,
+      process.env.S3_PUBLIC_URL!,
+    );
   }
   if (isProd) {
     throw new Error(
       'FATAL: media storage is not configured for production. ' +
-      'Set S3_BUCKET / S3_REGION / S3_PUBLIC_URL (or explicitly allow local storage).',
+        'Set S3_BUCKET / S3_REGION / S3_PUBLIC_URL (or explicitly allow local storage).',
     );
   }
   return new LocalMediaStorage(process.env.MEDIA_LOCAL_DIR);

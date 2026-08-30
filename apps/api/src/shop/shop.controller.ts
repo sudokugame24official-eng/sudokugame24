@@ -104,7 +104,10 @@ export class ShopController {
     }
 
     // P1-H: signature verification is ALWAYS enforced (no test bypass).
-    const event = await this.shopService.verifyStripeWebhook(signature, req.rawBody);
+    const event = await this.shopService.verifyStripeWebhook(
+      signature,
+      req.rawBody,
+    );
 
     if (event.type === 'checkout.session.completed') {
       await this.shopService.handleSuccessfulPayment(
@@ -139,7 +142,10 @@ export class ShopController {
   @Put('admin/products/:id')
   @RequirePermission('shop.manage')
   @AuditAction('shop.update_product')
-  async updateProductAdmin(@Param('id') id: string, @Body() data: UpdateProductDto) {
+  async updateProductAdmin(
+    @Param('id') id: string,
+    @Body() data: UpdateProductDto,
+  ) {
     return this.shopService.updateProductAdmin(id, data as any);
   }
 

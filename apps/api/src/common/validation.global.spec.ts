@@ -28,7 +28,9 @@ const expect400 = async (metatype: any, value: any) => {
     expect(e).toBeInstanceOf(BadRequestException);
     return;
   }
-  throw new Error(`Expected BadRequestException for ${JSON.stringify(value).slice(0, 80)}`);
+  throw new Error(
+    `Expected BadRequestException for ${JSON.stringify(value).slice(0, 80)}`,
+  );
 };
 
 const validBoard = () => Array.from({ length: 9 }, () => Array(9).fill(0));
@@ -55,36 +57,80 @@ describe('P1-A: global input validation (400 on bad payloads)', () => {
   });
 
   it('rejects invalid email formats', async () => {
-    await expect400(RegisterDto, { email: 'not-an-email', password: 'password123', username: 'alice' });
+    await expect400(RegisterDto, {
+      email: 'not-an-email',
+      password: 'password123',
+      username: 'alice',
+    });
   });
 
   it('rejects short passwords and bad usernames', async () => {
-    await expect400(RegisterDto, { email: 'a@b.com', password: 'short', username: 'alice' });
-    await expect400(RegisterDto, { email: 'a@b.com', password: 'password123', username: 'bad name!' });
+    await expect400(RegisterDto, {
+      email: 'a@b.com',
+      password: 'short',
+      username: 'alice',
+    });
+    await expect400(RegisterDto, {
+      email: 'a@b.com',
+      password: 'password123',
+      username: 'bad name!',
+    });
   });
 
   it('rejects negative and non-integer coin grant amounts', async () => {
-    await expect400(GrantCoinsDto, { userId: 'u1', amount: -500, reason: 'nope' });
-    await expect400(GrantCoinsDto, { userId: 'u1', amount: 12.5, reason: 'nope' });
-    await expect400(GrantCoinsDto, { userId: 'u1', amount: 'lots', reason: 'nope' });
+    await expect400(GrantCoinsDto, {
+      userId: 'u1',
+      amount: -500,
+      reason: 'nope',
+    });
+    await expect400(GrantCoinsDto, {
+      userId: 'u1',
+      amount: 12.5,
+      reason: 'nope',
+    });
+    await expect400(GrantCoinsDto, {
+      userId: 'u1',
+      amount: 'lots',
+      reason: 'nope',
+    });
   });
 
   it('rejects malformed sudoku boards (10x10, floats, out-of-range)', async () => {
     const tenRows = Array.from({ length: 10 }, () => Array(9).fill(0));
-    await expect400(SubmitSessionDto, { finalBoard: tenRows, timeSec: 60, mistakes: 0 });
+    await expect400(SubmitSessionDto, {
+      finalBoard: tenRows,
+      timeSec: 60,
+      mistakes: 0,
+    });
 
     const floatBoard = validBoard();
     floatBoard[0][0] = 1.5;
-    await expect400(SubmitSessionDto, { finalBoard: floatBoard, timeSec: 60, mistakes: 0 });
+    await expect400(SubmitSessionDto, {
+      finalBoard: floatBoard,
+      timeSec: 60,
+      mistakes: 0,
+    });
 
     const bigBoard = validBoard();
     bigBoard[3][3] = 42;
-    await expect400(SubmitSessionDto, { finalBoard: bigBoard, timeSec: 60, mistakes: 0 });
+    await expect400(SubmitSessionDto, {
+      finalBoard: bigBoard,
+      timeSec: 60,
+      mistakes: 0,
+    });
   });
 
   it('rejects negative/oversized time and oversized text', async () => {
-    await expect400(SubmitSessionDto, { finalBoard: validBoard(), timeSec: -5, mistakes: 0 });
-    await expect400(SubmitSessionDto, { finalBoard: validBoard(), timeSec: 999999999, mistakes: 0 });
+    await expect400(SubmitSessionDto, {
+      finalBoard: validBoard(),
+      timeSec: -5,
+      mistakes: 0,
+    });
+    await expect400(SubmitSessionDto, {
+      finalBoard: validBoard(),
+      timeSec: 999999999,
+      mistakes: 0,
+    });
     await expect400(CreateForumPostDto, {
       title: 'ok title',
       content: 'x'.repeat(20001),
@@ -93,13 +139,30 @@ describe('P1-A: global input validation (400 on bad payloads)', () => {
   });
 
   it('rejects non-UUID category ids', async () => {
-    await expect400(CreateForumPostDto, { title: 'ok', content: 'ok', categoryId: 'not-a-uuid' });
+    await expect400(CreateForumPostDto, {
+      title: 'ok',
+      content: 'ok',
+      categoryId: 'not-a-uuid',
+    });
   });
 
   it('rejects invalid product prices and types', async () => {
-    await expect400(CreateProductDto, { name: 'Item', priceCoins: -10, type: 'perk' });
-    await expect400(CreateProductDto, { name: 'Item', priceCoins: 100, type: 'weird' });
-    await expect400(CreateProductDto, { name: 'Item', priceCoins: 100, type: 'perk', entitlement: 'GOD_MODE' });
+    await expect400(CreateProductDto, {
+      name: 'Item',
+      priceCoins: -10,
+      type: 'perk',
+    });
+    await expect400(CreateProductDto, {
+      name: 'Item',
+      priceCoins: 100,
+      type: 'weird',
+    });
+    await expect400(CreateProductDto, {
+      name: 'Item',
+      priceCoins: 100,
+      type: 'perk',
+      entitlement: 'GOD_MODE',
+    });
   });
 
   it('rejects empty ban reasons and bad friend usernames', async () => {
@@ -128,7 +191,11 @@ describe('P1-A: global input validation (400 on bad payloads)', () => {
 
     const board = validBoard();
     board[0][0] = 5;
-    const sub = await transform(SubmitSessionDto, { finalBoard: board, timeSec: 120, mistakes: 1 });
+    const sub = await transform(SubmitSessionDto, {
+      finalBoard: board,
+      timeSec: 120,
+      mistakes: 1,
+    });
     expect(sub.timeSec).toBe(120);
     expect(sub.finalBoard[0][0]).toBe(5);
   });
