@@ -18,12 +18,16 @@ import AdSlot from "@/components/monetization/AdSlot";
 import { useGameModes } from "@/hooks/useGameModes";
 import { cn } from "@/lib/utils";
 import { Link } from "@/navigation";
+import { useAuth } from "@/components/AuthProvider";
+import { MemberOnlyModal } from "@/components/MemberOnlyModal";
 
 export default function SoloPlayPage() {
   const t = useTranslations("play");
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameMode, setGameMode] = useState<"SOLO" | "DAILY">("SOLO");
   const { isEnabled } = useGameModes(); // P1-P: disabled modes disappear
+  const { user } = useAuth();
+  const [showMemberModal, setShowMemberModal] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] =
     useState<string>("MEDIUM");
 
@@ -64,6 +68,11 @@ export default function SoloPlayPage() {
     mode: "SOLO" | "DAILY",
     difficulty: string = "MEDIUM",
   ) => {
+    if (mode === "DAILY" && !user) {
+      setShowMemberModal(true);
+      return;
+    }
+
     if (mode === "DAILY") {
       try {
         const res = await fetch(`${API_URL}/daily/today`);
@@ -84,8 +93,8 @@ export default function SoloPlayPage() {
           credentials: "include",
         });
         const data = await res.json();
-        if (data && data.sessionId) {
-          setSoloSessionId(data.sessionId);
+        if (data && data.initialBoard) {
+          setSoloSessionId(data.sessionId || "");
           setDailyPuzzle(data);
         }
       } catch (err) {
@@ -356,6 +365,10 @@ export default function SoloPlayPage() {
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-background text-foreground p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
+      <MemberOnlyModal 
+        isOpen={showMemberModal} 
+        onClose={() => setShowMemberModal(false)} 
+      />
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-primary/5 blur-[150px] rounded-full pointer-events-none"></div>
 
@@ -394,14 +407,13 @@ export default function SoloPlayPage() {
             <div className="relative z-10 h-full flex flex-col justify-between">
               <div>
                 <div className="bg-[#FF4500] text-white text-xs font-black uppercase px-3 py-1 rounded-full inline-block mb-6 shadow-md">
-                  {t("dailyNew")}
+                  {t("dailyBadge") || "Today's Puzzle"}
                 </div>
                 <h2 className="text-3xl font-black text-white mb-4">
-                  {t("dailyCardTitle")}
+                  {t("daily") || "Daily Challenge"}
                 </h2>
                 <p className="text-blue-200/70 mb-4 max-w-[90%] leading-relaxed">
-                  {t("dailyPrefix")} <strong>{t("dailyTimeLimit")}</strong>{t("dailyMid")}
-                  <strong className="text-[#FFCC00]">{t("dailyEarn")}</strong>{t("dailySuffix")}
+                  {t("dailyDesc")}
                 </p>
               </div>
               <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF4500] to-[#ff5c1a] text-white font-black uppercase tracking-wider px-6 py-4 rounded-xl shadow-[0_10px_20px_rgba(255,69,0,0.3)] hover:shadow-[0_15px_30px_rgba(255,69,0,0.5)] hover:-translate-y-1 transition-all w-full mt-4">

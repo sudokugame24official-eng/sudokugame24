@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export const SUPPORTED_LOCALES = [
-  { code: "fr", label: "Français", short: "FR", flag: "🇫🇷" },
   { code: "en", label: "English", short: "EN", flag: "🇬🇧" },
+  { code: "fr", label: "Français", short: "FR", flag: "🇫🇷" },
   { code: "de", label: "Deutsch", short: "DE", flag: "🇩🇪" },
 ] as const;
 
@@ -16,7 +16,7 @@ type LocaleCode = (typeof SUPPORTED_LOCALES)[number]["code"];
 function getCurrentLocale(pathname: string): LocaleCode {
   const segment = pathname.split("/")[1];
   const found = SUPPORTED_LOCALES.find((l) => l.code === segment);
-  return found ? found.code : "fr";
+  return found ? found.code : "en";
 }
 
 function switchPathLocale(pathname: string, newLocale: string): string {
@@ -69,6 +69,9 @@ export function LanguageSwitcher({ compact = false, className }: LanguageSwitche
   }, []);
 
   function handleSelect(code: string) {
+    try {
+      document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {}
     const newPath = switchPathLocale(pathname, code);
     setIsOpen(false);
     router.push(newPath);

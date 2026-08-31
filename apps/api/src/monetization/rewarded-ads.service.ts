@@ -265,7 +265,9 @@ export class RewardedAdsService {
     if (!status.eligible) {
       if (status.reason === 'DAILY_CAP_REACHED') {
         this.analytics.dailyCapHits++;
-        throw new BadRequestException('Daily reward cap reached. Come back tomorrow!');
+        throw new BadRequestException(
+          'Daily reward cap reached. Come back tomorrow!',
+        );
       }
       if (status.reason === 'COOLDOWN_ACTIVE') {
         throw new BadRequestException(
@@ -304,7 +306,11 @@ export class RewardedAdsService {
 
   // --- Ad Reward Claiming & Verification ---
 
-  async claimReward(userId: string, rewardToken: string, idempotencyKey?: string) {
+  async claimReward(
+    userId: string,
+    rewardToken: string,
+    idempotencyKey?: string,
+  ) {
     const now = Date.now();
 
     // 1. Verify token cryptographic integrity
@@ -327,7 +333,9 @@ export class RewardedAdsService {
     // 3. Verify token expiration
     if (now > payload.expiresAt) {
       this.analytics.rewardsRejected++;
-      throw new BadRequestException('Reward session has expired. Please try again.');
+      throw new BadRequestException(
+        'Reward session has expired. Please try again.',
+      );
     }
 
     // 4. Verify single-use session (replay attack prevention)

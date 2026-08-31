@@ -38,7 +38,11 @@ export class DuelGateway
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
-    // Optionally send immediate lobby state
+    const userId = client.data?.user?.id;
+    if (userId) {
+      void client.join(`user_${userId}`);
+    }
+    // Send immediate lobby state
     this.duelService.broadcastLobbyState();
   }
 

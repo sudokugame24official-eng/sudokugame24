@@ -23,6 +23,7 @@ import {
   Crown,
   CheckCircle2,
   TrendingUp,
+  UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -476,6 +477,111 @@ export default function HomeClient() {
                 </motion.div>
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════════
+            2.5 GUEST VS REGISTERED MEMBER COMPARISON UX
+        ══════════════════════════════════════════════════════════════ */}
+        <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#061838]/90 via-[#041E42]/90 to-[#0A2A5C]/90 border-2 border-brand-gold/30 p-8 sm:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.7)] backdrop-blur-2xl">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-xs font-black text-brand-gold tracking-[0.25em] uppercase bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/30">
+              {t("guestVsMember.badge")}
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-4 uppercase tracking-tight text-white">
+              {t("guestVsMember.title")}
+            </h2>
+            <p className="text-gray-200 text-base sm:text-lg mt-3">
+              {t("guestVsMember.subtitle")}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* GUEST CARD */}
+            <div className="bg-black/30 border border-white/15 rounded-3xl p-8 flex flex-col justify-between text-left">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                    {t("guestVsMember.guestCardTitle")}
+                  </span>
+                  <span className="text-xs text-green-400 font-bold uppercase">{t("trustFree")}</span>
+                </div>
+                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-wide">
+                  {t("guestVsMember.guestCardTitle")}
+                </h3>
+                <p className="text-gray-300 text-sm mb-6">
+                  {t("guestVsMember.guestCardSubtitle")}
+                </p>
+
+                <div className="space-y-3 mb-6">
+                  {[
+                    t("guestVsMember.guestFeature1"),
+                    t("guestVsMember.guestFeature2"),
+                    t("guestVsMember.guestFeature3"),
+                    t("guestVsMember.guestFeature4"),
+                  ].map((feat, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm text-gray-200">
+                      <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-xs text-gray-400 italic bg-white/5 p-3 rounded-xl border border-white/5 mb-6">
+                  ⚠️ {t("guestVsMember.guestNote")}
+                </p>
+              </div>
+
+              <Link href="/play" className="block w-full">
+                <button className="w-full py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-sm uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <Play className="w-4 h-4 fill-white" />
+                  <span>{t("guestVsMember.guestCta")}</span>
+                </button>
+              </Link>
+            </div>
+
+            {/* MEMBER CARD */}
+            <div className="bg-gradient-to-br from-brand-orange/15 via-[#0A2A5C] to-brand-gold/10 border-2 border-brand-gold/50 rounded-3xl p-8 flex flex-col justify-between text-left shadow-[0_10px_40px_rgba(255,204,0,0.15)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 rounded-full blur-2xl pointer-events-none" />
+
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-black uppercase tracking-widest text-brand-gold bg-brand-gold/20 px-3 py-1 rounded-full border border-brand-gold/40 flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-brand-gold" />
+                    {t("guestVsMember.memberCardTitle")}
+                  </span>
+                  <span className="text-xs text-brand-orange font-bold uppercase">100% Free</span>
+                </div>
+                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-wide">
+                  {t("guestVsMember.memberCardTitle")}
+                </h3>
+                <p className="text-gray-200 text-sm mb-6">
+                  {t("guestVsMember.memberCardSubtitle")}
+                </p>
+
+                <div className="space-y-3 mb-6">
+                  {[
+                    t("guestVsMember.memberFeature1"),
+                    t("guestVsMember.memberFeature2"),
+                    t("guestVsMember.memberFeature3"),
+                    t("guestVsMember.memberFeature4"),
+                    t("guestVsMember.memberFeature5"),
+                  ].map((feat, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm text-white font-bold">
+                      <Sparkles className="w-4 h-4 text-brand-gold shrink-0" />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Link href="/auth?mode=register" className="block w-full">
+                <button className="w-full py-4 bg-gradient-to-r from-brand-orange to-brand-gold text-brand-navy font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_10px_25px_rgba(255,69,0,0.4)] hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <UserPlus className="w-4 h-4" />
+                  <span>{t("guestVsMember.memberCta")}</span>
+                </button>
+              </Link>
+            </div>
           </div>
         </section>
 

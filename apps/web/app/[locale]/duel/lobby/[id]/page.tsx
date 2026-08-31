@@ -9,31 +9,29 @@ import { motion } from "framer-motion";
 import { Users, Play, LogOut, MessageSquare, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Dummy user state for preview
-const currentUser = {
-  id: "user_" + Math.floor(Math.random() * 10000),
-  username: "Guest_" + Math.floor(Math.random() * 1000),
-  elo: 1200,
-  coins: 5000,
-};
+import { useAuth } from "@/components/AuthProvider";
+
+// No mock user — lobby uses real auth state from useAuth()
 
 export default function LobbyPage() {
   const t = useTranslations("duel");
   const { id: lobbyId } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [lobby, setLobby] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string }[]>([]);
   const [message, setMessage] = useState("");
 
+  // Only connect when authenticated — guests must never join a competitive lobby socket.
   useEffect(() => {
+    if (!user) {
+      router.push("/duel");
+      return;
+    }
+
     const newSocket = io(`${WS_URL}/duel`, { withCredentials: true });
     setSocket(newSocket);
-
-    // Initial fetch/join? The backend currently only broadcasts lobby state.
-    // If we refresh here, we might not be in the lobby. 
-    // We can emit a "request_lobby_state" event, but for now we wait for `lobby_update`.
-    // We should probably emit "rejoin_lobby" if needed, but let's assume standard flow where socket persists or we just listen.
 
     newSocket.on("lobby_update", (data) => {
       if (data.id === lobbyId) {
@@ -52,10 +50,10 @@ export default function LobbyPage() {
     return () => {
       newSocket.disconnect();
     };
-  }, [lobbyId, router]);
+  }, [user, lobbyId, router]);
 
   const handleStartMatch = () => {
-    if (socket && lobby?.creatorId === currentUser.id) {
+    if (socket && lobby?.creatorId === user?.id) {
       socket.emit("start_match", { lobbyId });
     }
   };
@@ -86,7 +84,7 @@ export default function LobbyPage() {
     );
   }
 
-  const isCreator = lobby.creatorId === currentUser.id;
+  const isCreator = lobby.creatorId === user?.id;
   const canStart = isCreator && lobby.player2;
 
   return (

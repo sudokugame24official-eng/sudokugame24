@@ -1,30 +1,56 @@
 import Link from "next/link";
 import { extractContextualLinks } from "@/lib/related-links";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { API_URL } from "@/lib/api";
-import { MessageCircle, Eye, Pin, Lock, CheckCircle2 } from "lucide-react";
+import ForumTopicClient from "../../[id]/ForumTopicClient";
 
 interface Topic {
-  id: string; slug: string; title: string; content: string;
-  isPinned: boolean; isClosed: boolean; isLocked: boolean; views: number;
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  isPinned: boolean;
+  isClosed: boolean;
+  isLocked: boolean;
+  views: number;
+  likes: number;
   createdAt: string;
-  author: { profile?: { username?: string; level?: number } };
+  author: {
+    profile?: { username?: string; level?: number; avatarUrl?: string; rating?: number };
+    role?: string;
+    perks?: any[];
+  };
   category: { name: string; id: string };
   comments: {
-    id: string; content: string; createdAt: string;
-    author: { profile?: { username?: string } };
+    id: string;
+    content: string;
+    createdAt: string;
+    likes: number;
+    author: {
+      profile?: { username?: string; level?: number; avatarUrl?: string; rating?: number };
+      role?: string;
+      perks?: any[];
+    };
   }[];
   _count?: { comments: number };
 }
 
 async function fetchTopic(slug: string): Promise<Topic | null> {
   try {
-    // trackView=false on SSR: crawlers must not inflate view counts
-    const res = await fetch(`${API_URL}/forum/posts/slug/${encodeURIComponent(slug)}?trackView=false`, {
-      next: { revalidate: 30 },
-    });
-    if (!res.ok) return null;
+    const res = await fetch(
+      `${API_URL}/forum/posts/slug/${encodeURIComponent(slug)}?trackView=false`,
+      {
+        cache: "no-store",
+      },
+    );
+    if (!res.ok) {
+      // Fallback by ID if slug fetch didn't return 200
+      const resById = await fetch(`${API_URL}/forum/posts/${encodeURIComponent(slug)}`, {
+        cache: "no-store",
+      });
+      if (!resById.ok) return null;
+      return (await resById.json()) as Topic;
+    }
     return (await res.json()) as Topic;
   } catch {
     return null;
@@ -40,14 +66,26 @@ export async function generateMetadata({
   const topic = await fetchTopic(slug);
   if (!topic) return { title: "Topic not found" };
   const description = (topic.content || "").slice(0, 155);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
+  const canonicalUrl = `${siteUrl}/${locale}/forum/topic/${topic.slug || topic.id}`;
+
   return {
-    title: `${topic.title} | Forum Sudoku`,
+    title: `${topic.title} | Forum Sudoku Premium`,
     description,
-    alternates: { canonical: `/${locale}/forum/topic/${topic.slug}` },
-    robots: (topic.comments.length === 0 && topic.content.length < 100)
-      ? { index: false, follow: true } // thin content: keep out of the index
-      : undefined,
-    openGraph: { title: topic.title, description, type: "article" },
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        en: `${siteUrl}/en/forum/topic/${topic.slug || topic.id}`,
+        fr: `${siteUrl}/fr/forum/topic/${topic.slug || topic.id}`,
+        de: `${siteUrl}/de/forum/topic/${topic.slug || topic.id}`,
+      },
+    },
+    openGraph: {
+      title: topic.title,
+      description,
+      type: "article",
+      url: canonicalUrl,
+    },
   };
 }
 
@@ -58,12 +96,31 @@ export default async function ForumTopicPage({
 }) {
   const { locale, slug } = await params;
   const topic = await fetchTopic(slug);
-  if (!topic) notFound();
+  if (!topic) {
+    // Professional localized not-found page — no generic Next.js 404
+    const defaultMsg = { title: "Topic not found", body: "This discussion may have been deleted or moved.", back: "Return to Forum" };
+    const notFoundMessages: Record<string, { title: string; body: string; back: string }> = {
+      fr: { title: "Sujet introuvable", body: "Cette discussion a peut-\u00eatre \u00e9t\u00e9 supprim\u00e9e ou d\u00e9plac\u00e9e.", back: "Retour au forum" },
+      de: { title: "Thema nicht gefunden", body: "Diese Diskussion wurde m\u00f6glicherweise gel\u00f6scht oder verschoben.", back: "Zur\u00fcck zum Forum" },
+      en: defaultMsg,
+    };
+    const msg = notFoundMessages[locale] || defaultMsg;
+    return (
+      <div className="min-h-screen bg-[#041E42] flex flex-col items-center justify-center text-white px-4 text-center">
+        <svg className="w-16 h-16 text-white/20 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1 className="text-3xl font-black mb-3">{msg.title}</h1>
+        <p className="text-white/60 mb-8 max-w-sm">{msg.body}</p>
+        <Link href={`/${locale}/forum`} className="inline-flex items-center gap-2 bg-[#FFCC00] text-[#041E42] font-black px-6 py-3 rounded-xl hover:opacity-90 transition-opacity">
+          &larr; {msg.back}
+        </Link>
+      </div>
+    );
+  }
 
-  const t = (en: string, fr: string, de?: string) =>
-    locale === "fr" ? fr : locale === "de" ? de || en : en;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
-  const canonical = `${siteUrl}/${locale}/forum/topic/${topic.slug}`;
+  const canonical = `${siteUrl}/${locale}/forum/topic/${topic.slug || topic.id}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -72,7 +129,10 @@ export default async function ForumTopicPage({
     articleBody: topic.content.slice(0, 5000),
     datePublished: topic.createdAt,
     url: canonical,
-    author: { "@type": "Person", name: topic.author?.profile?.username || "Member" },
+    author: {
+      "@type": "Person",
+      name: topic.author?.profile?.username || "Member",
+    },
     interactionStatistic: {
       "@type": "InteractionCounter",
       interactionType: "https://schema.org/CommentAction",
@@ -86,98 +146,27 @@ export default async function ForumTopicPage({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: `${siteUrl}/${locale}` },
       { "@type": "ListItem", position: 2, name: "Forum", item: `${siteUrl}/${locale}/forum` },
-      { "@type": "ListItem", position: 3, name: topic.category.name, item: `${siteUrl}/${locale}/forum?category=${topic.category.id}` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: topic.category?.name || "Topic",
+        item: `${siteUrl}/${locale}/forum?category=${topic.category?.id || ""}`,
+      },
       { "@type": "ListItem", position: 4, name: topic.title.slice(0, 60), item: canonical },
     ],
   };
 
-  const totalComments = topic._count?.comments ?? topic.comments.length;
-
   return (
-    <div className="min-h-screen bg-[#020F24] text-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground mb-6">
-          <ol className="flex gap-2 flex-wrap">
-            <li><Link href={`/${locale}`} className="hover:text-white">Home</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href={`/${locale}/forum`} className="hover:text-white">Forum</Link></li>
-            <li aria-hidden>/</li>
-            <li className="text-white font-medium">{topic.category.name}</li>
-          </ol>
-        </nav>
-
-        <article>
-          <div className="flex flex-wrap items-center gap-2 text-xs mb-3">
-            {topic.isPinned && <span className="flex items-center gap-1 bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded font-bold"><Pin className="w-3 h-3" />{t("Pinned", "Épinglé", "Angeheftet")}</span>}
-            {topic.isClosed && <span className="bg-orange-500/20 text-orange-400 px-2 py-1 rounded font-bold">{t("Closed", "Fermé", "Geschlossen")}</span>}
-            {topic.isLocked && <span className="flex items-center gap-1 bg-red-500/20 text-red-400 px-2 py-1 rounded font-bold"><Lock className="w-3 h-3" />{t("Locked", "Verrouillé", "Gesperrt")}</span>}
-          </div>
-
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4">{topic.title}</h1>
-
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-            <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{topic.views} {t("views", "vues", "Aufrufe")}</span>
-            <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{totalComments} {t("replies", "réponses", "Antworten")}</span>
-            <span>{t("by", "par", "von")} <strong className="text-white/80">{topic.author?.profile?.username || t("Member", "Membre", "Mitglied")}</strong></span>
-            <time dateTime={topic.createdAt}>{new Date(topic.createdAt).toLocaleDateString(locale)}</time>
-          </div>
-
-          <div className="bg-card/40 border border-white/10 rounded-2xl p-6 mb-8">
-            <p className="whitespace-pre-wrap text-white/90">{topic.content}</p>
-          </div>
-
-          <section>
-            <h2 className="text-2xl font-black mb-6">
-              {totalComments} {t("replies", "réponses", "Antworten")}
-            </h2>
-            <div className="space-y-3">
-              {topic.comments.map((c) => (
-                <div key={c.id} className="bg-card/30 border border-white/10 rounded-xl p-4">
-                  <p className="whitespace-pre-wrap text-white/85 text-sm">{c.content}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    — <strong>{c.author?.profile?.username || t("Member", "Membre", "Mitglied")}</strong>,{" "}
-                    <time dateTime={c.createdAt}>{new Date(c.createdAt).toLocaleDateString(locale)}</time>
-                  </p>
-                </div>
-              ))}
-              {topic.comments.length === 0 && (
-                <p className="text-muted-foreground text-sm">{t("No replies yet.", "Pas encore de réponse.", "Noch keine Antworten.")}</p>
-              )}
-            </div>
-          </section>
-        </article>
-
-        {/* Semantic graph: contextual links (techniques mentioned → Academy, game modes → their pages) */}
-        <aside className="mt-12 bg-card/30 border border-white/10 rounded-2xl p-6 text-sm">
-          <h2 className="font-black mb-3">{t("Explore", "Explorer", "Erkunden")}</h2>
-          {(() => {
-            // P1-U: links derived from what THIS topic actually mentions
-            const ctx = extractContextualLinks(
-              `${topic.title} ${topic.content}`,
-              locale,
-            );
-            return ctx.length > 0 ? (
-              <div className="flex flex-wrap gap-3 mb-4">
-                {ctx.map((l) => (
-                  <Link key={l.href} href={l.href} className="bg-primary/20 text-primary border border-primary/30 px-4 py-2 rounded-lg hover:bg-primary/30">
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null;
-          })()}
-          <div className="flex flex-wrap gap-3">
-            <Link href={`/${locale}/learn`} className="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20">{t("Sudoku Academy", "Académie Sudoku", "Sudoku-Akademie")}</Link>
-            <Link href={`/${locale}/questions`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">Q&A</Link>
-            <Link href={`/${locale}/play`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">{t("Play free", "Jouer", "Spielen")}</Link>
-            <Link href={`/${locale}/daily`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">{t("Daily challenge", "Défi du jour", "Tägliche Herausforderung")}</Link>
-            <Link href={`/${locale}/duel`} className="bg-white/5 px-4 py-2 rounded-lg hover:bg-white/10">Duel</Link>
-          </div>
-        </aside>
-      </div>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <ForumTopicClient topic={topic} />
+    </>
   );
 }

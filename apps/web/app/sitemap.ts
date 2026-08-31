@@ -48,6 +48,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/about",
     "/terms",
     "/privacy",
+    "/blog",
+    "/blog/how-to-solve-hard-sudoku",
+    "/blog/winning-sudoku-duels-multiplayer",
+    "/blog/history-of-sudoku",
   ].map((route) => ({
     url: `${baseUrl}/en${route}`,
     lastModified: new Date(),

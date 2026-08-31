@@ -79,6 +79,7 @@ import { LiveStatsTicker } from "@/components/LiveStatsTicker";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 import { DuelChallengeListener } from "@/components/DuelChallengeListener";
 
@@ -161,6 +162,15 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} overflow-x-hidden`}
         suppressHydrationWarning
       >
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-9SRGVP7C4W" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-9SRGVP7C4W');
+          `}
+        </Script>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AdProvider>
             <AuthProvider>

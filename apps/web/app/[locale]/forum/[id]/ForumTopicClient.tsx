@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { PlayerIdentity } from "@/components/PlayerIdentity";
 import { useAuth } from "@/components/AuthProvider";
 import { useTranslations } from "next-intl";
+import { MemberOnlyModal } from "@/components/MemberOnlyModal";
 
 export default function ForumTopicClient({
   topic: initialTopic,
@@ -32,6 +33,7 @@ export default function ForumTopicClient({
   const [topic, setTopic] = useState(initialTopic);
   const [replyText, setReplyText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   const t = useTranslations("forum");
@@ -89,7 +91,10 @@ export default function ForumTopicClient({
   };
 
   const handleLikeTopic = async () => {
-    if (!user) return toast.error(t("loginToReply"));
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (isLikingTopic) return;
 
     setIsLikingTopic(true);
@@ -112,7 +117,10 @@ export default function ForumTopicClient({
   };
 
   const handleLikeComment = async (commentId: string, currentLikes: number) => {
-    if (!user) return toast.error(t("loginToReply"));
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
 
     // Optimistic
     const newComments = topic.comments.map((c: any) =>
@@ -592,6 +600,10 @@ export default function ForumTopicClient({
           )}
         </div>
       </div>
+      <MemberOnlyModal
+        isOpen={showMemberModal}
+        onClose={() => setShowMemberModal(false)}
+      />
     </div>
   );
 }

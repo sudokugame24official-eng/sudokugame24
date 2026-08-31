@@ -524,7 +524,7 @@ export const ChatPanel = () => {
   );
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-4 z-50">
+    <div className="fixed bottom-24 md:bottom-6 right-4 z-40">
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -532,11 +532,11 @@ export const ChatPanel = () => {
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setIsOpen(true)}
-            className="w-16 h-16 bg-gradient-to-br from-[#FF4500] via-[#FF6B33] to-[#FFCC00] text-brand-navy rounded-[2rem] flex items-center justify-center shadow-[0_10px_40px_rgba(255,69,0,0.5)] hover:scale-110 hover:shadow-[0_15px_50px_rgba(255,69,0,0.7)] transition-all relative group overflow-hidden cursor-pointer"
+            className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#FF4500] via-[#FF6B33] to-[#FFCC00] text-brand-navy rounded-full md:rounded-[2rem] flex items-center justify-center shadow-[0_10px_40px_rgba(255,69,0,0.5)] hover:scale-110 hover:shadow-[0_15px_50px_rgba(255,69,0,0.7)] transition-all relative group overflow-hidden cursor-pointer pointer-events-auto"
             title="Messagerie Sociale"
           >
-            <div className="absolute inset-0 rounded-[2rem] border-[2px] border-white/30"></div>
-            <MessageCircle className="w-7 h-7 relative z-10 text-white group-hover:rotate-12 transition-transform duration-300" />
+            <div className="absolute inset-0 rounded-full md:rounded-[2rem] border-[2px] border-white/30"></div>
+            <MessageCircle className="w-6 h-6 md:w-7 md:h-7 relative z-10 text-white group-hover:rotate-12 transition-transform duration-300" />
             
             {/* Unread message badge */}
             {unreadCount > 0 && (

@@ -18,19 +18,17 @@ import {
 import { SharedDuelBoard } from "@/components/duel/SharedDuelBoard";
 import { DuelChat } from "@/components/duel/DuelChat";
 import { cn } from "@/lib/utils";
-
-// Dummy user state
-const currentUser = {
-  id: "user_" + Math.floor(Math.random() * 10000), // Randomize for testing
-  username: "Guest_" + Math.floor(Math.random() * 1000),
-};
+import { useAuth } from "@/components/AuthProvider";
 
 export default function ActiveDuelPage() {
   const t = useTranslations("duel");
+  const { user } = useAuth();
   const { matchId } = useParams();
   const searchParams = useSearchParams();
   const isSpectating = searchParams.get("spectate") === "true";
   const router = useRouter();
+
+  const currentUserId = user?.id || "spectator";
 
   const [socket, setSocket] = useState<Socket | null>(null);
 
@@ -61,7 +59,7 @@ export default function ActiveDuelPage() {
     setSocket(newSocket);
 
     if (isSpectating) {
-      newSocket.emit("spectate_match", { matchId, userId: currentUser.id });
+      newSocket.emit("spectate_match", { matchId, userId: currentUserId });
     } else {
       newSocket.emit("join_match", { matchId });
     }
@@ -107,7 +105,7 @@ export default function ActiveDuelPage() {
       setPlayer2((prev: any) => ({ ...prev, score: data.scoreP2 }));
 
       // Update combo if it's the current player
-      if (data.userId === currentUser.id) {
+      if (data.userId === currentUserId) {
         if (data.isCorrect) setCombo((c) => c + 1);
         else setCombo(0);
       }
@@ -118,9 +116,8 @@ export default function ActiveDuelPage() {
       setWinnerId(data.winnerId);
       setPlayer1((prev: any) => ({ ...prev, score: data.scoreP1 }));
       setPlayer2((prev: any) => ({ ...prev, score: data.scoreP2 }));
-      const isPlayer1 = data.p1Progression !== undefined; // hack to check if we have xp
-      if (currentUser.id === player1?.id) setXpGained(data.p1XpGained);
-      else if (currentUser.id === player2?.id) setXpGained(data.p2XpGained);
+      if (currentUserId === player1?.id) setXpGained(data.p1XpGained);
+      else if (currentUserId === player2?.id) setXpGained(data.p2XpGained);
     });
 
     // --- CHAT EVENTS ---
@@ -135,7 +132,7 @@ export default function ActiveDuelPage() {
     return () => {
       newSocket.disconnect();
     };
-  }, [matchId, isSpectating, player1?.id, player2?.id]);
+  }, [matchId, isSpectating, player1?.id, player2?.id, currentUserId]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -161,7 +158,7 @@ export default function ActiveDuelPage() {
     if (socket) {
       socket.emit("make_move", {
         matchId,
-        userId: currentUser.id,
+        userId: currentUserId,
         row: r,
         col: c,
         value: val,
@@ -181,7 +178,7 @@ export default function ActiveDuelPage() {
     if (socket) {
       socket.emit("moderate_spectator", {
         matchId,
-        authorId: currentUser.id,
+        authorId: currentUserId,
         targetId,
         action,
       });
@@ -189,12 +186,12 @@ export default function ActiveDuelPage() {
   };
 
   const isPlayer =
-    player1?.id === currentUser.id || player2?.id === currentUser.id;
+    player1?.id === currentUserId || player2?.id === currentUserId;
 
-  const handleUserClick = (e: React.MouseEvent, user: { id: string; username: string }) => {
+  const handleUserClick = (e: React.MouseEvent, clickedUser: { id: string; username: string }) => {
     e.stopPropagation();
-    if (user.id === currentUser.id) return;
-    setSocialMenu({ x: e.clientX, y: e.clientY, userId: user.id, username: user.username });
+    if (clickedUser.id === currentUserId) return;
+    setSocialMenu({ x: e.clientX, y: e.clientY, userId: clickedUser.id, username: clickedUser.username });
   };
 
   return (
@@ -258,7 +255,7 @@ export default function ActiveDuelPage() {
                     {t("matchOver")}
                   </h2>
                   <p className="text-lg text-yellow-400 font-bold mb-6">
-                    {winnerId === currentUser.id
+                    {winnerId === currentUserId
                       ? t("youWon")
                       : winnerId
                         ? t("defeat")
@@ -292,7 +289,7 @@ export default function ActiveDuelPage() {
               ownersBoard={ownersBoard}
               player1={player1}
               player2={player2}
-              userId={currentUser.id}
+              userId={currentUserId}
               onMove={(r, c, v) => handleCellClick(r, c, v)}
               combo={combo}
             />

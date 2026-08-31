@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
 import { Trophy, Medal, Award, Flame } from "lucide-react";
+import { LeaderboardAuth } from "@/components/LeaderboardAuth";
 
 interface Row {
   rank?: number;
@@ -86,6 +87,7 @@ export default async function LeaderboardPage({
   return (
     <div className="min-h-screen bg-[#020F24] text-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <LeaderboardAuth />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground mb-6">

@@ -24,10 +24,19 @@ export class SudokuService {
     private readonly coinLedger: CoinLedgerService,
   ) {}
 
-  async startSession(userId: string, difficulty: Difficulty) {
+  async startSession(userId: string | null, difficulty: Difficulty) {
     const puzzleData = SudokuGenerator.generate(difficulty as any);
 
-    // Create puzzle in DB to track it
+    if (!userId) {
+      // Guest: return initial board for local gameplay, no DB session, no XP/coins tracking
+      return {
+        sessionId: null,
+        difficulty,
+        initialBoard: puzzleData.initialBoard,
+      };
+    }
+
+    // Create puzzle in DB to track it for registered member
     const puzzle = await prisma.sudokuPuzzle.create({
       data: {
         initialBoard: puzzleData.initialBoard,

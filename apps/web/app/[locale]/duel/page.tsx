@@ -11,6 +11,7 @@ import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
+import { MemberOnlyModal } from "@/components/MemberOnlyModal";
 
 type BotDifficulty = "EASY" | "MEDIUM" | "HARD";
 
@@ -50,13 +51,7 @@ const BOT_LEVELS: BotLevel[] = [
   },
 ];
 
-// Dummy user state for preview
-const currentUser = {
-  id: "user_" + Math.floor(Math.random() * 10000),
-  username: "Guest_" + Math.floor(Math.random() * 1000),
-  elo: 1200,
-  coins: 5000,
-};
+// No mock user — auth state comes exclusively from useAuth()
 
 // ─── Bot Offer Modal ──────────────────────────────────────────────────────────
 function BotOfferModal({
@@ -72,19 +67,24 @@ function BotOfferModal({
   const [remaining, setRemaining] = useState(Math.ceil(offer.timeoutMs / 1000));
   const [selected, setSelected] = useState<BotDifficulty>("MEDIUM");
 
+  const onAcceptRef = useRef(onAccept);
+  useEffect(() => {
+    onAcceptRef.current = onAccept;
+  }, [onAccept]);
+
   useEffect(() => {
     const iv = setInterval(() => {
       setRemaining((r) => {
         if (r <= 1) {
           clearInterval(iv);
-          onAccept("MEDIUM"); // auto-accept medium
+          onAcceptRef.current("MEDIUM"); // auto-accept medium
           return 0;
         }
         return r - 1;
       });
     }, 1000);
     return () => clearInterval(iv);
-  }, [onAccept]);
+  }, []);
 
   return (
     <motion.div
@@ -287,6 +287,7 @@ function PlayBotModal({
 
           <button
             onClick={() => onPlay(selected)}
+            onTouchEnd={(e) => { e.preventDefault(); onPlay(selected); }}
             className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black shadow-xl shadow-purple-500/25 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
           >
             <Sparkles className="w-5 h-5" />
@@ -312,6 +313,7 @@ export default function DuelLobbyPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showBotModal, setShowBotModal] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
   const [botOffer, setBotOffer] = useState<{ timeoutMs: number } | null>(null);
   const [receivedInvite, setReceivedInvite] = useState<any>(null);
   const [targetUsername, setTargetUsername] = useState("");
@@ -339,7 +341,15 @@ export default function DuelLobbyPage() {
     setSearchSeconds(0);
   }, []);
 
+  // Only connect the duel WebSocket when the user is authenticated.
+  // Guests must never establish a competitive socket connection.
   useEffect(() => {
+    if (!user) {
+      // Ensure no leftover socket remains if user logs out
+      setSocket(null);
+      return;
+    }
+
     const newSocket = io(`${WS_URL}/duel`, { withCredentials: true });
     setSocket(newSocket);
 
@@ -358,7 +368,6 @@ export default function DuelLobbyPage() {
       router.push(`/duel/lobby/${data.lobbyId}`);
     });
 
-    // ← New: rich bot_offer with level selection
     newSocket.on("bot_offer", (data) => {
       setBotOffer(data);
     });
@@ -374,9 +383,13 @@ export default function DuelLobbyPage() {
       stopSearchTimer();
       newSocket.disconnect();
     };
-  }, [router, stopSearchTimer]);
+  }, [user, router, stopSearchTimer]);
 
   const handleCreateGame = () => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket) {
       socket.emit("create_lobby", {
         difficulty,
@@ -392,6 +405,10 @@ export default function DuelLobbyPage() {
   };
 
   const handleQuickSearch = () => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket) {
       socket.emit("join_queue", { difficulty, betAmount: bet });
       setIsSearching(true);
@@ -400,12 +417,14 @@ export default function DuelLobbyPage() {
   };
 
   const handleJoinTable = (targetUserId: string) => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket) {
-      const activeUserId = user?.id || currentUser.id;
-      const activeUsername = user?.profile?.username || currentUser.username;
       socket.emit("join_table", {
-        userId: activeUserId,
-        username: activeUsername,
+        userId: user.id,
+        username: user.profile?.username || "Player",
         targetUserId,
       });
     }
@@ -416,6 +435,10 @@ export default function DuelLobbyPage() {
   };
 
   const handleSendInvite = () => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket && targetUsername) {
       socket.emit("send_invite", { targetUsername, difficulty, betAmount: bet });
       setShowInviteModal(false);
@@ -423,6 +446,10 @@ export default function DuelLobbyPage() {
   };
 
   const handleAcceptInvite = () => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket && receivedInvite) {
       socket.emit("accept_invite", { inviteId: receivedInvite.inviteId });
       setReceivedInvite(null);
@@ -431,6 +458,10 @@ export default function DuelLobbyPage() {
 
   // Accept bot offer from matchmaking queue (after 10s wait)
   const handleAcceptBotOffer = (botDifficulty: BotDifficulty) => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket) {
       socket.emit("accept_bot", { botDifficulty });
       setBotOffer(null);
@@ -445,6 +476,10 @@ export default function DuelLobbyPage() {
 
   // Direct "Play vs Bot" button (skips queue entirely)
   const handlePlayVsBot = (botDifficulty: BotDifficulty) => {
+    if (!user) {
+      setShowMemberModal(true);
+      return;
+    }
     if (socket) {
       socket.emit("play_vs_bot", {
         difficulty,
@@ -460,7 +495,9 @@ export default function DuelLobbyPage() {
     setIsSearching(false);
     setBotOffer(null);
     stopSearchTimer();
-    socket?.emit("leave_queue", { userId: currentUser.id });
+    if (user) {
+      socket?.emit("leave_queue", { userId: user.id });
+    }
   };
 
   const formatSearchTime = (s: number) =>
@@ -493,19 +530,29 @@ export default function DuelLobbyPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-6 bg-card/50 backdrop-blur-md px-6 py-3 rounded-full border border-border">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-bold">
-                {currentUser.username.charAt(0)}
+          {user ? (
+            <div className="flex items-center gap-6 bg-card/50 backdrop-blur-md px-6 py-3 rounded-full border border-border">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-bold">
+                  {(user.profile?.username || "U").charAt(0).toUpperCase()}
+                </div>
+                <span className="font-bold">{user.profile?.username || "Player"}</span>
               </div>
-              <span className="font-bold">{currentUser.username}</span>
+              <div className="h-6 w-px bg-border" />
+              <div className="flex items-center gap-2 font-bold text-yellow-500">
+                <Coins className="w-5 h-5 fill-yellow-500" />
+                {(user.profile?.coins ?? 0).toLocaleString()}
+              </div>
             </div>
-            <div className="h-6 w-px bg-border" />
-            <div className="flex items-center gap-2 font-bold text-yellow-500">
-              <Coins className="w-5 h-5 fill-yellow-500" />
-              {currentUser.coins.toLocaleString()}
-            </div>
-          </div>
+          ) : (
+            <button
+              onClick={() => setShowMemberModal(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-brand-orange to-brand-gold text-brand-navy font-black px-6 py-2.5 rounded-full uppercase tracking-wider text-xs shadow-lg hover:brightness-110 cursor-pointer"
+            >
+              <Users className="w-4 h-4" />
+              <span>{t("memberLoginRequired", { defaultValue: "Log In / Register" })}</span>
+            </button>
+          )}
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -539,6 +586,7 @@ export default function DuelLobbyPage() {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       onClick={() => setShowBotModal(true)}
+                      onTouchEnd={(e) => { e.preventDefault(); setShowBotModal(true); }}
                       className="flex items-center gap-2 text-sm font-bold text-purple-400 hover:text-purple-300 transition-colors mb-4 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/30"
                     >
                       <Bot className="w-4 h-4" />
@@ -589,6 +637,7 @@ export default function DuelLobbyPage() {
 
                     <button
                       onClick={handleQuickSearch}
+                      onTouchEnd={(e) => { e.preventDefault(); handleQuickSearch(); }}
                       className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 transition-all hover:scale-[1.02]"
                     >
                       <Sword className="w-5 h-5" />
@@ -605,6 +654,7 @@ export default function DuelLobbyPage() {
                   {/* Play vs Bot — direct */}
                   <button
                     onClick={() => setShowBotModal(true)}
+                    onTouchEnd={(e) => { e.preventDefault(); setShowBotModal(true); }}
                     className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-500/30 hover:border-purple-400/60 text-white py-4 rounded-2xl font-bold transition-all hover:scale-[1.02]"
                   >
                     <Bot className="w-5 h-5 text-purple-400" />
@@ -705,8 +755,9 @@ export default function DuelLobbyPage() {
                           <button
                             onClick={() => handleJoinTable(player.userId)}
                             disabled={
-                              currentUser.coins < player.betAmount ||
-                              currentUser.id === player.userId
+                              !user ||
+                              (user.profile?.coins ?? 0) < player.betAmount ||
+                              user.id === player.userId
                             }
                             className="bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white px-6 py-2 rounded-full font-bold text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -991,6 +1042,11 @@ export default function DuelLobbyPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MemberOnlyModal
+        isOpen={showMemberModal}
+        onClose={() => setShowMemberModal(false)}
+      />
     </div>
   );
 }

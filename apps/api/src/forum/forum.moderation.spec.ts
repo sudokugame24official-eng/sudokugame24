@@ -5,6 +5,7 @@ jest.mock('@repo/database', () => ({
   prisma: {
     forumPost: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
       count: jest.fn().mockResolvedValue(0),
       create: jest.fn(),
@@ -127,6 +128,11 @@ describe('P1-L: forum moderation + SEO slugs', () => {
       slug: 'x',
       isDeleted: true,
     });
+    (prisma.forumPost.findFirst as jest.Mock).mockResolvedValue({
+      id: 'p1',
+      slug: 'x',
+      isDeleted: true,
+    });
     await expect(service.getPostBySlug('x', false)).rejects.toThrow(
       NotFoundException,
     );
@@ -155,6 +161,11 @@ describe('P1-L: forum moderation + SEO slugs', () => {
 
   it('view increments fire-and-forget never break the read', async () => {
     (prisma.forumPost.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1',
+      slug: 'x',
+      isDeleted: false,
+    });
+    (prisma.forumPost.findFirst as jest.Mock).mockResolvedValue({
       id: 'p1',
       slug: 'x',
       isDeleted: false,

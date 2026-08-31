@@ -337,7 +337,13 @@ export class AdminService {
     const ticket = await prisma.supportTicket.findUnique({
       where: { id: ticketId },
       include: {
-        user: { select: { id: true, email: true, profile: { select: { username: true } } } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { username: true } },
+          },
+        },
       },
     });
 
@@ -357,12 +363,15 @@ export class AdminService {
           link: '/contact',
         },
       });
-      this.logger.log(`In-app notification created for user ${ticket.userId} for ticket ${ticketId}`);
+      this.logger.log(
+        `In-app notification created for user ${ticket.userId} for ticket ${ticketId}`,
+      );
     }
 
     // 2. If Guest (or registered email delivery) -> Send direct Email
     const targetEmail = ticket?.user?.email || ticket?.guestEmail;
-    const targetName = ticket?.user?.profile?.username || ticket?.guestName || 'Joueur';
+    const targetName =
+      ticket?.user?.profile?.username || ticket?.guestName || 'Joueur';
 
     if (targetEmail) {
       const emailHtml = `
@@ -770,7 +779,9 @@ export class AdminService {
       },
     });
 
-    this.logger.warn(`All advertisements disabled globally by admin ${adminId}`);
+    this.logger.warn(
+      `All advertisements disabled globally by admin ${adminId}`,
+    );
     return {
       success: true,
       message: 'Toutes les publicités ont été désactivées avec succès.',
@@ -781,7 +792,12 @@ export class AdminService {
     return prisma.auditLog.findMany({
       where: {
         action: {
-          in: ['ads.update_slot', 'ads.disable_all', 'ads.rollback', 'settings.update'],
+          in: [
+            'ads.update_slot',
+            'ads.disable_all',
+            'ads.rollback',
+            'settings.update',
+          ],
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -795,7 +811,9 @@ export class AdminService {
     });
 
     if (!log || !log.oldValue) {
-      throw new NotFoundException('Audit log entry not found or contains no previous state.');
+      throw new NotFoundException(
+        'Audit log entry not found or contains no previous state.',
+      );
     }
 
     const previousState = log.oldValue as any;

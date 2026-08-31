@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/components/AuthProvider";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
+import { MemberOnlyModal } from "@/components/MemberOnlyModal";
 
 export default function ShopPage() {
   const t = useTranslations("shop");
@@ -30,6 +31,7 @@ export default function ShopPage() {
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const [shopEnabled, setShopEnabled] = useState(false);
   const [adsEnabled, setAdsEnabled] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -38,6 +40,12 @@ export default function ShopPage() {
   useEffect(() => {
     checkAuth(); // Refresh user balance when navigating back to the shop
   }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      setShowMemberModal(true);
+    }
+  }, [loading, user]);
 
   const fetchData = async () => {
     try {
@@ -184,6 +192,7 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen pt-24 pb-12 px-4 relative flex flex-col items-center">
+      <MemberOnlyModal isOpen={showMemberModal} onClose={() => setShowMemberModal(false)} />
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#FF4500]/10 to-transparent -z-10" />
 

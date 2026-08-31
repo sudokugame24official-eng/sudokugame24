@@ -4,7 +4,11 @@ import { MonetizationService } from './monetization.service';
 import { AdminService } from '../admin/admin.service';
 import { CoinLedgerService } from '../coin-ledger/coin-ledger.service';
 import { prisma, CoinTransactionType } from '@repo/database';
-import { BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 
 import { EmailService } from '../email/email.service';
 
@@ -15,21 +19,25 @@ describe('Ultimate Google Ads & Rewarded Ads Control Center Test Suite', () => {
   let coinLedgerService: CoinLedgerService;
 
   const mockCoinLedger = {
-    credit: jest.fn().mockImplementation((userId, amount, type, source, refId, idempotencyKey) => {
-      return Promise.resolve({
-        success: true,
-        balance: 100 + amount,
-        transaction: {
-          id: `tx_${Date.now()}`,
-          userId,
-          amount,
-          type,
-          source,
-          referenceId: refId,
-          idempotencyKey,
+    credit: jest
+      .fn()
+      .mockImplementation(
+        (userId, amount, type, source, refId, idempotencyKey) => {
+          return Promise.resolve({
+            success: true,
+            balance: 100 + amount,
+            transaction: {
+              id: `tx_${Date.now()}`,
+              userId,
+              amount,
+              type,
+              source,
+              referenceId: refId,
+              idempotencyKey,
+            },
+          });
         },
-      });
-    }),
+      ),
   };
 
   const mockEmailService = {
@@ -64,7 +72,8 @@ describe('Ultimate Google Ads & Rewarded Ads Control Center Test Suite', () => {
 
   describe('1. Standard Google Ads Architecture & Safety', () => {
     it('should keep ads OFF by default', async () => {
-      const isEnabled = await monetizationService.isFeatureEnabled('ENABLE_ADS');
+      const isEnabled =
+        await monetizationService.isFeatureEnabled('ENABLE_ADS');
       expect(isEnabled).toBe(false);
     });
 
@@ -87,13 +96,16 @@ describe('Ultimate Google Ads & Rewarded Ads Control Center Test Suite', () => {
     });
 
     it('should allow valid editorial/content placements', async () => {
-      const validSlot = await adminService.updateAdSlot('home_between_sections', {
-        placement: 'in_content',
-        format: 'horizontal',
-        deviceTarget: 'ALL',
-        width: 728,
-        height: 90,
-      });
+      const validSlot = await adminService.updateAdSlot(
+        'home_between_sections',
+        {
+          placement: 'in_content',
+          format: 'horizontal',
+          deviceTarget: 'ALL',
+          width: 728,
+          height: 90,
+        },
+      );
 
       expect(validSlot).toBeDefined();
       expect(validSlot.slotName).toBe('home_between_sections');
@@ -102,7 +114,8 @@ describe('Ultimate Google Ads & Rewarded Ads Control Center Test Suite', () => {
     it('should disable all ads with one-click master disable action', async () => {
       const result = await adminService.disableAllAds('admin_test_id');
       expect(result.success).toBe(true);
-      const isAdsEnabled = await monetizationService.isFeatureEnabled('ENABLE_ADS');
+      const isAdsEnabled =
+        await monetizationService.isFeatureEnabled('ENABLE_ADS');
       expect(isAdsEnabled).toBe(false);
     });
   });

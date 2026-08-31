@@ -173,6 +173,7 @@ export const SharedDuelBoard: React.FC<SharedDuelBoardProps> = ({
               return (
                 <div
                   key={`${rIdx}-${cIdx}`}
+                  onPointerDown={(e) => { e.preventDefault(); handleCellClick(rIdx, cIdx); }}
                   onClick={() => handleCellClick(rIdx, cIdx)}
                   role="button"
                   tabIndex={0}
@@ -224,6 +225,7 @@ export const SharedDuelBoard: React.FC<SharedDuelBoardProps> = ({
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
             <button
               key={num}
+              onPointerDown={(e) => { e.preventDefault(); insertValue(num); }}
               onClick={() => insertValue(num)}
               className="aspect-square bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-xl font-black text-xl sm:text-2xl md:text-3xl hover:bg-brand-gold hover:text-black hover:border-brand-gold hover:scale-105 active:scale-95 transition-all flex items-center justify-center shadow-lg"
             >

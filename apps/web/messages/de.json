@@ -90,7 +90,28 @@
     "resetCaption": "Setzt sich um 00:00 UTC zurück",
     "academyBadge": "Lernfortschritt",
     "academyDesc": "Werden Sie zum Deduktionsmeister mit interaktiven Lektionen, kommentierten Diagrammen und gezielten Übungen.",
-    "gridLiveLabel": "Live • KI-Löser"
+    "gridLiveLabel": "Live • KI-Löser",
+    "guestVsMember": {
+      "badge": "Zugangsvergleich",
+      "title": "Kostenlos als Gast spielen oder Konto erstellen",
+      "subtitle": "Sie können sofort ohne Registrierung Rätsel lösen oder ein kostenloses Konto erstellen, um am weltweiten Wettbewerb teilzunehmen.",
+      "guestCardTitle": "Als Gast spielen",
+      "guestCardSubtitle": "Sofortiges Gelegenheitsspiel ohne Registrierung",
+      "guestFeature1": "Unbegrenztes klassisches Solo-Sudoku",
+      "guestFeature2": "Alle 5 Schwierigkeitsgrade (Einfach bis Meister)",
+      "guestFeature3": "Interaktive Sudoku-Akademie & Anleitungen",
+      "guestFeature4": "Keine Registrierung oder Anmeldung erforderlich",
+      "guestNote": "Ohne Rangliste, XP, Münzen oder Mehrspieler",
+      "guestCta": "Solo als Gast spielen",
+      "memberCardTitle": "Kostenloses Konto erstellen",
+      "memberCardSubtitle": "Schalten Sie das komplette SudokuGame24-Erlebnis frei",
+      "memberFeature1": "Echtzeit-1v1-Duelle & Matchmaking",
+      "memberFeature2": "Übungsspiele gegen intelligente Bots",
+      "memberFeature3": "Globale Bestenlisten & Elo-Bewertung",
+      "memberFeature4": "XP-Fortschritt, Münzen & Erfolge",
+      "memberFeature5": "Community-Forum & Direktnachrichten",
+      "memberCta": "Kostenloses Konto erstellen"
+    }
   },
   "nav": {
     "play": "Spielen",
@@ -786,7 +807,16 @@
     "registerSubtitle": "Erstellen Sie ein Konto, um Mehrspieler zu spielen und Ihre Statistiken zu verfolgen.",
     "username": "Benutzername",
     "or": "ODER",
-    "errorGeneric": "Ein Fehler ist aufgetreten"
+    "errorGeneric": "Ein Fehler ist aufgetreten",
+    "memberOnly": {
+      "title": "Funktion nur für Mitglieder",
+      "description": "Diese Seite oder Funktion ist registrierten Mitgliedern vorbehalten.",
+      "login": "Anmelden",
+      "register": "Kostenloses Konto erstellen",
+      "continueAsGuest": "Als Gast weiterspielen",
+      "guestBenefits": "Spielen Sie Solo-Sudoku kostenlos und ohne Registrierung.",
+      "memberBenefits": "Schalten Sie Duelle, Bot-Matches, Ranglisten, XP, Münzen, Erfolge und das Forum frei."
+    }
   },
   "errors": {
     "notFound": "Seite Nicht Gefunden",

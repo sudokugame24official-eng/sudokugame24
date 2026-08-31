@@ -90,7 +90,28 @@
     "resetCaption": "Resets at 00:00 UTC",
     "academyBadge": "Learning Progression",
     "academyDesc": "Become a deduction master with our interactive lessons, annotated diagrams, and targeted exercises.",
-    "gridLiveLabel": "Live • AI Solver"
+    "gridLiveLabel": "Live • AI Solver",
+    "guestVsMember": {
+      "badge": "Account Comparison",
+      "title": "Play Free as Guest or Join as Member",
+      "subtitle": "You can solve puzzles immediately without an account, or create a free profile to unlock global competition.",
+      "guestCardTitle": "Play as Guest",
+      "guestCardSubtitle": "Instant casual play without registration",
+      "guestFeature1": "Unlimited Classic Solo Sudoku",
+      "guestFeature2": "All 5 Difficulty Levels (Easy to Master)",
+      "guestFeature3": "Interactive Sudoku Academy & Guides",
+      "guestFeature4": "No account or login required",
+      "guestNote": "No ranking, XP, coins, or multiplayer",
+      "guestCta": "Play Solo as Guest",
+      "memberCardTitle": "Create Free Account",
+      "memberCardSubtitle": "Unlock the full SudokuGame24 experience",
+      "memberFeature1": "Real-time 1v1 Duels & Matchmaking",
+      "memberFeature2": "Practice Matches vs Intelligent Bots",
+      "memberFeature3": "Global Leaderboards & Elo Ranking",
+      "memberFeature4": "XP Progression, Coins & Achievements",
+      "memberFeature5": "Community Forum & Social Messaging",
+      "memberCta": "Create Free Account"
+    }
   },
   "nav": {
     "play": "Play",
@@ -786,7 +807,16 @@
     "registerSubtitle": "Create an account to play multiplayer and track your stats.",
     "username": "Username",
     "or": "OR",
-    "errorGeneric": "An error occurred"
+    "errorGeneric": "An error occurred",
+    "memberOnly": {
+      "title": "Member Only Feature",
+      "description": "This page or function is reserved for registered members.",
+      "login": "Log In",
+      "register": "Create Free Account",
+      "continueAsGuest": "Continue as Guest",
+      "guestBenefits": "Play Solo Sudoku freely without an account.",
+      "memberBenefits": "Unlock Duels, Bot matches, Rankings, XP, Coins, Achievements, and Forum replies."
+    }
   },
   "errors": {
     "notFound": "Page Not Found",

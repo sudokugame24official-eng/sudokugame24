@@ -90,7 +90,28 @@
     "resetCaption": "Réinitialisation UTC à 00:00",
     "academyBadge": "Progression Pédagogique",
     "academyDesc": "Devenez un maître de la déduction avec nos leçons interactives, diagrammes annotés et exercices ciblés.",
-    "gridLiveLabel": "Direct • IA Solver"
+    "gridLiveLabel": "Direct • IA Solver",
+    "guestVsMember": {
+      "badge": "Comparatif des accès",
+      "title": "Jouez gratuitement en Invité ou créez un Compte",
+      "subtitle": "Vous pouvez résoudre des grilles immédiatement sans inscription, ou créer un compte gratuit pour rejoindre la compétition mondiale.",
+      "guestCardTitle": "Jouer en Invité",
+      "guestCardSubtitle": "Jeu occasionnel immédiat sans compte",
+      "guestFeature1": "Sudoku Solo classique illimité",
+      "guestFeature2": "5 niveaux de difficulté (Facile à Maître)",
+      "guestFeature3": "Académie Sudoku & Guides interactifs",
+      "guestFeature4": "Aucune inscription ou connexion requise",
+      "guestNote": "Sans classement, XP, pièces ni multijoueur",
+      "guestCta": "Jouer en Solo en Invité",
+      "memberCardTitle": "Créer un Compte Gratuit",
+      "memberCardSubtitle": "Débloquez l'expérience complète SudokuGame24",
+      "memberFeature1": "Duels 1v1 en temps réel & Matchmaking",
+      "memberFeature2": "Matchs d'entraînement contre les Bots",
+      "memberFeature3": "Classements mondiaux & Rating Elo",
+      "memberFeature4": "Progression XP, Pièces & Trophées",
+      "memberFeature5": "Forum communautaire & Messagerie",
+      "memberCta": "Créer un Compte Gratuit"
+    }
   },
   "nav": {
     "play": "Jouer",
@@ -786,7 +807,16 @@
     "registerSubtitle": "Créez un compte pour jouer en multijoueur et suivre vos statistiques.",
     "username": "Nom d'utilisateur",
     "or": "OU",
-    "errorGeneric": "Une erreur est survenue"
+    "errorGeneric": "Une erreur est survenue",
+    "memberOnly": {
+      "title": "Fonctionnalité réservée aux membres",
+      "description": "Cette page ou fonction est réservée aux membres inscrits.",
+      "login": "Se connecter",
+      "register": "Créer un compte gratuit",
+      "continueAsGuest": "Continuer en tant qu'invité",
+      "guestBenefits": "Jouez au Sudoku Solo gratuitement et sans inscription.",
+      "memberBenefits": "Débloquez les Duels, matchs contre les Bots, Classements, XP, Pièces, Trophées et le Forum."
+    }
   },
   "errors": {
     "notFound": "Page Introuvable",

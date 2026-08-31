@@ -1192,13 +1192,18 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
     };
 
     // Instruct instances to make sockets join the room (using Socket.IO Redis adapter feature)
-    // We can emit to `user_${id}` to tell the client they are in a match, and the client will emit `join_match_room`
-    // For server-side forced joining via adapter, we use server.in('user_id').socketsJoin(`match_${match.id}`)
-    this.server.in(`user_${p1.userId}`).socketsJoin(`match_${match.id}`);
+    // We emit to `user_${id}` to tell the client they are in a match, and join room safely if supported
+    try {
+      this.server.in?.(`user_${p1.userId}`)?.socketsJoin?.(`match_${match.id}`);
+    } catch {}
     this.server.to(`user_${p1.userId}`).emit('duel_start', payload);
 
     if (!isBotMatch) {
-      this.server.in(`user_${p2.userId}`).socketsJoin(`match_${match.id}`);
+      try {
+        this.server
+          .in?.(`user_${p2.userId}`)
+          ?.socketsJoin?.(`match_${match.id}`);
+      } catch {}
       this.server.to(`user_${p2.userId}`).emit('duel_start', payload);
     }
 

@@ -91,17 +91,20 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.googleLogin(req);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     if (result) {
       res.cookie('access_token', result.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        // 'lax' is required for OAuth redirect flows (cookie must survive cross-site redirect)
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      // Redirect to profile page. State parameter could carry the locale in a future iteration.
+      // For now, redirect to the default locale profile which will redirect once the user's
+      // browser language is detected by i18n middleware.
       res.redirect(`${frontendUrl}/profile`);
     } else {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       res.redirect(`${frontendUrl}/auth?error=google_failed`);
     }
   }

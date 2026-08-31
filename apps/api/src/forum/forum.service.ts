@@ -60,91 +60,116 @@ export class ForumService {
   }
 
   async getPostById(id: string) {
-    const post = await prisma.forumPost.findUnique({
-      where: { id },
-      include: {
-        author: {
-          select: {
-            profile: {
-              select: {
-                username: true,
-                avatarUrl: true,
-                level: true,
-                rating: true,
-              },
-            },
-            role: true,
-            perks: true,
-          },
-        },
-        category: true,
-        comments: {
-          include: {
-            author: {
-              select: {
-                profile: {
-                  select: {
-                    username: true,
-                    avatarUrl: true,
-                    level: true,
-                    rating: true,
-                  },
-                },
-                role: true,
-                perks: true,
-              },
+    const includeQuery = {
+      author: {
+        select: {
+          profile: {
+            select: {
+              username: true,
+              avatarUrl: true,
+              level: true,
+              rating: true,
             },
           },
-          orderBy: { createdAt: 'asc' },
+          role: true,
+          perks: true,
         },
       },
+      category: true,
+      comments: {
+        include: {
+          author: {
+            select: {
+              profile: {
+                select: {
+                  username: true,
+                  avatarUrl: true,
+                  level: true,
+                  rating: true,
+                },
+              },
+              role: true,
+              perks: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' as const },
+      },
+    };
+
+    let post = await prisma.forumPost.findUnique({
+      where: { id },
+      include: includeQuery,
     });
+
+    // Fallback lookup by slug if ID lookup finds nothing
+    if (!post && id) {
+      post = await prisma.forumPost.findFirst({
+        where: { slug: id },
+        include: includeQuery,
+      });
+    }
 
     if (!post || post.isDeleted) throw new NotFoundException('Post not found');
     return post;
   }
 
-  /** P1-L: fetch by SEO slug for the public topic page. */
+  /** P1-L: fetch by SEO slug for the public topic page with ID fallback. */
   async getPostBySlug(slug: string, incrementViews = true) {
-    const post = await prisma.forumPost.findUnique({
-      where: { slug },
-      include: {
-        author: {
-          select: {
-            profile: {
-              select: {
-                username: true,
-                avatarUrl: true,
-                level: true,
-                rating: true,
-              },
-            },
-            role: true,
-            perks: true,
-          },
-        },
-        category: true,
-        comments: {
-          include: {
-            author: {
-              select: {
-                profile: {
-                  select: {
-                    username: true,
-                    avatarUrl: true,
-                    level: true,
-                    rating: true,
-                  },
-                },
-                role: true,
-                perks: true,
-              },
+    const includeQuery = {
+      author: {
+        select: {
+          profile: {
+            select: {
+              username: true,
+              avatarUrl: true,
+              level: true,
+              rating: true,
             },
           },
-          orderBy: { createdAt: 'asc' },
+          role: true,
+          perks: true,
         },
       },
+      category: true,
+      comments: {
+        include: {
+          author: {
+            select: {
+              profile: {
+                select: {
+                  username: true,
+                  avatarUrl: true,
+                  level: true,
+                  rating: true,
+                },
+              },
+              role: true,
+              perks: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' as const },
+      },
+    };
+
+    let post = await prisma.forumPost.findFirst({
+      where: { slug },
+      include: includeQuery,
     });
+
+    // Fallback lookup by ID if slug lookup returns null
+    if (!post && slug) {
+      try {
+        post = await prisma.forumPost.findUnique({
+          where: { id: slug },
+          include: includeQuery,
+        });
+      } catch (e) {
+        // Ignore UUID cast errors
+      }
+    }
+
     if (!post || post.isDeleted) throw new NotFoundException('Post not found');
     if (incrementViews) {
       await prisma.forumPost

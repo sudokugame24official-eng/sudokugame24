@@ -25,137 +25,14 @@ import { useTranslations } from "next-intl";
 
 import { useParams } from "next/navigation";
 
-const SEED_TOPICS_BY_LOCALE: Record<string, any[]> = {
-  en: [
-    {
-      id: "top-5-beginner-mistakes",
-      slug: "top-5-fatal-mistakes-sudoku-beginners",
-      title: "Top 5 fatal mistakes made by Sudoku beginners",
-      content: "Complete strategic guide to avoid guessing, master Snyder notation, and boost your solving speed.",
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      isPinned: true,
-      views: 1420,
-      _count: { comments: 18 },
-      category: { name: "Beginners & Help" },
-      author: { profile: { username: "LogicMaster99", level: 42 }, role: "ADMIN" },
-    },
-    {
-      id: "mastering-x-wing-swordfish",
-      slug: "mastering-x-wing-and-swordfish-expert-sudoku",
-      title: "Mastering X-Wing and Swordfish on Expert and Diabolical grids",
-      content: "Step-by-step breakdown with interactive diagrams to identify locked candidate elimination patterns.",
-      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-      isPinned: true,
-      views: 2890,
-      _count: { comments: 34 },
-      category: { name: "Strategies & Techniques" },
-      author: { profile: { username: "GrandMaster_X", level: 50 }, role: "ADMIN" },
-    },
-    {
-      id: "killer-sudoku-rules-sums",
-      slug: "killer-sudoku-vs-classic-sudoku-rules-key-sums",
-      title: "Killer Sudoku vs Classic Sudoku: Rules, key sums, and the Rule of 45",
-      content: "How to deduce hidden cells with cage arithmetic and unique 2-cell and 3-cell combinations.",
-      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-      views: 980,
-      _count: { comments: 12 },
-      category: { name: "Variants & Puzzles" },
-      author: { profile: { username: "MathWhiz", level: 31 } },
-    },
-    {
-      id: "timer-pressure-1v1-duels",
-      slug: "how-to-handle-clock-pressure-in-sudoku-tournaments",
-      title: "How to handle clock pressure in real-time 1v1 Sudoku tournaments?",
-      content: "Essential reflexes to win your duels in real time and climb the worldwide Elo leaderboard.",
-      createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-      views: 1650,
-      _count: { comments: 21 },
-      category: { name: "Duels & 1v1 Multiplayer" },
-      author: { profile: { username: "SpeedSolver_99", level: 44 } },
-    },
-  ],
-  fr: [
-    {
-      id: "top-5-erreurs-debutants",
-      slug: "top-5-erreurs-fatales-debutants-sudoku",
-      title: "Top 5 des erreurs fatales commises par les débutants en Sudoku",
-      content: "Guide stratégique complet pour éviter le guessing, maîtriser la notation de Snyder et booster son temps de résolution.",
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      isPinned: true,
-      views: 1420,
-      _count: { comments: 18 },
-      category: { name: "Débutants & Entraide" },
-      author: { profile: { username: "LogicMaster99", level: 42 }, role: "ADMIN" },
-    },
-    {
-      id: "guide-technique-x-wing-swordfish",
-      slug: "guide-technique-x-wing-swordfish-sudoku-expert",
-      title: "Maîtriser le X-Wing et le Swordfish sur les grilles Diaboliques",
-      content: "Explications pas-à-pas avec diagrammes interactifs pour identifier les patterns d'élimination de candidats verrouillés.",
-      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-      isPinned: true,
-      views: 2890,
-      _count: { comments: 34 },
-      category: { name: "Stratégies & Techniques" },
-      author: { profile: { username: "GrandMaster_X", level: 50 }, role: "ADMIN" },
-    },
-    {
-      id: "killer-sudoku-regles-sommes",
-      slug: "killer-sudoku-vs-sudoku-classique-regles-sommes-cles",
-      title: "Killer Sudoku vs Sudoku Classique : Règles, sommes clés et règle du 45",
-      content: "Comment déduire les cases cachées grâce à l'arithmétique des cages et aux combinaisons uniques de 2 et 3 cases.",
-      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-      views: 980,
-      _count: { comments: 12 },
-      category: { name: "Variantes & Casse-têtes" },
-      author: { profile: { username: "MathWhiz", level: 31 } },
-    },
-    {
-      id: "secrets-vitesse-duels-1v1",
-      slug: "comment-gerer-pression-chronometre-tournois-sudoku",
-      title: "Comment gérer la pression du chronomètre dans les tournois de Sudoku ?",
-      content: "Les réflexes indispensables pour gagner vos duels en temps réel et monter dans le classement Elo mondial.",
-      createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-      views: 1650,
-      _count: { comments: 21 },
-      category: { name: "Duels & Multijoueur 1v1" },
-      author: { profile: { username: "SpeedSolver_99", level: 44 } },
-    },
-  ],
-  de: [
-    {
-      id: "top-5-anfaengerfehler",
-      slug: "top-5-anfaengerfehler-sudoku-loesungen",
-      title: "Top 5 fatale Fehler von Sudoku-Anfängern",
-      content: "Umfassender strategischer Leitfaden zur Vermeidung von Ratestrategien und Snyder-Notation.",
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      isPinned: true,
-      views: 1420,
-      _count: { comments: 18 },
-      category: { name: "Anfänger & Hilfe" },
-      author: { profile: { username: "LogicMaster99", level: 42 }, role: "ADMIN" },
-    },
-    {
-      id: "x-wing-swordfish-anleitung",
-      slug: "x-wing-und-swordfish-meister-sudoku-experte",
-      title: "X-Wing und Swordfish auf schweren Rastern meistern",
-      content: "Schritt-für-Schritt-Anleitung mit interaktiven Diagrammen zur Identifikation von Kandidatenmustern.",
-      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-      isPinned: true,
-      views: 2890,
-      _count: { comments: 34 },
-      category: { name: "Strategien & Techniken" },
-      author: { profile: { username: "GrandMaster_X", level: 50 }, role: "ADMIN" },
-    },
-  ],
-};
+// No seed topics — only real database topics are shown to prevent fake 404-producing links.
+// The forum will display a loading indicator until live data is fetched from the API.
 
 export default function ForumClient() {
   const params = useParams<{ locale: string }>();
   const currentLocale = params?.locale || "en";
-  const defaultTopics = SEED_TOPICS_BY_LOCALE[currentLocale] || SEED_TOPICS_BY_LOCALE["en"] || [];
-  const [topics, setTopics] = useState<any[]>(defaultTopics);
-  const [loading, setLoading] = useState(false);
+  const [topics, setTopics] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const t = useTranslations("forum");
 
@@ -175,6 +52,7 @@ export default function ForumClient() {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     fetch(`${API_URL}/forum/posts`)
       .then(async (res) => {
         if (!res.ok) throw new Error("API Error");
@@ -182,13 +60,13 @@ export default function ForumClient() {
       })
       .then((data) => {
         const list = Array.isArray(data) ? data : data?.posts;
-        if (Array.isArray(list) && list.length > 0) {
-          setTopics(list);
-        }
+        setTopics(Array.isArray(list) ? list : []);
       })
       .catch(() => {
-        // Retain DEFAULT_SEED_TOPICS on network failure
-      });
+        // On API failure show empty list, never fabricated topics
+        setTopics([]);
+      })
+      .finally(() => setLoading(false));
 
     fetch(`${API_URL}/forum/categories`)
       .then((res) => res.json())

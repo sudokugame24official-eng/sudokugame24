@@ -173,15 +173,20 @@ export class UsersController {
     }
 
     if (body.avatarUrl !== undefined) {
-      dataToUpdate.avatarUrl = typeof body.avatarUrl === 'string' ? body.avatarUrl.trim() : null;
+      dataToUpdate.avatarUrl =
+        typeof body.avatarUrl === 'string' ? body.avatarUrl.trim() : null;
     }
 
     if (body.bio !== undefined) {
-      dataToUpdate.bio = typeof body.bio === 'string' ? body.bio.trim().slice(0, 500) : null;
+      dataToUpdate.bio =
+        typeof body.bio === 'string' ? body.bio.trim().slice(0, 500) : null;
     }
 
     if (body.country !== undefined) {
-      dataToUpdate.country = typeof body.country === 'string' ? body.country.trim().slice(0, 50) : null;
+      dataToUpdate.country =
+        typeof body.country === 'string'
+          ? body.country.trim().slice(0, 50)
+          : null;
     }
 
     if (body.age !== undefined && body.age !== null && body.age !== '') {
@@ -193,7 +198,11 @@ export class UsersController {
       dataToUpdate.age = null;
     }
 
-    if (body.height !== undefined && body.height !== null && body.height !== '') {
+    if (
+      body.height !== undefined &&
+      body.height !== null &&
+      body.height !== ''
+    ) {
       const heightNum = parseFloat(String(body.height));
       if (!isNaN(heightNum) && heightNum >= 50 && heightNum <= 260) {
         dataToUpdate.height = heightNum;
@@ -202,7 +211,11 @@ export class UsersController {
       dataToUpdate.height = null;
     }
 
-    if (body.weight !== undefined && body.weight !== null && body.weight !== '') {
+    if (
+      body.weight !== undefined &&
+      body.weight !== null &&
+      body.weight !== ''
+    ) {
       const weightNum = parseFloat(String(body.weight));
       if (!isNaN(weightNum) && weightNum >= 20 && weightNum <= 300) {
         dataToUpdate.weight = weightNum;
@@ -261,9 +274,7 @@ export class UsersController {
       }
       const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!isMatch) {
-        throw new BadRequestException(
-          'Le mot de passe actuel est incorrect.',
-        );
+        throw new BadRequestException('Le mot de passe actuel est incorrect.');
       }
     }
 

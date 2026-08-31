@@ -5,6 +5,7 @@ const intlMiddleware = createMiddleware({
   locales: ["en", "fr", "de"],
   defaultLocale: "en",
   localePrefix: "always",
+  localeDetection: false,
 });
 
 export default function middleware(req: NextRequest) {
@@ -21,5 +22,5 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/(en|fr|de|es|it)/:path*"],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };
