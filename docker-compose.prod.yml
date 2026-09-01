@@ -93,6 +93,27 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
 
+  backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    container_name: sudoku_backup
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@postgres:5432/${POSTGRES_DB:?error}?schema=public
+      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY:?error}
+      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
+      - BACKUP_WEBHOOK_URL=${BACKUP_WEBHOOK_URL}
+    volumes:
+      - ./backups:/app/backups
+
 volumes:
   postgres_data:
   redis_data:

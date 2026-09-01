@@ -1,0 +1,42 @@
+# --- STAGE 1: Builder ---
+FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy essential files
+COPY package.json package-lock.json ./
+COPY packages/database/package.json ./packages/database/package.json
+COPY scripts/ ./scripts/
+
+# Install dependencies (only what's needed for the DB package/Prisma)
+RUN npm ci
+
+# Copy Prisma schema and generate client
+COPY packages/database/prisma ./packages/database/prisma
+RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
+
+# --- STAGE 2: Runner ---
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 backupuser
+
+# Copy node_modules and generated Prisma client
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
+
+# Copy scripts and package files
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/package.json ./package.json
+
+# Create backups directory and set permissions
+RUN mkdir -p /app/backups && chown backupuser:nodejs /app/backups
+
+USER backupuser
+
+ENV NODE_ENV=production
+
+# Default command runs the backup script
+CMD ["node", "scripts/backup-db.js"]
