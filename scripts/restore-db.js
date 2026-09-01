@@ -18,7 +18,11 @@ const { PrismaClient } = require('@prisma/client');
 const { getDerivedKey } = require('./backup-db');
 
 const BACKUP_DIR = path.resolve(__dirname, '../backups');
-const BACKUP_ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY || 'sudokugame24_default_secure_backup_key_2026';
+if (!process.env.BACKUP_ENCRYPTION_KEY) {
+  console.error('FATAL: BACKUP_ENCRYPTION_KEY environment variable is required.');
+  process.exit(1);
+}
+const BACKUP_ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY;
 
 // Decrypt AES-256-GCM buffer with Authenticated Associated Data
 function decryptDataGCM(encryptedBuffer, passphrase) {

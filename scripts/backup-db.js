@@ -42,7 +42,11 @@ if (fs.existsSync(envPath)) {
 }
 
 const BACKUP_DIR = path.resolve(__dirname, '../backups');
-const BACKUP_ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY || 'sudokugame24_default_secure_backup_key_2026';
+if (!process.env.BACKUP_ENCRYPTION_KEY) {
+  console.error('FATAL: BACKUP_ENCRYPTION_KEY environment variable is required.');
+  process.exit(1);
+}
+const BACKUP_ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY;
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
