@@ -6,12 +6,12 @@ const prisma = new PrismaClient();
 // P1-F/G: safe default ad slots (DISABLED by default — owner enables per-slot)
 
 // P1-L: structured forum categories (4 groups, 12 boards)
-const FORUM_CATEGORIES = [
+const FORUM_CATEGORIES: Array<[string, string]> = [
   ['General Sudoku', 'Any sudoku talk: rules, grids, variants, curiosities.'],
   ['Beginner Help', 'New to sudoku? Ask anything — no question is too simple.'],
   ['Strategies', 'Discuss solving strategies and step-by-step approaches.'],
   ['Advanced Techniques', 'X-Wing, Swordfish, XY-Wing and beyond — for experienced solvers.'],
-  ['Daily Challenge', 'Talk about today's daily challenge — no full-solution spoilers in titles.'],
+  ['Daily Challenge', "Talk about today's daily challenge — no full-solution spoilers in titles."],
   ['Duel', 'Matchmaking stories, duel tactics and rematch requests.'],
   ['Leaderboards', 'Rankings, ratings and competitive discussion.'],
   ['Tournaments', 'Announcements and discussion around competitive events.'],
@@ -22,9 +22,6 @@ const FORUM_CATEGORIES = [
   ['Technical Support', 'Trouble playing, loading or accessing the site? Get help here.'],
   ['Bug Reports', 'Report reproducible bugs (steps, browser, device).'],
 ];
-for (const [name, description] of FORUM_CATEGORIES) {
-  await prisma.forumCategory.upsert({ where: { name }, update: { description }, create: { name, description } });
-}
 
 const AD_SLOTS = [
   { slotName: 'home_leaderboard', placement: 'leaderboard', format: 'horizontal', height: 90 },
@@ -32,16 +29,25 @@ const AD_SLOTS = [
   { slotName: 'post_game', placement: 'post_game', format: 'rectangle', height: 250 },
   { slotName: 'forum_sidebar', placement: 'sidebar', format: 'vertical', height: 600 },
 ];
-for (const s of AD_SLOTS) {
-  await prisma.adSlotConfig.upsert({
-    where: { slotName: s.slotName },
-    update: {},
-    create: { slotName: s.slotName, enabled: false, ...s },
-  });
+
+function generateSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
 async function main() {
   console.log("Starting massive content seeding for Phase 5...");
+
+  for (const [name, description] of FORUM_CATEGORIES) {
+    await prisma.forumCategory.upsert({ where: { name }, update: { description }, create: { name, description } });
+  }
+
+  for (const s of AD_SLOTS) {
+    await prisma.adSlotConfig.upsert({
+      where: { slotName: s.slotName },
+      update: {},
+      create: { ...s, enabled: false },
+    });
+  }
 
   // 1. Ensure Official Accounts
   const accounts = [
@@ -782,19 +788,18 @@ async function main() {
       where: { name: topic.categoryName },
     });
     if (cat) {
-      const existing = await prisma.forumPost.findFirst({
-        where: { title: topic.title },
+      const slug = generateSlug(topic.title);
+      await prisma.forumPost.upsert({
+        where: { slug },
+        update: {},
+        create: {
+          title: topic.title,
+          slug,
+          content: topic.content,
+          categoryId: cat.id,
+          authorId: topic.authorId,
+        },
       });
-      if (!existing) {
-        await prisma.forumPost.create({
-          data: {
-            title: topic.title,
-            content: topic.content,
-            categoryId: cat.id,
-            authorId: topic.authorId,
-          },
-        });
-      }
     }
   }
 
@@ -900,19 +905,20 @@ async function main() {
     const cat = await prisma.forumCategory.findUnique({
       where: { name: topic.categoryName },
     });
-    const existing = await prisma.forumPost.findFirst({
-      where: { title: topic.title },
-    });
-    if (cat && !existing) {
-      await prisma.forumPost.create({
-        data: {
+    if (cat) {
+      const slug = generateSlug(topic.title);
+      await prisma.forumPost.upsert({
+        where: { slug },
+        update: {},
+        create: {
           title: topic.title,
+          slug,
           content: topic.content,
           categoryId: cat.id,
-          authorId: topic.authorId,
+          authorId: topic.authorId as string,
           comments: {
             create: topic.comments.map((comment) => ({
-              authorId: comment.authorId,
+              author: { connect: { id: comment.authorId as string } },
               content: comment.content,
             })),
           },
