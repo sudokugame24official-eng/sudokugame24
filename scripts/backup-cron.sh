@@ -40,10 +40,10 @@ mkdir -p "${APP_DIR}/backups"
     exit "${EXIT_CODE_ALREADY_RUNNING}"
   }
 
-  echo "🔓 Shell flock acquired. Launching Node.js backup engine..."
+  echo "🔓 Shell flock acquired. Launching Node.js backup engine via Docker..."
 
-  # Run Node.js Backup Engine (Layer 1: PID lockfile inside backup-db.js)
-  node "${SCRIPT_DIR}/backup-db.js"
+  # Run Node.js Backup Engine inside Docker
+  docker compose -f docker-compose.prod.yml run --rm backup
 
   echo "✅ Backup Cron Runner Completed Successfully."
 ) 200>"${LOCK_FILE}"
