@@ -26,6 +26,10 @@ export class LocalMediaStorage implements MediaStorage {
   private readonly publicPrefix: string;
 
   constructor(baseDir?: string, publicPrefix = '/uploads') {
+    // DOCKER LIMITATION: In a multi-container setup (like Hostinger VPS), 
+    // the API container will write to its own local filesystem. 
+    // For the web container to serve these files, this path MUST be mounted 
+    // as a shared Docker volume between the API and Web services.
     this.baseDir =
       baseDir ||
       path.join(__dirname, '..', '..', '..', 'web', 'public', 'uploads');
@@ -86,6 +90,7 @@ export function createMediaStorage(): MediaStorage {
     process.env.S3_REGION &&
     process.env.S3_PUBLIC_URL
   );
+  const allowLocalStorage = process.env.ALLOW_LOCAL_STORAGE === 'true';
 
   if (s3Configured) {
     return new S3MediaStorage(
@@ -94,11 +99,17 @@ export function createMediaStorage(): MediaStorage {
       process.env.S3_PUBLIC_URL!,
     );
   }
-  if (isProd) {
-    throw new Error(
-      'FATAL: media storage is not configured for production. ' +
-        'Set S3_BUCKET / S3_REGION / S3_PUBLIC_URL (or explicitly allow local storage).',
-    );
+  
+  if (allowLocalStorage) {
+    return new LocalMediaStorage(process.env.MEDIA_LOCAL_DIR);
   }
-  return new LocalMediaStorage(process.env.MEDIA_LOCAL_DIR);
+  
+  if (!isProd || process.env.NODE_ENV === 'development') {
+    return new LocalMediaStorage(process.env.MEDIA_LOCAL_DIR);
+  }
+
+  throw new Error(
+    'FATAL: media storage is not configured for production. ' +
+      'Set S3_BUCKET / S3_REGION / S3_PUBLIC_URL (or explicitly allow local storage via ALLOW_LOCAL_STORAGE=true).',
+  );
 }
