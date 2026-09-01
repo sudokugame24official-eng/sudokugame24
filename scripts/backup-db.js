@@ -12,6 +12,12 @@
  * 5. Automated Cloudflare R2 / S3 upload with AWS SigV4.
  * 6. Retention policy: 7 daily, 4 weekly, 3 monthly.
  * 7. Webhook notification integration (Discord / Telegram / Slack / Healthchecks.io).
+ *
+ * Concurrency Safety:
+ * - PID-based lockfile in the shared backups volume (POSIX-safe, stale-lock aware).
+ * - Shell-level flock(1) in backup-cron.sh uses the same lockfile path.
+ * - Lock is always released on process exit (including crash/SIGKILL via OS).
+ * - Exit code 75 (EX_TEMPFAIL) signals a backup is already running.
  */
 
 const fs = require('fs');
@@ -43,9 +49,78 @@ const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'sudokugame24-backups';
 const BACKUP_WEBHOOK_URL = process.env.BACKUP_WEBHOOK_URL; // Optional Discord/Slack webhook for instant alerts
 
+// ────────────────────────────────────────────────────────────────────────────
+// MUTEX — PID LOCKFILE (Layer 1 of 2)
+// Shared via the /app/backups Docker volume so it survives across
+// simultaneous `docker compose run backup` invocations.
+// The same path is used by the shell-level flock in backup-cron.sh.
+// Exit code 75 = EX_TEMPFAIL (POSIX sysexits.h convention for "try again later")
+// ────────────────────────────────────────────────────────────────────────────
+const LOCK_FILE = path.join(BACKUP_DIR, 'backup.lock');
+const EXIT_CODE_ALREADY_RUNNING = 75; // EX_TEMPFAIL
+
 if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
+
+/**
+ * Attempt to acquire an exclusive PID lockfile.
+ * Returns true if the lock was acquired, false if another instance is running.
+ *
+ * Stale-lock detection: if the file exists but the recorded PID is no longer
+ * alive (kill(pid, 0) throws ESRCH), the stale file is removed and we proceed.
+ */
+function acquireLock() {
+  if (fs.existsSync(LOCK_FILE)) {
+    const raw = fs.readFileSync(LOCK_FILE, 'utf8').trim();
+    const existingPid = parseInt(raw, 10);
+    if (!isNaN(existingPid)) {
+      try {
+        // Signal 0 = test if process is alive without killing it
+        process.kill(existingPid, 0);
+        // Process IS alive → another backup is running
+        return false;
+      } catch (e) {
+        if (e.code === 'ESRCH') {
+          // Process is dead → stale lock, clean it up
+          console.warn(`⚠️  Stale lockfile detected (PID ${existingPid} is no longer running). Removing.`);
+          fs.unlinkSync(LOCK_FILE);
+        } else if (e.code === 'EPERM') {
+          // Process is alive but owned by another user — treat as locked
+          return false;
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      // Malformed lockfile → remove it
+      console.warn('⚠️  Malformed lockfile detected. Removing.');
+      fs.unlinkSync(LOCK_FILE);
+    }
+  }
+
+  // Write our own PID
+  fs.writeFileSync(LOCK_FILE, String(process.pid), { flag: 'wx' }); // O_EXCL: fail if file appeared between check and write
+  return true;
+}
+
+/** Release the lock — only if we own it. */
+function releaseLock() {
+  try {
+    if (!fs.existsSync(LOCK_FILE)) return;
+    const raw = fs.readFileSync(LOCK_FILE, 'utf8').trim();
+    if (parseInt(raw, 10) === process.pid) {
+      fs.unlinkSync(LOCK_FILE);
+    }
+  } catch (_) { /* ignore errors during cleanup */ }
+}
+
+// Always release lock on process exit (covers normal exit, uncaught exception,
+// and SIGTERM). SIGKILL cannot be caught, but the OS closes all file descriptors
+// and the shell-level flock will detect the process is gone.
+process.on('exit', releaseLock);
+process.on('SIGINT', () => { releaseLock(); process.exit(130); });
+process.on('SIGTERM', () => { releaseLock(); process.exit(143); });
 
 // Derive a 32-byte encryption key from passphrase using PBKDF2
 function getDerivedKey(passphrase) {
@@ -270,6 +345,29 @@ function enforceRetentionPolicy(backupDir) {
 
 async function runBackup() {
   const startTime = Date.now();
+
+  // ── MUTEX ACQUISITION (Layer 1: Node.js PID lockfile) ──────────────────────
+  let lockAcquired = false;
+  try {
+    lockAcquired = acquireLock();
+  } catch (lockErr) {
+    // O_EXCL race — another process beat us to the lock between our check and write
+    if (lockErr.code === 'EEXIST') {
+      lockAcquired = false;
+    } else {
+      throw lockErr;
+    }
+  }
+
+  if (!lockAcquired) {
+    console.error('🔒 BACKUP ALREADY RUNNING — Another backup process is active (lockfile held).');
+    console.error(`   Lock file: ${LOCK_FILE}`);
+    console.error(`   This process (PID ${process.pid}) will NOT execute a backup.`);
+    console.error(`   Exit code: ${EXIT_CODE_ALREADY_RUNNING} (EX_TEMPFAIL — try again later).`);
+    process.exit(EXIT_CODE_ALREADY_RUNNING);
+  }
+
+  console.log(`🔓 Lock acquired by PID ${process.pid}. Proceeding with backup.`);
   console.log('================================================================');
   console.log('📦 SUDOKUGAME24 — EXECUTING PRODUCTION BACKUP (AES-256-GCM AEAD)');
   console.log('================================================================');
