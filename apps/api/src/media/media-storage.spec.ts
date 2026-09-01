@@ -29,7 +29,7 @@ describe('P1-J: media storage abstraction', () => {
       delete process.env.R2_ACCOUNT_ID;
       delete process.env.R2_ACCESS_KEY_ID;
       delete process.env.R2_SECRET_ACCESS_KEY;
-      delete process.env.R2_BUCKET_NAME;
+      delete process.env.R2_MEDIA_BUCKET;
       delete process.env.S3_PUBLIC_URL;
       delete process.env.ALLOW_LOCAL_STORAGE;
       delete process.env.NODE_ENV;
@@ -44,7 +44,7 @@ describe('P1-J: media storage abstraction', () => {
       process.env.R2_ACCOUNT_ID = 'account-id';
       process.env.R2_ACCESS_KEY_ID = 'access-key';
       process.env.R2_SECRET_ACCESS_KEY = 'secret-key';
-      process.env.R2_BUCKET_NAME = 'test-bucket';
+      process.env.R2_MEDIA_BUCKET = 'test-bucket';
       process.env.S3_PUBLIC_URL = 'https://cdn.example.com';
       
       const storage = createMediaStorage();

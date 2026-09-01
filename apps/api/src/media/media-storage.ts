@@ -110,14 +110,14 @@ export function createMediaStorage(): MediaStorage {
     process.env.R2_ACCOUNT_ID &&
     process.env.R2_ACCESS_KEY_ID &&
     process.env.R2_SECRET_ACCESS_KEY &&
-    process.env.R2_BUCKET_NAME &&
+    process.env.R2_MEDIA_BUCKET &&
     process.env.S3_PUBLIC_URL
   );
   const allowLocalStorage = process.env.ALLOW_LOCAL_STORAGE === 'true';
 
   if (r2Configured) {
     return new S3MediaStorage(
-      process.env.R2_BUCKET_NAME!,
+      process.env.R2_MEDIA_BUCKET!,
       process.env.R2_ACCOUNT_ID!,
       process.env.R2_ACCESS_KEY_ID!,
       process.env.R2_SECRET_ACCESS_KEY!,
@@ -135,7 +135,7 @@ export function createMediaStorage(): MediaStorage {
 
   throw new Error(
     'FATAL: media storage is not configured for production. ' +
-      'Set R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET_NAME / S3_PUBLIC_URL ' +
+      'Set R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_MEDIA_BUCKET / S3_PUBLIC_URL ' +
       '(or explicitly allow local storage via ALLOW_LOCAL_STORAGE=true).',
   );
 }
