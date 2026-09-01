@@ -275,8 +275,10 @@ export const Header = () => {
 
             <NavLink href="/leaderboard" label={t("leaderboard")} isActive={isActive("/leaderboard")} />
 
-            <NavDropdown label={t("learn")} href="/learn" isActive={isActive("/learn")}>
+            <NavDropdown label={t("learn")} href="/learn" isActive={isActive("/learn") || isActive("/blog")}>
               <MegaItem href="/learn" icon={BookOpen} label={t("academy")} desc={t("allStrategies")} color="text-brand-gold" />
+              <MegaItem href="/blog" icon={BookOpen} label="Blog & Actus" desc="News, Guides & Updates" color="text-green-400" />
+              <div className="h-px bg-white/8 my-1 mx-2" />
               <MegaItem href="/learn/rules" icon={BookOpen} label={t("rules")} desc={t("rulesDesc")} color="text-brand-cyan" />
               <MegaItem href="/learn/beginner" icon={Zap} label={t("beginner")} desc={t("beginnerDesc")} color="text-green-400" />
               <MegaItem href="/learn/intermediate" icon={Zap} label={t("intermediate")} desc={t("intermediateDesc")} color="text-yellow-400" />
@@ -536,6 +538,7 @@ export const Header = () => {
                       label: t("learn"),
                       items: [
                         { href: "/learn", icon: BookOpen, label: t("academy") },
+                        { href: "/blog", icon: BookOpen, label: "Blog & Actus" },
                         { href: "/faq", icon: HelpCircle, label: t("faq") },
                         { href: "/help", icon: HelpCircle, label: t("helpCenter") },
                       ],

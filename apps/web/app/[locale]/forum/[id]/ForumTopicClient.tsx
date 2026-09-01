@@ -369,7 +369,11 @@ export default function ForumTopicClient({
           </div>
 
           <div className="text-gray-200 leading-relaxed space-y-4 whitespace-pre-wrap text-[15px] md:text-base">
-            {topic.content}
+            {topic.content || (
+              <span className="text-gray-500 italic">
+                {t("emptyContent") || "Aucun contenu ou sujet indisponible."}
+              </span>
+            )}
           </div>
 
           <div className="mt-8 pt-6 border-t border-white/10 flex items-center gap-6">

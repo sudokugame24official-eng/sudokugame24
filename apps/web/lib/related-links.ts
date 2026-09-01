@@ -25,15 +25,12 @@ interface Rule {
 
 const RULES: Rule[] = [
   // Techniques -> Academy lessons (seeded slugs)
-  { slug: "/learn/naked-single", terms: ["naked single", "single nu", "sole candidat"], label: { en: "Naked Single lesson", fr: "Leçon Singleton nu" }, kind: "technique" },
-  { slug: "/learn/hidden-single", terms: ["hidden single", "singleton caché", "caché"], label: { en: "Hidden Single lesson", fr: "Leçon Singleton caché" }, kind: "technique" },
-  { slug: "/learn/naked-pair", terms: ["naked pair", "paire nue", "paire cachée", "hidden pair"], label: { en: "Naked & hidden pairs lesson", fr: "Leçon Paires nues et cachées" }, kind: "technique" },
-  { slug: "/learn/locked-candidates", terms: ["locked candidates", "pointing pair", "claiming pair", "candidats verrouillés", "paire pointante", "box-line"], label: { en: "Locked Candidates lesson", fr: "Leçon Candidats verrouillés" }, kind: "technique" },
+  { slug: "/learn/naked-singles", terms: ["naked single", "single nu", "sole candidat"], label: { en: "Naked Single lesson", fr: "Leçon Singleton nu" }, kind: "technique" },
+  { slug: "/learn/naked-pairs", terms: ["naked pair", "paire nue", "paire cachée", "hidden pair"], label: { en: "Naked & hidden pairs lesson", fr: "Leçon Paires nues et cachées" }, kind: "technique" },
   { slug: "/learn/x-wing", terms: ["x-wing", "x wing", "aile de x"], label: { en: "X-Wing lesson", fr: "Leçon X-Wing" }, kind: "technique" },
-  { slug: "/learn/swordfish", terms: ["swordfish", "espadon", "poisson"], label: { en: "Swordfish lesson", fr: "Leçon Swordfish" }, kind: "technique" },
   // Concepts -> Academy articles
-  { slug: "/learn/what-is-sudoku", terms: ["what is sudoku", "qu'est-ce qu'un sudoku", "règles", "rules"], label: { en: "What is Sudoku?", fr: "Qu'est-ce que le Sudoku ?" }, kind: "technique" },
-  { slug: "/learn/how-to-play-sudoku", terms: ["how to play", "comment jouer", "beginner", "débutant", "debutant"], label: { en: "How to play Sudoku", fr: "Comment jouer au Sudoku" }, kind: "technique" },
+  { slug: "/learn/rules", terms: ["what is sudoku", "qu'est-ce qu'un sudoku", "règles", "rules"], label: { en: "What is Sudoku?", fr: "Qu'est-ce que le Sudoku ?" }, kind: "technique" },
+  { slug: "/learn/how-to-play", terms: ["how to play", "comment jouer", "beginner", "débutant", "debutant"], label: { en: "How to play Sudoku", fr: "Comment jouer au Sudoku" }, kind: "technique" },
   // Game modes
   { slug: "/daily", terms: ["daily", "défi du jour", "defi du jour", "streak", "série"], label: { en: "Daily Challenge", fr: "Défi du jour" }, kind: "game" },
   { slug: "/duel", terms: ["duel", "pvp", "1v1", "versus"], label: { en: "Play duels", fr: "Jouer en duel" }, kind: "game" },

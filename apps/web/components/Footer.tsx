@@ -216,6 +216,7 @@ export const Footer = () => {
             <FooterLink href="/duel">{t("duel")}</FooterLink>
             <FooterLink href="/leaderboard">{t("leaderboard")}</FooterLink>
             <FooterLink href="/learn">{t("sudokuAcademy")}</FooterLink>
+            <FooterLink href="/blog">Blog & Actus</FooterLink>
           </div>
 
           {/* Community Section */}

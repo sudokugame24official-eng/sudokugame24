@@ -162,15 +162,19 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} overflow-x-hidden`}
         suppressHydrationWarning
       >
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-9SRGVP7C4W" strategy="afterInteractive" />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-9SRGVP7C4W');
-          `}
-        </Script>
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AdProvider>
             <AuthProvider>
