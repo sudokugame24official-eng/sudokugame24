@@ -26,8 +26,10 @@ describe('P1-J: media storage abstraction', () => {
 
     beforeEach(() => {
       originalEnv = { ...process.env };
-      delete process.env.S3_BUCKET;
-      delete process.env.S3_REGION;
+      delete process.env.R2_ACCOUNT_ID;
+      delete process.env.R2_ACCESS_KEY_ID;
+      delete process.env.R2_SECRET_ACCESS_KEY;
+      delete process.env.R2_BUCKET_NAME;
       delete process.env.S3_PUBLIC_URL;
       delete process.env.ALLOW_LOCAL_STORAGE;
       delete process.env.NODE_ENV;
@@ -37,10 +39,12 @@ describe('P1-J: media storage abstraction', () => {
       process.env = { ...originalEnv };
     });
 
-    it('1. production + S3 configuré → S3MediaStorage', () => {
+    it('1. production + R2 configuré → S3MediaStorage', () => {
       process.env.NODE_ENV = 'production';
-      process.env.S3_BUCKET = 'test-bucket';
-      process.env.S3_REGION = 'eu-west-1';
+      process.env.R2_ACCOUNT_ID = 'account-id';
+      process.env.R2_ACCESS_KEY_ID = 'access-key';
+      process.env.R2_SECRET_ACCESS_KEY = 'secret-key';
+      process.env.R2_BUCKET_NAME = 'test-bucket';
       process.env.S3_PUBLIC_URL = 'https://cdn.example.com';
       
       const storage = createMediaStorage();
@@ -48,7 +52,7 @@ describe('P1-J: media storage abstraction', () => {
       expect(storage.constructor.name).toBe('S3MediaStorage');
     });
 
-    it('2. production + S3 absent + ALLOW_LOCAL_STORAGE=true → LocalMediaStorage', () => {
+    it('2. production + R2 absent + ALLOW_LOCAL_STORAGE=true → LocalMediaStorage', () => {
       process.env.NODE_ENV = 'production';
       process.env.ALLOW_LOCAL_STORAGE = 'true';
       
@@ -56,7 +60,7 @@ describe('P1-J: media storage abstraction', () => {
       expect(storage).toBeInstanceOf(LocalMediaStorage);
     });
 
-    it('3. production + S3 absent + ALLOW_LOCAL_STORAGE absent/false → erreur', () => {
+    it('3. production + R2 absent + ALLOW_LOCAL_STORAGE absent/false → erreur', () => {
       process.env.NODE_ENV = 'production';
       process.env.ALLOW_LOCAL_STORAGE = 'false';
       

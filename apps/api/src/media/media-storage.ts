@@ -56,46 +56,71 @@ export class LocalMediaStorage implements MediaStorage {
   }
 }
 
-/**
- * S3-compatible storage. Uses the REST endpoint signature v4 via the AWS SDK
- * only when configured — to avoid a heavy dependency before credentials exist,
- * this implementation is intentionally a fail-fast placeholder that documents
- * exactly what the owner must provide. Wiring @aws-sdk/client-s3 is a 20-line
- * change once credentials are available (documented in OWNER_HANDOVER).
- */
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+
 export class S3MediaStorage implements MediaStorage {
+  private readonly client: S3Client;
+
   constructor(
     private readonly bucket: string,
-    private readonly region: string,
+    accountId: string,
+    accessKeyId: string,
+    secretAccessKey: string,
     private readonly publicBaseUrl: string,
-  ) {}
-
-  async save(): Promise<StoredFile> {
-    throw new BadRequestException(
-      'Stockage S3 non configuré : renseignez S3_BUCKET, S3_REGION, S3_PUBLIC_URL ' +
-        'et installez @aws-sdk/client-s3 (voir OWNER_HANDOVER.md, section Media).',
-    );
+  ) {
+    this.client = new S3Client({
+      region: 'auto',
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
   }
 
-  async delete(): Promise<void> {
-    // nothing stored — no-op
+  async save(buffer: Buffer, filename: string, mimeType: string): Promise<StoredFile> {
+    const key = `${Date.now()}-${filename}`;
+    
+    await this.client.send(new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    }));
+
+    return {
+      key,
+      url: `${this.publicBaseUrl}/${key}`,
+      sizeBytes: buffer.length,
+    };
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.client.send(new DeleteObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    }));
   }
 }
 
 export function createMediaStorage(): MediaStorage {
-  const isProd =
-    process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  const s3Configured = !!(
-    process.env.S3_BUCKET &&
-    process.env.S3_REGION &&
+  const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+  
+  const r2Configured = !!(
+    process.env.R2_ACCOUNT_ID &&
+    process.env.R2_ACCESS_KEY_ID &&
+    process.env.R2_SECRET_ACCESS_KEY &&
+    process.env.R2_BUCKET_NAME &&
     process.env.S3_PUBLIC_URL
   );
   const allowLocalStorage = process.env.ALLOW_LOCAL_STORAGE === 'true';
 
-  if (s3Configured) {
+  if (r2Configured) {
     return new S3MediaStorage(
-      process.env.S3_BUCKET!,
-      process.env.S3_REGION!,
+      process.env.R2_BUCKET_NAME!,
+      process.env.R2_ACCOUNT_ID!,
+      process.env.R2_ACCESS_KEY_ID!,
+      process.env.R2_SECRET_ACCESS_KEY!,
       process.env.S3_PUBLIC_URL!,
     );
   }
@@ -110,6 +135,7 @@ export function createMediaStorage(): MediaStorage {
 
   throw new Error(
     'FATAL: media storage is not configured for production. ' +
-      'Set S3_BUCKET / S3_REGION / S3_PUBLIC_URL (or explicitly allow local storage via ALLOW_LOCAL_STORAGE=true).',
+      'Set R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET_NAME / S3_PUBLIC_URL ' +
+      '(or explicitly allow local storage via ALLOW_LOCAL_STORAGE=true).',
   );
 }
