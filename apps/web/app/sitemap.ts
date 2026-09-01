@@ -20,9 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes = [
     "",
-    "/regles-du-sudoku",
-    "/sudoku-rules",
-    "/sudoku-regeln",
     "/sudoku",
     "/sudoku/easy",
     "/sudoku/medium",
@@ -38,9 +35,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/learn",
     "/learn/rules",
     "/learn/how-to-play",
-    "/learn/naked-singles",
-    "/learn/naked-pairs",
-    "/learn/x-wing",
     "/chat",
     "/friends",
     "/help",
@@ -48,15 +42,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/about",
     "/terms",
     "/privacy",
-    "/blog",
-    "/blog/how-to-solve-hard-sudoku",
-    "/blog/winning-sudoku-duels-multiplayer",
-    "/blog/history-of-sudoku",
   ].map((route) => ({
     url: `${baseUrl}/en${route}`,
     lastModified: new Date(),
     changeFrequency: "daily" as const,
-    priority: route === "" ? 1.0 : route.includes("rules") || route.includes("regles") || route.includes("regeln") ? 0.95 : 0.8,
+    priority: route === "" ? 1.0 : route.includes("rules") ? 0.95 : 0.8,
     alternates: getAlternates(route),
   }));
 

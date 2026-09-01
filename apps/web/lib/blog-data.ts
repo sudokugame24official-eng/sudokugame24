@@ -823,7 +823,7 @@ export const BLOG_ARTICLES: BlogPost[] = [
     },
     content: {
       en: `<h2>Ready to Play?</h2>
-<p>If you've read our <a href=\"/blog/how-to-play-sudoku\">Beginner's Guide</a> and understand the rules, it's time to actually play.</p>
+<p>If you've read our <a href=\"/learn/how-to-play-sudoku\">Beginner's Guide</a> and understand the rules, it's time to actually play.</p>
 <h3>Where to Start</h3>
 <p>Do not buy a newspaper. Newspaper puzzles are notoriously wildly inconsistent in difficulty. One day's \"Easy\" might require advanced logic.</p>
 <p>Instead, use a digital platform like <a href=\"/\">SudokuGame24</a>. Our \"Easy\" mode is algorithmically guaranteed to be solvable using ONLY Naked Singles and Hidden Singles. It is the perfect training ground.</p>
