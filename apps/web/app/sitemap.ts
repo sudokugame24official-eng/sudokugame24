@@ -3,7 +3,7 @@ import { SEO_LOCALES } from "../i18n";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com";
   const locales = SEO_LOCALES;
 
   const getAlternates = (route: string) => {

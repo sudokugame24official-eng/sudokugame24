@@ -20,7 +20,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale: locale, namespace: "seo" });
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://sudokupremium.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com";
 
   return {
     metadataBase: new URL(siteUrl),
@@ -120,17 +120,17 @@ export default async function RootLayout({
               "@graph": [
                 {
                   "@type": "WebSite",
-                  "@id": "https://sudokupremium.com/#website",
-                  "url": "https://sudokupremium.com/",
-                  "name": "Sudoku Premium",
+                  "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/#website`,
+                  "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/`,
+                  "name": "SudokuGame24",
                   "description": "Plateforme mondiale de Sudoku gratuit en ligne, défis quotidiens et duels multijoueurs 1v1.",
                   "inLanguage": ["fr-FR", "en-US", "de-DE"]
                 },
                 {
                   "@type": "WebApplication",
-                  "@id": "https://sudokupremium.com/#game",
-                  "name": "Sudoku Premium Online Game",
-                  "url": "https://sudokupremium.com/",
+                  "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/#game`,
+                  "name": "SudokuGame24 Online Game",
+                  "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/`,
                   "applicationCategory": "GameApplication",
                   "operatingSystem": "All (Web, iOS, Android, Desktop)",
                   "offers": {
@@ -148,10 +148,10 @@ export default async function RootLayout({
                 },
                 {
                   "@type": "Organization",
-                  "@id": "https://sudokupremium.com/#organization",
-                  "name": "Sudoku Premium International",
-                  "url": "https://sudokupremium.com/",
-                  "logo": "https://sudokupremium.com/favicon.ico"
+                  "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/#organization`,
+                  "name": "SudokuGame24 International",
+                  "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/`,
+                  "logo": `${process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com"}/favicon.ico`
                 }
               ]
             })
