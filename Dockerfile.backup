@@ -1,6 +1,6 @@
 # --- STAGE 1: Builder ---
-FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat
+FROM node:20-bookworm-slim AS builder
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Copy essential files
@@ -16,7 +16,8 @@ COPY packages/database/prisma ./packages/database/prisma
 RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
 
 # --- STAGE 2: Runner ---
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Non-root user for security
