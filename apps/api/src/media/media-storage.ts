@@ -106,22 +106,28 @@ export class S3MediaStorage implements MediaStorage {
 export function createMediaStorage(): MediaStorage {
   const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
   
+  const accountId = process.env.R2_MEDIA_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_MEDIA_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_MEDIA_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY;
+  const mediaBucket = process.env.R2_MEDIA_BUCKET || 'sudokugame24-media';
+  const publicUrl = process.env.S3_PUBLIC_URL;
+
   const r2Configured = !!(
-    process.env.R2_ACCOUNT_ID &&
-    process.env.R2_ACCESS_KEY_ID &&
-    process.env.R2_SECRET_ACCESS_KEY &&
-    process.env.R2_MEDIA_BUCKET &&
-    process.env.S3_PUBLIC_URL
+    accountId &&
+    accessKeyId &&
+    secretAccessKey &&
+    mediaBucket &&
+    publicUrl
   );
   const allowLocalStorage = process.env.ALLOW_LOCAL_STORAGE === 'true';
 
   if (r2Configured) {
     return new S3MediaStorage(
-      process.env.R2_MEDIA_BUCKET!,
-      process.env.R2_ACCOUNT_ID!,
-      process.env.R2_ACCESS_KEY_ID!,
-      process.env.R2_SECRET_ACCESS_KEY!,
-      process.env.S3_PUBLIC_URL!,
+      mediaBucket,
+      accountId!,
+      accessKeyId!,
+      secretAccessKey!,
+      publicUrl!,
     );
   }
   

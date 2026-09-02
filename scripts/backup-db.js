@@ -47,9 +47,9 @@ if (!process.env.BACKUP_ENCRYPTION_KEY) {
   process.exit(1);
 }
 const BACKUP_ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY;
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const R2_ACCOUNT_ID = process.env.R2_BACKUP_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.R2_BACKUP_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_BACKUP_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'sudokugame24-backups';
 const BACKUP_WEBHOOK_URL = process.env.BACKUP_WEBHOOK_URL; // Optional Discord/Slack webhook for instant alerts
 
