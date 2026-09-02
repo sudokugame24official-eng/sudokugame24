@@ -53,11 +53,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
   let articleRoutes: any[] = [];
   let topicRoutes: any[] = [];
+  let academyRoutes: any[] = [];
 
   try {
-    const [resArticles, resTopics] = await Promise.all([
+    const [resArticles, resTopics, resCourses] = await Promise.all([
       fetch(`${apiUrl}/content/articles?status=PUBLISHED`).catch(() => null),
       fetch(`${apiUrl}/forum/topics?limit=50`).catch(() => null),
+      fetch(`${apiUrl}/academy/courses`).catch(() => null),
     ]);
 
     if (resArticles && resArticles.ok) {
@@ -83,9 +85,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: getAlternates(`/forum/${topic.id}`),
       }));
     }
+
+    if (resCourses && resCourses.ok) {
+      const coursesData = await resCourses.json();
+      for (const course of coursesData) {
+        academyRoutes.push({
+          url: `${baseUrl}/en/learn/courses/${course.slug}`,
+          lastModified: new Date(course.updatedAt || course.createdAt),
+          changeFrequency: "weekly" as const,
+          priority: 0.85,
+          alternates: getAlternates(`/learn/courses/${course.slug}`),
+        });
+
+        if (course.modules) {
+          for (const mod of course.modules) {
+            if (mod.lessons) {
+              for (const lesson of mod.lessons) {
+                academyRoutes.push({
+                  url: `${baseUrl}/en/learn/courses/${course.slug}/lessons/${lesson.slug}`,
+                  lastModified: new Date(lesson.updatedAt || lesson.createdAt),
+                  changeFrequency: "weekly" as const,
+                  priority: 0.8,
+                  alternates: getAlternates(`/learn/courses/${course.slug}/lessons/${lesson.slug}`),
+                });
+              }
+            }
+          }
+        }
+      }
+    }
   } catch (error) {
     console.error("Failed to fetch dynamic routes for sitemap:", error);
   }
 
-  return [...staticRoutes, ...articleRoutes, ...topicRoutes];
+  return [...staticRoutes, ...articleRoutes, ...topicRoutes, ...academyRoutes];
 }

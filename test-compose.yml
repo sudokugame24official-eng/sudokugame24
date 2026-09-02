@@ -1,0 +1,49 @@
+services:
+  sudoku_backup_test_postgres:
+    image: postgres:15-alpine
+    container_name: sudoku_backup_test_postgres
+    environment:
+      POSTGRES_USER: backup_test
+      POSTGRES_PASSWORD: backup_test_password
+      POSTGRES_DB: sudoku_backup_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backup_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sudoku_backup_test_network
+
+  sudoku_backup_test_restore:
+    image: postgres:15-alpine
+    container_name: sudoku_backup_test_restore
+    environment:
+      POSTGRES_USER: backup_test
+      POSTGRES_PASSWORD: backup_test_password
+      POSTGRES_DB: sudoku_backup_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backup_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sudoku_backup_test_network
+
+  sudoku_backup_test_backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    container_name: sudoku_backup_test_backup
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URL=postgresql://backup_test:backup_test_password@sudoku_backup_test_postgres:5432/sudoku_backup_test?schema=public
+      - RESTORE_DATABASE_URL=postgresql://backup_test:backup_test_password@sudoku_backup_test_restore:5432/sudoku_backup_test?schema=public
+      - BACKUP_ENCRYPTION_KEY=testkey12345678901234567890123456
+      - BACKUP_RETENTION_DAYS=7
+    volumes:
+      - ./test_backups:/app/backups
+    networks:
+      - sudoku_backup_test_network
+
+networks:
+  sudoku_backup_test_network:

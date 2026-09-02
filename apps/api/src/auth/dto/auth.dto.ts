@@ -33,3 +33,23 @@ export class LoginDto {
   @MaxLength(128)
   password!: string;
 }
+
+export class ForgotPasswordDto {
+  @IsEmail({}, { message: 'Invalid email address' })
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @MaxLength(128)
+  newPassword!: string;
+
+  @IsString()
+  token!: string;
+}
+
+export class VerifyEmailDto {
+  @IsString()
+  token!: string;
+}

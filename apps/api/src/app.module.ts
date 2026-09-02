@@ -34,6 +34,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { ThemeModule } from './theme/theme.module';
 import { HomepageModule } from './homepage/homepage.module';
 import { SupportModule } from './support/support.module';
+import { AcademyModule } from './academy/academy.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { SupportModule } from './support/support.module';
     ThemeModule,
     HomepageModule,
     SupportModule,
+    AcademyModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

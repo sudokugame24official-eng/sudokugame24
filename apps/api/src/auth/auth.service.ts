@@ -8,6 +8,7 @@ import { prisma } from '@repo/database';
 import * as bcrypt from 'bcryptjs';
 import { EmailService } from '../email/email.service';
 import { trackEvent } from '../analytics/track-event';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -85,8 +86,113 @@ export class AuthService {
       console.error('Failed to send welcome email', err);
     });
 
+    // Generate and send verification email
+    await this.generateEmailVerificationToken(user.id);
+
     const { passwordHash: _, ...result } = user;
     return result;
+  }
+
+  async verifyEmail(token: string) {
+    const authToken = await prisma.authToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!authToken || authToken.type !== 'EMAIL_VERIFICATION') {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    if (authToken.expiresAt < new Date()) {
+      await prisma.authToken.delete({ where: { id: authToken.id } });
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: authToken.userId },
+        data: { isEmailVerified: true },
+      }),
+      prisma.authToken.delete({ where: { id: authToken.id } }),
+    ]);
+
+    return { success: true };
+  }
+
+  async generateEmailVerificationToken(userId: string) {
+    const token = randomBytes(32).toString('hex');
+    await prisma.authToken.create({
+      data: {
+        userId,
+        token,
+        type: 'EMAIL_VERIFICATION',
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours
+      },
+    });
+
+    const frontUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const verifyUrl = `${frontUrl}/auth/verify-email?token=${token}`;
+    
+    this.emailService.sendEmail(userId, 'EMAIL_VERIFICATION', { verifyUrl }).catch((err) => {
+      console.error('Failed to send verification email', err);
+    });
+
+    return token;
+  }
+
+  async generatePasswordResetToken(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return null; // Silently return to avoid email enumeration
+
+    const token = randomBytes(32).toString('hex');
+    await prisma.authToken.create({
+      data: {
+        userId: user.id,
+        token,
+        type: 'PASSWORD_RESET',
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+      },
+    });
+
+    const frontUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontUrl}/auth/reset-password?token=${token}`;
+
+    this.emailService.sendEmail(user.id, 'PASSWORD_RESET', { resetUrl }).catch((err) => {
+      console.error('Failed to send password reset email', err);
+    });
+
+    return token;
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const authToken = await prisma.authToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!authToken || authToken.type !== 'PASSWORD_RESET') {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    if (authToken.expiresAt < new Date()) {
+      await prisma.authToken.delete({ where: { id: authToken.id } });
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const salt = await bcrypt.genSalt();
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: authToken.userId },
+        data: { passwordHash },
+      }),
+      prisma.authToken.deleteMany({
+        where: { userId: authToken.userId, type: 'PASSWORD_RESET' },
+      }),
+    ]);
+
+    return { success: true };
   }
 
   async googleLogin(req: any) {
@@ -120,6 +226,13 @@ export class AuthService {
       this.emailService.sendEmail(user.id, 'WELCOME_EMAIL').catch((err) => {
         console.error('Failed to send welcome email', err);
       });
+
+      // For OAuth, we can auto-verify the email since Google already verified it
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isEmailVerified: true },
+      });
+      user.isEmailVerified = true;
     } else if (!user.googleId) {
       // Link google account to existing email
       user = await prisma.user.update({

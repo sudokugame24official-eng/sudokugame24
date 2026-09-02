@@ -98,6 +98,10 @@ model User {
   answerVotes      AnswerVote[]
   followedQuestions QuestionFollow[]
   mediaUploads     MediaAsset[]     @relation("UploadedMedia")
+  authTokens       AuthToken[]
+  courseProgress   UserCourseProgress[]
+  lessonProgress   UserLessonProgress[]
+  quizResults      QuizResult[]
 
   @@index([isBot])
 }
@@ -137,6 +141,23 @@ model Profile {
   age            Int?
   height         Float?
   weight         Float?
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String        @unique
+  type      AuthTokenType
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
 }
 
 
@@ -840,4 +861,105 @@ model SudokuTechnique {
   status    String   @default("DRAFT") // DRAFT, PUBLISHED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// --- ACADEMY SYSTEM ---
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  level       String   // BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modules     Module[]
+  progress    UserCourseProgress[]
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?  @db.Text
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  slug        String   @unique
+  title       String
+  content     String   @db.Text
+  order       Int      @default(0)
+  interactive Json?    // Interactive puzzle data (if any)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress    UserLessonProgress[]
+  quizzes     Quiz[]
+}
+
+model Quiz {
+  id          String   @id @default(cuid())
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title       String
+  order       Int      @default(0)
+  questions   Json     // Array of { question, options, correctIndex, explanation }
+  passingScore Int     @default(80) // Percentage
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  results     QuizResult[]
+}
+
+model UserCourseProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress    Int      @default(0) // 0 to 100 percentage
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model UserLessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+}
+
+model QuizResult {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score       Int      // User's score percentage
+  passed      Boolean
+  createdAt   DateTime @default(now())
+
+  @@index([userId, quizId])
 }

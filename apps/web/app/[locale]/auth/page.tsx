@@ -124,8 +124,18 @@ export default function AuthPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-[#0c1b33] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition-all text-sm font-medium"
             />
+          </div>
+          <div className="flex justify-end mt-1">
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => router.push(`/${locale}/auth/forgot-password`)}
+                className="text-xs text-slate-400 hover:text-brand-orange transition-colors"
+              >
+                {t("forgotPassword") || "Mot de passe oublié ?"}
+              </button>
+            )}
           </div>
 
           <button
