@@ -3,10 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DIFFICULTIES, getDifficulty } from "@/lib/sudoku-seo-content";
 
-export function generateStaticParams() {
-  return DIFFICULTIES.map((d) => ({ difficulty: d.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {
