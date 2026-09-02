@@ -2,12 +2,13 @@
 import { GrowthService } from "./growth.service";
 import { CreateProspectDto, UpdateProspectDto, ProspectQueryDto } from "./growth.dto";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
-import { RolesGuard } from "../common/guards/roles.guard";
-import { Roles } from "../common/decorators/roles.decorator";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { Role } from "@repo/database";
 
 @Controller("admin/growth")
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles("ADMIN", "MODERATOR")
+@Roles(Role.ADMIN, Role.MODERATOR)
 export class GrowthController {
   constructor(private readonly growthService: GrowthService) {}
 
@@ -37,7 +38,7 @@ export class GrowthController {
   }
 
   @Delete("prospects/:id")
-  @Roles("ADMIN")
+  @Roles(Role.ADMIN)
   deleteProspect(@Param("id") id: string) {
     return this.growthService.deleteProspect(id);
   }
