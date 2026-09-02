@@ -8,6 +8,9 @@ import {
   Res,
   Req,
   UnauthorizedException,
+  ForbiddenException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
@@ -20,29 +23,22 @@ import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmail
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async register(
     @Body() body: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
   ) {
-    const user = await this.authService.register(
+    await this.authService.register(
       body.email,
       body.password,
       body.username,
     );
-    const { access_token } = await this.authService.login(user);
-
-    res.cookie('access_token', access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return user;
+    // Do NOT issue a token here — user must verify email first
+    return { success: true, message: 'Registration successful. Please verify your email.' };
   }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(
     @Body() body: LoginDto,
@@ -51,6 +47,16 @@ export class AuthController {
     const user = await this.authService.validateUser(body.email, body.password);
     if (!user) {
       throw new UnauthorizedException('Identifiants invalides');
+    }
+
+    // Block login for unverified accounts
+    if (!user.isEmailVerified) {
+      throw new ForbiddenException('Please verify your email before logging in.');
+    }
+
+    // Block banned accounts
+    if (user.isBanned) {
+      throw new ForbiddenException('Your account has been suspended.');
     }
 
     const { access_token } = await this.authService.login(user);
@@ -62,7 +68,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return user;
+    return { accessToken: access_token, user };
   }
 
   @Post('logout')

@@ -35,6 +35,7 @@ import { ThemeModule } from './theme/theme.module';
 import { HomepageModule } from './homepage/homepage.module';
 import { SupportModule } from './support/support.module';
 import { AcademyModule } from './academy/academy.module';
+import { GrowthModule } from './growth/growth.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { AcademyModule } from './academy/academy.module';
     HomepageModule,
     SupportModule,
     AcademyModule,
+    GrowthModule,
   ],
   controllers: [AppController, UsersController],
   providers: [

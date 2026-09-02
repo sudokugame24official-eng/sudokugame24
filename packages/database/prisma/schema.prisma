@@ -963,3 +963,43 @@ model QuizResult {
 
   @@index([userId, quizId])
 }
+
+enum BacklinkStatus {
+  PROSPECT
+  QUALIFIED
+  CONTACTED
+  FOLLOW_UP
+  NEGOTIATING
+  PLACED
+  VERIFIED
+  LOST
+  REJECTED
+}
+
+model BacklinkProspect {
+  id              String          @id @default(cuid())
+  domain          String
+  url             String?
+  niche           String?
+  relevanceScore  Int             @default(0)
+  authorityScore  Int             @default(0)
+  contactEmail    String?
+  contactName     String?
+  status          BacklinkStatus  @default(PROSPECT)
+  targetPage      String?
+  proposedAnchor  String?
+  placedUrl       String?
+  verifiedAt      DateTime?
+  lastCheckedAt   DateTime?
+  notes           String?
+  outreachDraft   String?
+  followUpAt      DateTime?
+  contactedAt     DateTime?
+  createdBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([domain])
+  @@unique([domain, url])
+}
