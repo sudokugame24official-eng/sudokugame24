@@ -1,6 +1,28 @@
-import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
+import { Injectable, Module, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { BullModule, InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { EmailProcessor } from './email.processor';
+
+@Injectable()
+export class QueueLifecycleService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(QueueLifecycleService.name);
+
+  constructor(@InjectQueue('email-queue') private readonly queue: Queue) {}
+
+  onModuleInit() {
+    this.queue.on('error', (err) => {
+      this.logger.debug(`Queue error handled: ${err.message}`);
+    });
+  }
+
+  async onModuleDestroy() {
+    try {
+      await this.queue.close();
+    } catch {
+      // ignore
+    }
+  }
+}
 
 @Module({
   imports: [
@@ -29,7 +51,9 @@ import { EmailProcessor } from './email.processor';
       },
     }),
   ],
-  providers: [EmailProcessor],
+  providers: [EmailProcessor, QueueLifecycleService],
   exports: [BullModule],
 })
 export class QueueModule {}
+
+

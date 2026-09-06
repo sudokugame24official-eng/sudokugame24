@@ -25,6 +25,7 @@ import {
   Image as ImageIcon,
   CalendarDays,
   Gamepad2,
+  Link2,
 } from "lucide-react";
 
 // Staff roles allowed into the admin panel. The API enforces permissions
@@ -79,6 +80,7 @@ export default function AdminLayout({
       "Media Library": "Médiathèque",
       "SEO & Growth": "5. SEO & Croissance",
       "SEO Control": "Contrôle SEO & Métas",
+      "Backlinks & Growth": "Backlinks & Croissance",
       "Marketing": "6. Marketing & Tracking",
       "Marketing Integrations": "Pixels & Intégrations",
       "Monetization": "7. Monétisation & Boutique",
@@ -123,6 +125,7 @@ export default function AdminLayout({
       "Media Library": "Medienbibliothek",
       "SEO & Growth": "5. SEO & Wachstum",
       "SEO Control": "SEO-Verwaltung & Metas",
+      "Backlinks & Growth": "Backlinks & Wachstum",
       "Marketing": "6. Marketing & Tracking",
       "Marketing Integrations": "Pixel & Integrationen",
       "Monetization": "7. Monetarisierung & Shop",
@@ -167,6 +170,7 @@ export default function AdminLayout({
       "Media Library": "Media Library",
       "SEO & Growth": "5. SEO & Growth",
       "SEO Control": "SEO Control & Metas",
+      "Backlinks & Growth": "Backlinks & Growth",
       "Marketing": "6. Marketing & Tracking",
       "Marketing Integrations": "Pixels & Integrations",
       "Monetization": "7. Monetization & Shop",
@@ -233,6 +237,7 @@ export default function AdminLayout({
       title: tAdmin("SEO & Growth"),
       items: [
         { name: tAdmin("SEO Control"), path: "/seo", icon: Megaphone },
+        { name: tAdmin("Backlinks & Growth"), path: "/growth", icon: Link2 },
       ],
     },
     {

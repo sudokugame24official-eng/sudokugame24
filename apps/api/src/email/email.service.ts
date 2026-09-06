@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { prisma } from '@repo/database';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 
 @Injectable()
-export class EmailService {
+export class EmailService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
 
@@ -19,6 +19,20 @@ export class EmailService {
         pass: process.env.SMTP_PASS || 'test',
       },
     });
+  }
+
+  onModuleInit() {
+    this.emailQueue?.on('error', (err) => {
+      this.logger.debug(`EmailQueue connection event: ${err.message}`);
+    });
+  }
+
+  async onModuleDestroy() {
+    try {
+      await this.emailQueue?.close();
+    } catch {
+      // Ignore cleanup error
+    }
   }
 
   async sendEmail(

@@ -78,6 +78,7 @@ export class AuthController {
   }
 
   @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 per hour
+  @HttpCode(HttpStatus.OK)
   @Post('forgot-password')
   async forgotPassword(@Body() body: ForgotPasswordDto) {
     const token = await this.authService.generatePasswordResetToken(body.email);

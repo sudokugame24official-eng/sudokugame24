@@ -1,14 +1,28 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { EmailService } from '../email/email.service';
 
 @Processor('email-queue')
-export class EmailProcessor extends WorkerHost {
+export class EmailProcessor extends WorkerHost implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(EmailProcessor.name);
 
   constructor(private readonly emailService: EmailService) {
     super();
+  }
+
+  onModuleInit() {
+    this.worker?.on('error', (err) => {
+      this.logger.debug(`EmailProcessor worker connection event: ${err.message}`);
+    });
+  }
+
+  async onModuleDestroy() {
+    try {
+      await this.worker?.close();
+    } catch {
+      // Ignore cleanup error
+    }
   }
 
   async process(job: Job<any, any, string>): Promise<any> {

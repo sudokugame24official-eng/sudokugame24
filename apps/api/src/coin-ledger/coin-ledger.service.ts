@@ -48,25 +48,24 @@ export class CoinLedgerService {
         }
       }
 
-      // 2. Fetch current balance.
-      const profile = await tx.profile.findUnique({
-        where: { userId },
-        select: { coins: true },
-      });
-
-      if (!profile) {
+      // 2. Lock the profile row to serialize concurrent coin operations for
+      //    this user (SELECT ... FOR UPDATE). Without this lock, concurrent
+      //    debits can cascade and drain the balance below zero.
+      const rows: Array<{ coins: number | bigint }> =
+        await tx.$queryRaw`SELECT "coins" FROM "Profile" WHERE "userId" = ${userId} FOR UPDATE`;
+      if (rows.length === 0) {
         throw new BadRequestException('User profile not found');
       }
 
-      const balanceBefore = profile.coins;
+      const balanceBefore = Number(rows[0].coins);
       const balanceAfter = balanceBefore + amount;
 
-      // 3. Invariants Check
+      // 3. Invariants Check: balance must never go negative.
       if (balanceAfter < 0) {
         throw new BadRequestException('Insufficient balance');
       }
 
-      // 4. Update Profile
+      // 4. Update Profile (optimistic check now safe under the row lock)
       const updatedProfile = await tx.profile.updateMany({
         where: {
           userId,
