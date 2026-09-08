@@ -188,7 +188,7 @@ export default function LearnPage() {
                   </p>
                 </div>
               </div>
-              <Link href={`/learn/${level.key}`}>
+              <Link href={`/learn/${level.articles[0]?.slug || level.key}`}>
                 <button
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm border ${level.color} ${level.accent} hover:bg-white/5 transition-colors`}
                 >
