@@ -297,15 +297,20 @@ export const Header = () => {
           <div className="flex items-center gap-3 relative">
 
             {/* CTA Button with shimmer */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2.5">
               <Link href="/chat">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  aria-label={t("liveChat")}
-                  className="px-5 py-2 rounded-full font-bold text-[13px] uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 transition-colors border border-white/20 flex items-center gap-2"
+                  aria-label="Tchat"
+                  className="h-9 px-5 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 transition-colors border border-white/20 flex items-center justify-center gap-2.5 min-w-[115px]"
                 >
-                  <MessageSquare className="w-4 h-4" /> {t("liveChat").toUpperCase()}
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  <MessageSquare className="w-4 h-4" />
+                  <span>TCHAT</span>
                 </motion.button>
               </Link>
               
@@ -314,9 +319,10 @@ export const Header = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label={t("play")}
-                  className="px-6 py-2 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-brand-orange hover:bg-brand-orange-light transition-colors shadow-lg shadow-brand-orange/30 flex items-center gap-2"
+                  className="h-9 px-5 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-brand-orange hover:bg-brand-orange-light transition-colors shadow-lg shadow-brand-orange/30 flex items-center justify-center gap-2.5 min-w-[115px]"
                 >
-                  {t("play").toUpperCase()}
+                  <Play className="w-4 h-4 fill-white shrink-0" />
+                  <span>{t("play").toUpperCase()}</span>
                 </motion.button>
               </Link>
             </div>
