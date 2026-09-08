@@ -211,7 +211,7 @@ export default function HomeClient() {
                     className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-inner group/art"
                   >
                     <Image
-                      src="/hero1_v2.jpg"
+                      src="/hero1.png"
                       alt="Sudoku Masters - Master Your Mind"
                       width={440}
                       height={440}
@@ -546,7 +546,7 @@ export default function HomeClient() {
                 
                 <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-black">
                   <Image
-                    src="/hero2_v2.jpg"
+                    src="/hero2.png"
                     alt="Sudoku World Championship Grand Finals"
                     fill
                     priority
