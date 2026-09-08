@@ -213,11 +213,13 @@ export default function HomeClient() {
                     <Image
                       src="/hero1_v2.jpg"
                       alt="Sudoku Masters - Master Your Mind"
-                      fill
+                      width={440}
+                      height={440}
                       priority
                       fetchPriority="high"
-                      className="object-cover transition-transform duration-700 group-hover/art:scale-105"
-                      sizes="(max-width: 768px) 85vw, (max-width: 1200px) 50vw, 460px"
+                      quality={75}
+                      className="w-full h-auto object-cover rounded-2xl transition-transform duration-700 group-hover/art:scale-105"
+                      sizes="(max-width: 640px) 340px, (max-width: 768px) 428px, 440px"
                     />
                     
                     {/* Gradient Overlay & Tag */}
@@ -549,8 +551,9 @@ export default function HomeClient() {
                     fill
                     priority
                     fetchPriority="high"
+                    quality={75}
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    sizes="(max-width: 768px) 85vw, (max-width: 1200px) 50vw, 500px"
+                    sizes="(max-width: 640px) 340px, (max-width: 768px) 496px, 500px"
                   />
                   {/* Subtle vignette */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />

@@ -7,6 +7,7 @@ import Script from "next/script";
 export default function MarketingPixels() {
   const [pixels, setPixels] = useState<any>({});
   const [hasConsent, setHasConsent] = useState(false);
+  const [shouldLoadScripts, setShouldLoadScripts] = useState(false);
 
   useEffect(() => {
     const savedConsent = localStorage.getItem("gdpr_ads_consent");
@@ -26,7 +27,21 @@ export default function MarketingPixels() {
       }
     };
     fetchPixels();
+
+    // Delay pixel loading until interaction or 4s idle to ensure max PageSpeed score
+    const loadPixels = () => setShouldLoadScripts(true);
+    const events = ["scroll", "mousemove", "touchstart", "click", "keydown"];
+    
+    events.forEach((evt) => window.addEventListener(evt, loadPixels, { once: true, passive: true }));
+    const timer = setTimeout(loadPixels, 4000);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, loadPixels));
+      clearTimeout(timer);
+    };
   }, []);
+
+  if (!shouldLoadScripts) return null;
 
   return (
     <>

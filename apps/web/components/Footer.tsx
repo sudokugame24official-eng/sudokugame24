@@ -159,19 +159,20 @@ export const Footer = () => {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={s.label}
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`w-9 h-9 rounded-full bg-white/6 border border-white/8 flex items-center justify-center transition-all ${s.color} group`}
+                  className={`w-11 h-11 rounded-full bg-white/6 border border-white/8 flex items-center justify-center transition-all ${s.color} group`}
                   title={s.label}
                 >
-                  <s.icon className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+                  <s.icon className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" />
                 </motion.a>
               ))}
             </div>
 
             {/* Newsletter */}
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">
+              <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
                 {t("newsletterTitle")}
               </p>
               {subscribed ? (
@@ -189,16 +190,18 @@ export const Footer = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t("newsletterPlaceholder")}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-all min-w-0"
+                    aria-label={t("newsletterPlaceholder")}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/20 transition-all min-w-0"
                   />
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     type="submit"
-                    className="px-3 py-2 rounded-xl text-white transition-all shrink-0"
+                    aria-label="S'abonner à la newsletter"
+                    className="px-4 py-3 rounded-xl text-white transition-all shrink-0 flex items-center justify-center min-w-[44px] min-h-[44px]"
                     style={{ background: "linear-gradient(135deg, #FF4500, #FF6B33)" }}
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-5 h-5" />
                   </motion.button>
                 </form>
               )}

@@ -491,8 +491,9 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
           <button
             onClick={handleUndo}
             disabled={history.length === 0}
+            aria-label="Annuler la dernière action"
             className={cn(
-              "flex-1 flex flex-col items-center gap-1 py-2 transition-colors",
+              "flex-1 flex flex-col items-center gap-1 py-2 min-h-[44px] min-w-[44px] justify-center transition-colors",
               history.length === 0
                 ? "opacity-50 cursor-not-allowed text-muted-foreground"
                 : "text-muted-foreground hover:text-white",
@@ -505,7 +506,8 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
           </button>
           <button
             onClick={() => insertValue(0)}
-            className="flex-1 flex flex-col items-center gap-1 py-2 text-muted-foreground hover:text-red-400 transition-colors"
+            aria-label="Effacer le contenu de la case"
+            className="flex-1 flex flex-col items-center gap-1 py-2 min-h-[44px] min-w-[44px] justify-center text-muted-foreground hover:text-red-400 transition-colors"
           >
             <Eraser className="w-5 h-5" />
             <span className="text-[10px] font-bold uppercase tracking-wider">
@@ -514,8 +516,9 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
           </button>
           <button
             onClick={() => setNotesMode(!notesMode)}
+            aria-label="Basculer le mode d'annotation de notes"
             className={cn(
-              "flex-1 flex flex-col items-center gap-1 py-2 transition-colors",
+              "flex-1 flex flex-col items-center gap-1 py-2 min-h-[44px] min-w-[44px] justify-center transition-colors",
               notesMode
                 ? "text-blue-400 bg-blue-400/10 rounded-xl"
                 : "text-muted-foreground hover:text-white",
@@ -528,7 +531,8 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
           </button>
           <button
             onClick={handleHint}
-            className="flex-1 flex flex-col items-center gap-1 py-2 text-muted-foreground hover:text-[#FFCC00] transition-colors relative"
+            aria-label="Demander un indice de résolution"
+            className="flex-1 flex flex-col items-center gap-1 py-2 min-h-[44px] min-w-[44px] justify-center text-muted-foreground hover:text-[#FFCC00] transition-colors relative"
           >
             {hintsLeft <= 0 ? (
               <div className="absolute -top-1 right-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
@@ -552,7 +556,8 @@ export const SudokuBoard: React.FC<SudokuGridProps> = ({
             <button
               key={num}
               onClick={() => insertValue(num)}
-              className="aspect-square bg-gradient-to-b from-[#133A7C] to-[#0A2A5C] border border-white/15 text-white rounded-xl font-black text-xl sm:text-2xl md:text-3xl hover:from-brand-orange hover:to-[#CC3700] hover:text-white hover:border-brand-orange/80 active:translate-y-1 active:scale-95 transition-all flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.4)] select-none tabular-nums"
+              aria-label={`Insérer le chiffre ${num}`}
+              className="aspect-square min-h-[44px] min-w-[44px] bg-gradient-to-b from-[#133A7C] to-[#0A2A5C] border border-white/15 text-white rounded-xl font-black text-xl sm:text-2xl md:text-3xl hover:from-brand-orange hover:to-[#CC3700] hover:text-white hover:border-brand-orange/80 active:translate-y-1 active:scale-95 transition-all flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.4)] select-none tabular-nums"
             >
               {num}
             </button>

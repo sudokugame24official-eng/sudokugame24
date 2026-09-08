@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const content = `# SudokuGame24
+
+> Plateforme mondiale de Sudoku en ligne, optimisée pour l'IA et les agents autonomes.
+
+SudokuGame24.com est la plateforme ultime pour les passionnés de Sudoku. Elle offre une expérience complète allant de la résolution classique de grilles à des affrontements en temps réel, avec un leaderboard mondial.
+
+## Liens Utiles
+
+- [Jouer au Sudoku en ligne](https://sudokugame24.com/play) : Mode solo classique avec niveaux facile, moyen, difficile et expert.
+- [Défi Quotidien](https://sudokugame24.com/daily) : Une grille unique chaque jour pour tous les joueurs.
+- [Duels en Temps Réel](https://sudokugame24.com/duel) : Affrontements 1v1 en ligne avec classement ELO.
+- [Classement Mondial](https://sudokugame24.com/leaderboard) : Le top 100 des meilleurs joueurs de Sudoku.
+- [Académie et Règles](https://sudokugame24.com/learn) : Apprenez les règles du Sudoku et les techniques avancées (X-Wing, Swordfish).
+
+## Architecture Publique
+
+- [Profils Publics](https://sudokugame24.com/api/users/) - Les statistiques publiques des joueurs.
+- [API de Statistiques Live](https://sudokugame24.com/api/stats/live) - Récupérer les métriques en direct des parties en cours.
+`;
+
+  return new NextResponse(content, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+}

@@ -328,7 +328,7 @@ export const Header = () => {
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               aria-label="Notifications"
-              className="relative p-2 text-white/70 hover:text-brand-gold transition-colors"
+              className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/90 hover:text-brand-gold transition-colors"
             >
               <Bell className="w-5 h-5" />
               <motion.span
