@@ -302,9 +302,10 @@ export const Header = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  aria-label={t("liveChat")}
                   className="px-5 py-2 rounded-full font-bold text-[13px] uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 transition-colors border border-white/20 flex items-center gap-2"
                 >
-                  <MessageSquare className="w-4 h-4" /> TCHAT
+                  <MessageSquare className="w-4 h-4" /> {t("liveChat").toUpperCase()}
                 </motion.button>
               </Link>
               
@@ -312,9 +313,10 @@ export const Header = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  aria-label={t("play")}
                   className="px-6 py-2 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-brand-orange hover:bg-brand-orange-light transition-colors shadow-lg shadow-brand-orange/30 flex items-center gap-2"
                 >
-                  JOUER
+                  {t("play").toUpperCase()}
                 </motion.button>
               </Link>
             </div>

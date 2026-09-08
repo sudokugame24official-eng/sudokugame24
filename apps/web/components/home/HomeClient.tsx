@@ -149,7 +149,7 @@ export default function HomeClient() {
               <div className="w-px h-10 bg-white/15" />
               <StatBadge value="1.2M+" label={t("statSolved")} color="text-brand-gold" />
               <div className="w-px h-10 bg-white/15" />
-              <StatBadge value="4.9 \u2605" label={t("statRating")} color="text-brand-cyan" />
+              <StatBadge value="4.9 ★" label={t("statRating")} color="text-brand-cyan" />
             </div>
           </m.div>
 
@@ -565,7 +565,7 @@ export default function HomeClient() {
                       {t("finalsLive")}
                     </div>
                     <div className="bg-brand-navy/90 border border-brand-gold/60 text-brand-gold px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider backdrop-blur-md">
-                      <span>\u2694\uFE0F {t("eloMatchmaking")}</span>
+                      <span>⚔️ {t("eloMatchmaking")}</span>
                     </div>
                   </div>
 

@@ -5,10 +5,36 @@ import { Globe, Check, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+const FlagGB = () => (
+  <svg viewBox="0 0 640 480" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm inline-block shrink-0">
+    <path fill="#012169" d="M0 0h640v480H0z"/>
+    <path fill="#FFF" d="m0 0 640 480M640 0 0 480" stroke="#FFF" strokeWidth="60"/>
+    <path fill="none" stroke="#C8102E" strokeWidth="40" d="m0 0 640 480M640 0 0 480"/>
+    <path fill="#FFF" d="M280 0h80v480h-80zM0 200h640v80H0z"/>
+    <path fill="#C8102E" d="M300 0h40v480h-40zM0 220h640v40H0z"/>
+  </svg>
+);
+
+const FlagFR = () => (
+  <svg viewBox="0 0 900 600" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm inline-block shrink-0">
+    <rect width="300" height="600" fill="#002395"/>
+    <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+    <rect x="600" width="300" height="600" fill="#ED2939"/>
+  </svg>
+);
+
+const FlagDE = () => (
+  <svg viewBox="0 0 5 3" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm inline-block shrink-0">
+    <rect width="5" height="3" y="0" fill="#000"/>
+    <rect width="5" height="2" y="1" fill="#D00"/>
+    <rect width="5" height="1" y="2" fill="#FFCE00"/>
+  </svg>
+);
+
 export const SUPPORTED_LOCALES = [
-  { code: "en", label: "English", short: "EN", flag: <img src="/flags/gb.png" alt="GB Flag" className="w-5 h-auto rounded-sm object-cover" /> },
-  { code: "fr", label: "Français", short: "FR", flag: <img src="/flags/fr.png" alt="FR Flag" className="w-5 h-auto rounded-sm object-cover" /> },
-  { code: "de", label: "Deutsch", short: "DE", flag: <img src="/flags/de.png" alt="DE Flag" className="w-5 h-auto rounded-sm object-cover" /> },
+  { code: "en", label: "English", short: "EN", flag: <FlagGB /> },
+  { code: "fr", label: "Français", short: "FR", flag: <FlagFR /> },
+  { code: "de", label: "Deutsch", short: "DE", flag: <FlagDE /> },
 ] as const;
 
 type LocaleCode = "en" | "fr" | "de";
@@ -16,7 +42,7 @@ type LocaleCode = "en" | "fr" | "de";
 function getCurrentLocale(pathname: string): LocaleCode {
   const segment = pathname.split("/")[1];
   const found = SUPPORTED_LOCALES.find((l) => l.code === segment);
-  return found ? found.code : "en";
+  return found ? (found.code as LocaleCode) : "en";
 }
 
 function switchPathLocale(pathname: string, newLocale: string): string {
@@ -83,7 +109,7 @@ export function LanguageSwitcher({ compact = false, className }: LanguageSwitche
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label={`Langue : ${currentLang.label} (${currentLang.flag}). Changer de langue.`}
+        aria-label={`Langue : ${currentLang.label}. Changer de langue.`}
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 hover:border-brand-gold/50 text-white transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold cursor-pointer",
           isOpen && "border-brand-gold bg-brand-gold/10 text-brand-gold",
