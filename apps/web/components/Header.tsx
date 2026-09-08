@@ -280,9 +280,9 @@ export const Header = () => {
               <MegaItem href="/blog" icon={BookOpen} label="Blog & Actus" desc="News, Guides & Updates" color="text-green-400" />
               <div className="h-px bg-white/8 my-1 mx-2" />
               <MegaItem href="/learn/rules" icon={BookOpen} label={t("rules")} desc={t("rulesDesc")} color="text-brand-cyan" />
-              <MegaItem href="/learn/beginner" icon={Zap} label={t("beginner")} desc={t("beginnerDesc")} color="text-green-400" />
-              <MegaItem href="/learn/intermediate" icon={Zap} label={t("intermediate")} desc={t("intermediateDesc")} color="text-yellow-400" />
-              <MegaItem href="/learn/advanced" icon={Zap} label={t("advanced")} desc={t("advancedDesc")} color="text-brand-orange" />
+              <MegaItem href="/learn/how-to-play" icon={Zap} label={t("beginner")} desc={t("beginnerDesc")} color="text-green-400" />
+              <MegaItem href="/learn/naked-pairs" icon={Zap} label={t("intermediate")} desc={t("intermediateDesc")} color="text-yellow-400" />
+              <MegaItem href="/learn/x-wing" icon={Zap} label={t("advanced")} desc={t("advancedDesc")} color="text-brand-orange" />
               <div className="h-px bg-white/8 my-1 mx-2" />
               <MegaItem href="/faq" icon={HelpCircle} label={t("faq")} color="text-gray-400" />
             </NavDropdown>
@@ -301,37 +301,21 @@ export const Header = () => {
             <div className="hidden lg:flex items-center gap-2">
               <Link href="/chat">
                 <motion.button
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="relative overflow-hidden px-4 py-2 rounded-full font-black text-[13px] uppercase tracking-wider text-brand-navy shadow-[0_4px_15px_rgba(0,191,255,0.4)]"
-                  style={{ background: "linear-gradient(135deg, #00BFFF 0%, #33CCFF 100%)" }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-5 py-2 rounded-full font-bold text-[13px] uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 transition-colors border border-white/20 flex items-center gap-2"
                 >
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4" /> {t("liveChat")}
-                  </span>
-                  {/* Shimmer sweep */}
-                  <motion.div
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 2.5 }}
-                    className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
-                  />
+                  <MessageSquare className="w-4 h-4" /> TCHAT
                 </motion.button>
               </Link>
               
               <Link href="/play">
                 <motion.button
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="relative overflow-hidden px-5 py-2 rounded-full font-black text-[13px] uppercase tracking-wider text-white shadow-[0_4px_15px_rgba(255,69,0,0.4)]"
-                  style={{ background: "linear-gradient(135deg, #FF4500 0%, #FF6B33 100%)" }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-2 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-brand-orange hover:bg-brand-orange-light transition-colors shadow-lg shadow-brand-orange/30 flex items-center gap-2"
                 >
-                  <span className="relative z-10">⚡ {t("play")}</span>
-                  {/* Shimmer sweep */}
-                  <motion.div
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 2 }}
-                    className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                  />
+                  JOUER
                 </motion.button>
               </Link>
             </div>
