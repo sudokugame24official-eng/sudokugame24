@@ -210,10 +210,10 @@ export const Footer = () => {
 
           {/* Sudoku Section */}
           <div className="flex flex-col gap-3">
-            <h4 className="font-black text-white uppercase tracking-widest text-xs mb-1 flex items-center gap-2">
+            <h3 className="font-black text-white uppercase tracking-widest text-xs mb-1 flex items-center gap-2">
               <Gamepad2 className="w-3.5 h-3.5 text-brand-orange" />
               {t("sectionSudoku")}
-            </h4>
+            </h3>
             <FooterLink href="/play">{t("playSudoku")}</FooterLink>
             <FooterLink href="/daily">{t("dailyChallenge")}</FooterLink>
             <FooterLink href="/duel">{t("duel")}</FooterLink>
@@ -223,10 +223,10 @@ export const Footer = () => {
 
           {/* Community Section */}
           <div className="flex flex-col gap-3">
-            <h4 className="font-black text-white uppercase tracking-widest text-xs mb-1 flex items-center gap-2">
+            <h3 className="font-black text-white uppercase tracking-widest text-xs mb-1 flex items-center gap-2">
               <Users className="w-3.5 h-3.5 text-brand-cyan" />
               {t("sectionCommunity")}
-            </h4>
+            </h3>
             <FooterLink href="/forum">{t("forum")}</FooterLink>
             <FooterLink href="/friends">{t("friends")}</FooterLink>
             <FooterLink href="/messages">{t("messages")}</FooterLink>
@@ -235,10 +235,10 @@ export const Footer = () => {
 
           {/* Help & Company Section */}
           <div className="flex flex-col gap-3">
-            <h4 className="font-black text-white uppercase tracking-widest text-xs mb-1 flex items-center gap-2">
+            <h3 className="font-black text-white uppercase tracking-widest text-xs mb-1 flex items-center gap-2">
               <HelpCircle className="w-3.5 h-3.5 text-brand-gold" />
               {t("sectionHelp")}
-            </h4>
+            </h3>
             <FooterLink href="/help">{t("helpCenter")}</FooterLink>
             <FooterLink href="/faq">{t("faq")}</FooterLink>
             <FooterLink href="/contact">{t("contactUs")}</FooterLink>
@@ -250,7 +250,7 @@ export const Footer = () => {
       </div>
 
       {/* Trust Signals Strip */}
-      <div className="border-t border-white/5 bg-white/2">
+      <div className="border-t border-white/10 bg-white/5">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-4">
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             {[
@@ -259,8 +259,8 @@ export const Footer = () => {
               { icon: Award, text: t("trustFairPlay") },
               { icon: Globe, text: t("trustLanguages", { count: SUPPORTED_LOCALES.length }) },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-gray-600 text-xs">
-                <item.icon className="w-3 h-3 text-brand-gold/50" />
+              <div key={i} className="flex items-center gap-1.5 text-gray-200 text-xs font-medium">
+                <item.icon className="w-3.5 h-3.5 text-brand-gold" />
                 <span>{item.text}</span>
               </div>
             ))}
@@ -269,15 +269,15 @@ export const Footer = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-white/5">
+      <div className="border-t border-white/10">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <LanguageSwitcher compact />
           </div>
-          <p className="text-gray-600 text-xs text-center">
+          <p className="text-gray-300 text-xs text-center font-medium">
             {t("copyright", { year: currentYear })}
           </p>
-          <p className="text-gray-700 text-xs flex items-center gap-1">
+          <p className="text-gray-300 text-xs flex items-center gap-1 font-medium">
             {t("builtFor")}
           </p>
         </div>
