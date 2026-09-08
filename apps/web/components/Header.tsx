@@ -241,6 +241,7 @@ export const Header = () => {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowMobileMenu(true)}
+              aria-label="Ouvrir le menu mobile"
               className="md:hidden p-2 -ml-2 text-white/80 hover:text-brand-gold transition-colors"
             >
               <Menu className="w-6 h-6" />
@@ -326,6 +327,7 @@ export const Header = () => {
             {/* Notifications */}
             <button
               onClick={() => setShowNotifications(!showNotifications)}
+              aria-label="Notifications"
               className="relative p-2 text-white/70 hover:text-brand-gold transition-colors"
             >
               <Bell className="w-5 h-5" />
@@ -487,7 +489,7 @@ export const Header = () => {
                     <SudokuLogoIcon />
                     <span className="font-black text-lg uppercase tracking-widest text-white">{t("menu")}</span>
                   </div>
-                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowMobileMenu(false)} className="p-2 bg-white/5 rounded-full text-gray-400">
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowMobileMenu(false)} aria-label="Fermer le menu" className="p-2 bg-white/5 rounded-full text-gray-400">
                     <X className="w-5 h-5" />
                   </motion.button>
                 </div>

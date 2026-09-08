@@ -178,6 +178,7 @@ export default function HomeClient() {
                   <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
                     <button
                       onClick={() => setActiveVisualTab("art")}
+                      aria-label="Afficher l'illustration"
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                         activeVisualTab === "art"
                           ? "bg-brand-orange text-white shadow"
@@ -188,6 +189,7 @@ export default function HomeClient() {
                     </button>
                     <button
                       onClick={() => setActiveVisualTab("grid")}
+                      aria-label="Afficher la grille interactive"
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                         activeVisualTab === "grid"
                           ? "bg-brand-cyan text-brand-navy shadow"

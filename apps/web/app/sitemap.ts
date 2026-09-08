@@ -118,5 +118,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to fetch dynamic routes for sitemap:", error);
   }
 
-  return [...staticRoutes, ...articleRoutes, ...topicRoutes, ...academyRoutes];
+  const academySlugs = [
+    "rules",
+    "how-to-play",
+    "candidates",
+    "naked-singles",
+    "hidden-singles",
+    "naked-pairs",
+    "hidden-pairs",
+    "naked-triples",
+    "pointing-pairs",
+    "box-line",
+    "x-wing",
+    "swordfish",
+    "xy-wing",
+    "unique-rectangle",
+    "chains",
+  ];
+
+  const academyStaticRoutes = academySlugs.map((slug) => ({
+    url: `${baseUrl}/en/learn/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: slug === "rules" || slug === "how-to-play" ? 0.95 : 0.90,
+    alternates: getAlternates(`/learn/${slug}`),
+  }));
+
+  return [...staticRoutes, ...academyStaticRoutes, ...articleRoutes, ...topicRoutes, ...academyRoutes];
 }
