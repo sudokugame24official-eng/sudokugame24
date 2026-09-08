@@ -1,6 +1,6 @@
 "use client";
 import { API_URL } from "@/lib/api";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, LazyMotion, domAnimation, AnimatePresence } from "framer-motion";
 import { Link } from "@/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -26,139 +26,17 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 
-// ─── Mini animated sudoku grid ───────────────────────────────────────────────
-const DEMO_BOARD = [
-  [5, 3, 0, 0, 7, 0, 0, 0, 0],
-  [6, 0, 0, 1, 9, 5, 0, 0, 0],
-  [0, 9, 8, 0, 0, 0, 0, 6, 0],
-  [8, 0, 0, 0, 6, 0, 0, 0, 3],
-  [4, 0, 0, 8, 0, 3, 0, 0, 1],
-  [7, 0, 0, 0, 2, 0, 0, 0, 6],
-  [0, 6, 0, 0, 0, 0, 2, 8, 0],
-  [0, 0, 0, 4, 1, 9, 0, 0, 5],
-  [0, 0, 0, 0, 8, 0, 0, 7, 9],
-];
+const AnimatedSudokuGrid = dynamic(() => import("./AnimatedSudokuGrid"), { ssr: false });
 
-const DEMO_SOLUTION = [
-  [5, 3, 4, 6, 7, 8, 9, 1, 2],
-  [6, 7, 2, 1, 9, 5, 3, 4, 8],
-  [1, 9, 8, 3, 4, 2, 5, 6, 7],
-  [8, 5, 9, 7, 6, 1, 4, 2, 3],
-  [4, 2, 6, 8, 5, 3, 7, 9, 1],
-  [7, 1, 3, 9, 2, 4, 8, 5, 6],
-  [9, 6, 1, 5, 3, 7, 2, 8, 4],
-  [2, 8, 7, 4, 1, 9, 6, 3, 5],
-  [3, 4, 5, 2, 8, 6, 1, 7, 9],
-];
+// â”€â”€â”€ Stat Pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const CELL_COLORS: Record<number, string> = {
-  1: "#FF6B35",
-  2: "#4ECDC4",
-  3: "#FFE66D",
-  4: "#A8E6CF",
-  5: "#FF8B94",
-  6: "#C7B3FF",
-  7: "#87CEEB",
-  8: "#FFA07A",
-  9: "#98FB98",
-};
-
-function AnimatedSudokuGrid() {
-  const t = useTranslations("home");
-  const [highlighted, setHighlighted] = useState<{ r: number; c: number } | null>(null);
-  const [filledCells, setFilledCells] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    const empties: { r: number; c: number }[] = [];
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        const row = DEMO_BOARD[r];
-        if (row && row[c] === 0) {
-          empties.push({ r, c });
-        }
-      }
-    }
-
-    let idx = 0;
-    const iv = setInterval(() => {
-      if (idx >= empties.length) {
-        idx = 0;
-        setFilledCells(new Set());
-        setHighlighted(null);
-        return;
-      }
-      const cell = empties[idx++];
-      if (cell) {
-        setHighlighted(cell);
-        setFilledCells((prev) => new Set([...prev, `${cell.r}-${cell.c}`]));
-      }
-    }, 400);
-    return () => clearInterval(iv);
-  }, []);
-
-  return (
-    <div className="relative">
-      <div className="relative bg-[#041E42]/90 border border-brand-gold/30 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md">
-        <div
-          className="grid gap-0.5"
-          style={{ display: "grid", gridTemplateColumns: "repeat(9, 1fr)", gap: "2px" }}
-        >
-          {DEMO_BOARD.map((row, r) =>
-            row.map((val, c) => {
-              const isBox = (Math.floor(r / 3) + Math.floor(c / 3)) % 2 === 0;
-              const isHighlighted = highlighted?.r === r && highlighted?.c === c;
-              const isFilled = filledCells.has(`${r}-${c}`);
-              const solvedVal = DEMO_SOLUTION[r]?.[c] ?? 1;
-              const displayVal = val !== 0 ? val : isFilled ? solvedVal : "";
-              const isPreset = val !== 0;
-
-              const borderTop = r % 3 === 0 && r !== 0 ? "border-t-2 border-t-white/30" : "";
-              const borderLeft = c % 3 === 0 && c !== 0 ? "border-l-2 border-l-white/30" : "";
-
-              return (
-                <motion.div
-                  key={`${r}-${c}`}
-                  animate={isHighlighted ? { scale: 1.15 } : { scale: 1 }}
-                  transition={{ duration: 0.15 }}
-                  className={[
-                    "w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded text-xs font-black transition-colors select-none",
-                    isBox ? "bg-white/6" : "bg-white/2",
-                    borderTop,
-                    borderLeft,
-                    isHighlighted ? "ring-2 ring-brand-cyan ring-opacity-90 z-10" : "",
-                  ].join(" ")}
-                  style={{
-                    color: isPreset
-                      ? "#FFFFFF"
-                      : isFilled
-                      ? CELL_COLORS[solvedVal] || "#00BFFF"
-                      : "transparent",
-                    backgroundColor: isHighlighted ? "rgba(0,191,255,0.3)" : undefined,
-                  }}
-                >
-                  {displayVal}
-                </motion.div>
-              );
-            })
-          )}
-        </div>
-        <div className="flex items-center gap-2 mt-2.5 px-1">
-          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_#4ade80]" />
-          <span className="text-[11px] text-gray-300 font-bold uppercase tracking-wider">{t("gridLiveLabel")}</span>
-          <span className="ml-auto text-[11px] text-brand-gold font-black">01:48</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Stat Pill ───────────────────────────────────────────────────────────────
 function StatBadge({ value, label, color }: { value: string; label: string; color: string }) {
   return (
     <div className="flex flex-col items-center">
       <span className={`text-2xl md:text-3xl font-black ${color} tracking-tight`}>{value}</span>
-      <span className="text-xs text-gray-400 font-bold mt-0.5 text-center uppercase tracking-wider">{label}</span>
+      <span className="text-xs text-gray-300 font-bold mt-0.5 text-center uppercase tracking-wider">{label}</span>
     </div>
   );
 }
@@ -168,11 +46,12 @@ export default function HomeClient() {
   const [activeVisualTab, setActiveVisualTab] = useState<"art" | "grid">("art");
 
   return (
+    <LazyMotion features={domAnimation}>
     <div className="min-h-screen bg-[#041226] text-white font-sans overflow-x-hidden selection:bg-brand-orange selection:text-white">
 
-      {/* ══════════════════════════════════════════════════════════════
-          1. HERO SECTION — AAA GAME STUDIO HERO WITH HERO1 ARTWORK
-      ══════════════════════════════════════════════════════════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          1. HERO SECTION â€” AAA GAME STUDIO HERO WITH HERO1 ARTWORK
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="relative w-full min-h-[94vh] flex items-center overflow-hidden pt-6 pb-16">
         {/* Dynamic Studio Ambient Glows */}
         <div className="absolute inset-0 bg-[#041226]" />
@@ -191,7 +70,7 @@ export default function HomeClient() {
         <div className="relative z-10 w-full max-w-[1340px] mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
           {/* LEFT: Headline & Actions (7 Cols) */}
-          <motion.div
+          <m.div
             initial={{ x: -40, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -219,7 +98,7 @@ export default function HomeClient() {
             {/* Primary Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Link href="/play" className="w-full sm:w-auto">
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96 }}
                   className="relative overflow-hidden w-full sm:w-auto flex items-center justify-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-orange to-brand-orange-light text-white font-black rounded-2xl shadow-[0_10px_30px_rgba(255,69,0,0.45)] hover:shadow-[0_15px_40px_rgba(255,69,0,0.65)] text-lg uppercase tracking-wider transition-all"
@@ -228,23 +107,23 @@ export default function HomeClient() {
                   <span>{t("playNow")}</span>
                   <ChevronRight className="w-5 h-5 opacity-80" />
                   {/* Shimmer light sweep */}
-                  <motion.div
+                  <m.div
                     animate={{ x: ["-100%", "250%"] }}
                     transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.5 }}
                     className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
                   />
-                </motion.button>
+                </m.button>
               </Link>
 
               <Link href="/daily" className="w-full sm:w-auto">
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4.5 bg-brand-navy-light/80 border-2 border-brand-gold/40 text-brand-gold font-black rounded-2xl hover:bg-brand-gold/15 hover:border-brand-gold shadow-[0_10px_25px_rgba(0,0,0,0.4)] text-lg uppercase tracking-wider transition-all backdrop-blur-xl"
                 >
                   <Calendar className="w-5 h-5 text-brand-gold" />
                   <span>{t("dailyChallenge")}</span>
-                </motion.button>
+                </m.button>
               </Link>
             </div>
 
@@ -270,12 +149,12 @@ export default function HomeClient() {
               <div className="w-px h-10 bg-white/15" />
               <StatBadge value="1.2M+" label={t("statSolved")} color="text-brand-gold" />
               <div className="w-px h-10 bg-white/15" />
-              <StatBadge value="4.9 ★" label={t("statRating")} color="text-brand-cyan" />
+              <StatBadge value="4.9 \u2605" label={t("statRating")} color="text-brand-cyan" />
             </div>
-          </motion.div>
+          </m.div>
 
           {/* RIGHT: Visual Showcase featuring HERO1.PNG + Interactive Switcher (5 Cols) */}
-          <motion.div
+          <m.div
             initial={{ x: 40, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
@@ -302,7 +181,7 @@ export default function HomeClient() {
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                         activeVisualTab === "art"
                           ? "bg-brand-orange text-white shadow"
-                          : "text-gray-400 hover:text-white"
+                          : "text-gray-300 hover:text-white"
                       }`}
                     >
                       {t("tabArt")}
@@ -312,7 +191,7 @@ export default function HomeClient() {
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                         activeVisualTab === "grid"
                           ? "bg-brand-cyan text-brand-navy shadow"
-                          : "text-gray-400 hover:text-white"
+                          : "text-gray-300 hover:text-white"
                       }`}
                     >
                       {t("tabGrid")}
@@ -322,47 +201,48 @@ export default function HomeClient() {
 
                 {/* Content Area */}
                 {activeVisualTab === "art" ? (
-                  <motion.div
+                  <m.div
                     key="art"
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={false}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
                     className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-inner group/art"
                   >
                     <Image
-                      src="/hero1.png"
+                      src="/hero1_v2.jpg"
                       alt="Sudoku Masters - Master Your Mind"
                       fill
                       priority
+                      fetchPriority="high"
                       className="object-cover transition-transform duration-700 group-hover/art:scale-105"
-                      sizes="(max-width: 768px) 100vw, 460px"
+                      sizes="(max-width: 768px) 85vw, (max-width: 1200px) 50vw, 460px"
                     />
                     
                     {/* Gradient Overlay & Tag */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
                     {/* Floating Hero Badge 1 */}
-                    <motion.div
+                    <m.div
                       animate={{ y: [0, -6, 0] }}
                       transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
                       className="absolute top-3 left-3 bg-brand-navy/90 border border-brand-gold/60 px-3.5 py-1.5 rounded-full shadow-lg backdrop-blur-md flex items-center gap-2"
                     >
                       <Crown className="w-4 h-4 text-brand-gold" />
                       <span className="text-xs font-black text-brand-gold uppercase tracking-wider">{t("heroBadge2")}</span>
-                    </motion.div>
+                    </m.div>
 
                     {/* Floating Hero Badge 2 */}
-                    <motion.div
+                    <m.div
                       animate={{ y: [0, 6, 0] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                       className="absolute bottom-3 right-3 bg-brand-orange/90 text-white px-3.5 py-1.5 rounded-full shadow-lg backdrop-blur-md flex items-center gap-2 border border-white/20"
                     >
                       <Sparkles className="w-4 h-4 text-brand-gold" />
                       <span className="text-xs font-black uppercase tracking-wider">{t("heroBadge3")}</span>
-                    </motion.div>
-                  </motion.div>
+                    </m.div>
+                  </m.div>
                 ) : (
-                  <motion.div
+                  <m.div
                     key="grid"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -370,7 +250,7 @@ export default function HomeClient() {
                     className="p-2"
                   >
                     <AnimatedSudokuGrid />
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Footer caption */}
@@ -382,13 +262,13 @@ export default function HomeClient() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════
-          2. FEATURE MODULES — 4 PILLARS (PLAY / DAILY / DUEL / LEARN)
-      ══════════════════════════════════════════════════════════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          2. FEATURE MODULES â€” 4 PILLARS (PLAY / DAILY / DUEL / LEARN)
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <main className="max-w-[1340px] mx-auto py-16 px-5 sm:px-8 lg:px-12 space-y-32">
         <section>
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -447,7 +327,7 @@ export default function HomeClient() {
               },
             ].map((card) => (
               <Link key={card.href} href={card.href} className="group">
-                <motion.div
+                <m.div
                   whileHover={{ y: -8, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={`relative bg-brand-navy-light/70 border border-white/10 rounded-3xl p-7 h-full flex flex-col justify-between transition-all duration-300 backdrop-blur-xl ${card.borderGlow}`}
@@ -474,15 +354,15 @@ export default function HomeClient() {
                     <span>{t("cardStart")}</span>
                     <ChevronRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
-                </motion.div>
+                </m.div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             2.5 GUEST VS REGISTERED MEMBER COMPARISON UX
-        ══════════════════════════════════════════════════════════════ */}
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#061838]/90 via-[#041E42]/90 to-[#0A2A5C]/90 border-2 border-brand-gold/30 p-8 sm:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.7)] backdrop-blur-2xl">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <span className="text-xs font-black text-brand-gold tracking-[0.25em] uppercase bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/30">
@@ -501,7 +381,7 @@ export default function HomeClient() {
             <div className="bg-black/30 border border-white/15 rounded-3xl p-8 flex flex-col justify-between text-left">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-black uppercase tracking-widest text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-300 bg-white/5 px-3 py-1 rounded-full border border-white/10">
                     {t("guestVsMember.guestCardTitle")}
                   </span>
                   <span className="text-xs text-green-400 font-bold uppercase">{t("trustFree")}</span>
@@ -527,8 +407,8 @@ export default function HomeClient() {
                   ))}
                 </div>
 
-                <p className="text-xs text-gray-400 italic bg-white/5 p-3 rounded-xl border border-white/5 mb-6">
-                  ⚠️ {t("guestVsMember.guestNote")}
+                <p className="text-xs text-gray-300 italic bg-white/5 p-3 rounded-xl border border-white/5 mb-6">
+                  âš ï¸ {t("guestVsMember.guestNote")}
                 </p>
               </div>
 
@@ -585,9 +465,9 @@ export default function HomeClient() {
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════
-            3. ESPORTS ARENA & DUELS — SHOWCASING HERO2.PNG ARTWORK
-        ══════════════════════════════════════════════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            3. ESPORTS ARENA & DUELS â€” SHOWCASING HERO2.PNG ARTWORK
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#061838] via-[#041E42] to-[#0A2A5C] border-2 border-brand-cyan/40 p-8 sm:p-12 lg:p-14 shadow-[0_25px_70px_rgba(0,191,255,0.2)]">
           {/* Ambient stadium neon lights */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-cyan/15 rounded-full blur-3xl pointer-events-none" />
@@ -627,7 +507,7 @@ export default function HomeClient() {
 
               <div className="pt-4 flex flex-wrap gap-4">
                 <Link href="/duel">
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.04, y: -2 }}
                     whileTap={{ scale: 0.96 }}
                     className="flex items-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-cyan to-blue-500 text-brand-navy font-black rounded-2xl shadow-[0_10px_30px_rgba(0,191,255,0.4)] hover:shadow-[0_15px_40px_rgba(0,191,255,0.6)] text-lg uppercase tracking-wider transition-all"
@@ -635,24 +515,24 @@ export default function HomeClient() {
                     <Swords className="w-5 h-5" />
                     <span>{t("enterArena")}</span>
                     <ChevronRight className="w-5 h-5" />
-                  </motion.button>
+                  </m.button>
                 </Link>
                 <Link href="/leaderboard">
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="flex items-center gap-2 px-7 py-4.5 bg-white/10 border border-white/20 text-white font-bold rounded-2xl hover:bg-white/20 text-lg uppercase tracking-wider transition-all"
                   >
                     <Trophy className="w-5 h-5 text-brand-gold" />
                     <span>{t("competeRankings")}</span>
-                  </motion.button>
+                  </m.button>
                 </Link>
               </div>
             </div>
 
             {/* Right: HERO2.PNG Esports Stage Graphic (6 Cols) */}
             <div className="lg:col-span-6 flex justify-center">
-              <motion.div
+              <m.div
                 whileHover={{ scale: 1.02, rotate: 0.5 }}
                 transition={{ type: "spring", stiffness: 300 }}
                 className="relative w-full max-w-[500px] rounded-3xl overflow-hidden border-2 border-brand-cyan/50 shadow-[0_20px_60px_rgba(0,0,0,0.85)] group"
@@ -662,11 +542,13 @@ export default function HomeClient() {
                 
                 <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-black">
                   <Image
-                    src="/hero2.png"
+                    src="/hero2_v2.jpg"
                     alt="Sudoku World Championship Grand Finals"
                     fill
+                    priority
+                    fetchPriority="high"
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, 500px"
+                    sizes="(max-width: 768px) 85vw, (max-width: 1200px) 50vw, 500px"
                   />
                   {/* Subtle vignette */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
@@ -678,7 +560,7 @@ export default function HomeClient() {
                       {t("finalsLive")}
                     </div>
                     <div className="bg-brand-navy/90 border border-brand-gold/60 text-brand-gold px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider backdrop-blur-md">
-                      ⚔️ {t("eloMatchmaking")}
+                      <span>\u2694\uFE0F {t("eloMatchmaking")}</span>
                     </div>
                   </div>
 
@@ -695,15 +577,15 @@ export default function HomeClient() {
                     </Link>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </div>
 
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════
-            4. DAILY EVENT HIGHLIGHT — CALENDAR & STREAK
-        ══════════════════════════════════════════════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            4. DAILY EVENT HIGHLIGHT â€” CALENDAR & STREAK
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#12284C] via-[#0A2A5C] to-[#041E42] border-2 border-brand-gold/40 p-8 sm:p-12 shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/10 rounded-full blur-3xl" />
 
@@ -724,11 +606,11 @@ export default function HomeClient() {
 
               <div className="flex items-center gap-8 pt-2">
                 <div className="bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t("difficulty")}</p>
+                  <p className="text-xs text-gray-300 font-bold uppercase tracking-wider">{t("difficulty")}</p>
                   <p className="text-xl font-black text-brand-orange mt-0.5">{t("master")}</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t("yourStreak")}</p>
+                  <p className="text-xs text-gray-300 font-bold uppercase tracking-wider">{t("yourStreak")}</p>
                   <p className="text-xl font-black text-brand-gold flex items-center gap-1.5 mt-0.5">
                     <Flame className="w-5 h-5 text-brand-orange fill-brand-orange animate-bounce" />
                     <span>{t("streakDays")}</span>
@@ -739,7 +621,7 @@ export default function HomeClient() {
 
             <div className="flex flex-col items-center gap-4 shrink-0">
               <Link href="/daily">
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-10 py-5 bg-gradient-to-r from-brand-gold to-amber-400 text-brand-navy font-black rounded-2xl shadow-[0_10px_35px_rgba(255,204,0,0.4)] hover:shadow-[0_15px_45px_rgba(255,204,0,0.6)] text-xl uppercase tracking-widest transition-all flex items-center gap-3"
@@ -747,16 +629,16 @@ export default function HomeClient() {
                   <Calendar className="w-6 h-6" />
                   <span>{t("playToday")}</span>
                   <ChevronRight className="w-6 h-6" />
-                </motion.button>
+                </m.button>
               </Link>
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t("resetCaption")}</span>
+              <span className="text-xs text-gray-300 font-bold uppercase tracking-wider">{t("resetCaption")}</span>
             </div>
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════
-            5. SUDOKU ACADEMY — 3 TIERS (BEGINNER / INTERMEDIATE / ADVANCED)
-        ══════════════════════════════════════════════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            5. SUDOKU ACADEMY â€” 3 TIERS (BEGINNER / INTERMEDIATE / ADVANCED)
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="text-center">
           <div className="max-w-3xl mx-auto mb-14">
             <span className="text-xs font-black text-brand-gold tracking-[0.25em] uppercase bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/30">
@@ -799,7 +681,7 @@ export default function HomeClient() {
               },
             ].map((item) => (
               <Link key={item.href} href={item.href} className="group">
-                <motion.div
+                <m.div
                   whileHover={{ y: -8 }}
                   whileTap={{ scale: 0.98 }}
                   className={`relative rounded-3xl p-8 text-left bg-brand-navy-light/70 border flex flex-col justify-between h-full transition-all duration-300 backdrop-blur-xl ${item.border}`}
@@ -826,17 +708,17 @@ export default function HomeClient() {
                     <span>{t("readGuides")}</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
-                </motion.div>
+                </m.div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             6. COMMUNITY & ACHIEVEMENTS
-        ══════════════════════════════════════════════════════════════ */}
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <motion.div
+          <m.div
             whileHover={{ y: -6 }}
             className="bg-brand-navy-light/80 border-2 border-brand-cyan/30 p-8 sm:p-10 rounded-3xl backdrop-blur-xl shadow-xl hover:border-brand-cyan transition-all group text-left"
           >
@@ -851,9 +733,9 @@ export default function HomeClient() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </Link>
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             whileHover={{ y: -6 }}
             className="bg-brand-navy-light/80 border-2 border-brand-gold/30 p-8 sm:p-10 rounded-3xl backdrop-blur-xl shadow-xl hover:border-brand-gold transition-all group text-left"
           >
@@ -868,12 +750,12 @@ export default function HomeClient() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </Link>
-          </motion.div>
+          </m.div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             7. FINAL STUDIO CALL-TO-ACTION
-        ══════════════════════════════════════════════════════════════ */}
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="relative overflow-hidden rounded-[3rem] text-center py-20 px-6 sm:px-12 bg-gradient-to-br from-brand-orange/20 via-brand-navy to-brand-cyan/20 border-2 border-brand-gold/40 shadow-[0_25px_80px_rgba(0,0,0,0.8)]">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/15 rounded-full blur-[140px] pointer-events-none" />
 
@@ -893,7 +775,7 @@ export default function HomeClient() {
 
             <div className="pt-4 flex justify-center">
               <Link href="/play">
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.06, y: -3 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-12 py-5 text-xl font-black text-white bg-gradient-to-r from-brand-orange via-brand-orange-light to-brand-orange rounded-2xl shadow-[0_10px_40px_rgba(255,69,0,0.55)] hover:shadow-[0_15px_50px_rgba(255,69,0,0.75)] uppercase tracking-widest transition-all flex items-center gap-3"
@@ -901,12 +783,15 @@ export default function HomeClient() {
                   <Play className="w-6 h-6 fill-white" />
                   <span>{t("playNow")}</span>
                   <ChevronRight className="w-6 h-6" />
-                </motion.button>
+                </m.button>
               </Link>
             </div>
           </div>
         </section>
       </main>
     </div>
+    </LazyMotion>
   );
 }
+
+

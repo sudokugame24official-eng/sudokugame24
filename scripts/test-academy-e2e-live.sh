@@ -45,21 +45,21 @@ echo "Courses returned: ${COURSE_COUNT}"
 
 echo "=== 6. COMPLETE LESSON ==="
 COMPLETE_RES=$(curl -s -X POST "${BASE_URL}/academy/lessons/lsn_fund_001/complete" \
-  -H "Cookie: access_token=${ACCESS_TOKEN}" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json")
 echo "Complete Lesson Response: ${COMPLETE_RES}"
 
 echo "=== 7. SUBMIT QUIZ ==="
 # Questions: correctIndex are 1 and 2
 QUIZ_RES=$(curl -s -X POST "${BASE_URL}/academy/quizzes/qiz_fund_001/submit" \
-  -H "Cookie: access_token=${ACCESS_TOKEN}" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"answers":[1, 2]}')
 echo "Submit Quiz Response: ${QUIZ_RES}"
 
 echo "=== 8. CHECK USER PROGRESS ENDPOINT ==="
 PROG_RES=$(curl -s -X GET "${BASE_URL}/academy/progress" \
-  -H "Cookie: access_token=${ACCESS_TOKEN}")
+  -H "Authorization: Bearer ${ACCESS_TOKEN}")
 echo "Progress Response: ${PROG_RES}"
 
 echo "=== 9. VERIFY DIRECTLY IN POSTGRES ==="

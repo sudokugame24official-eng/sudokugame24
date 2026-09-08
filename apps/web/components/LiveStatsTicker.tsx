@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, LazyMotion, domAnimation, AnimatePresence } from "framer-motion";
 import { Swords, Users, Trophy, Flame, Globe } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { API_URL } from "@/lib/api";
@@ -25,15 +25,19 @@ function useCountUp(target: number, duration = 1200) {
   const start = useRef(Date.now());
 
   useEffect(() => {
-    start.current = Date.now();
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - start.current;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(target * ease));
-      if (progress >= 1) clearInterval(timer);
-    }, 16);
-    return () => clearInterval(timer);
+    const delayTimeout = setTimeout(() => {
+      start.current = Date.now();
+      const timer = setInterval(() => {
+        const elapsed = Date.now() - start.current;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        setCount(Math.round(target * ease));
+        if (progress >= 1) clearInterval(timer);
+      }, 16);
+      return () => clearInterval(timer);
+    }, 1500); // Delay 1.5s to free main thread during LCP
+
+    return () => clearTimeout(delayTimeout);
   }, [target, duration]);
 
   return count;
@@ -67,7 +71,7 @@ function StatItem({
         )}
       </div>
       <span className={`text-xs font-black tracking-wide ${color}`}>{display}</span>
-      <span className="text-[11px] text-gray-500">{label}</span>
+      <span className="text-[11px] text-gray-300">{label}</span>
     </div>
   );
 }
@@ -95,6 +99,7 @@ export const LiveStatsTicker = () => {
   if (!visible) return null;
 
   return (
+    <LazyMotion features={domAnimation}>
     <div className="w-full bg-brand-navy border-b border-white/5 relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/5 via-transparent to-brand-gold/5 animate-pulse pointer-events-none" />
@@ -102,7 +107,7 @@ export const LiveStatsTicker = () => {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between px-4">
         {/* Left: Live indicator */}
         <div className="flex items-center gap-2 py-1.5 shrink-0">
-          <motion.div
+          <m.div
             animate={{ scale: [1, 1.3, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="w-1.5 h-1.5 bg-green-400 rounded-full"
@@ -139,9 +144,9 @@ export const LiveStatsTicker = () => {
         {/* Right: Close */}
         <button
           onClick={() => setVisible(false)}
-          className="text-gray-600 hover:text-gray-400 transition-colors text-xs shrink-0 py-1.5"
+          className="text-gray-400 hover:text-white transition-colors text-xs shrink-0 py-1.5"
         >
-          ✕
+          âœ•
         </button>
       </div>
 
@@ -152,5 +157,7 @@ export const LiveStatsTicker = () => {
         }
       `}</style>
     </div>
+    </LazyMotion>
   );
 };
+

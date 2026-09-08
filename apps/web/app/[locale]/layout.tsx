@@ -12,6 +12,13 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 });
 
+export const viewport = {
+  themeColor: "#041226",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -58,11 +65,9 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: `/${locale}`,
-      languages: {
-        en: "/en",
-        fr: "/fr",
-        de: "/de",
-      },
+      languages: Object.fromEntries(
+        require("../../i18n").SEO_LOCALES.map((l: string) => [l, `/${l}`])
+      ),
     },
   };
 }
@@ -162,19 +167,6 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} overflow-x-hidden`}
         suppressHydrationWarning
       >
-        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');
-              `}
-            </Script>
-          </>
-        )}
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AdProvider>
             <AuthProvider>

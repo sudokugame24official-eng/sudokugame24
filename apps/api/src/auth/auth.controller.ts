@@ -23,6 +23,7 @@ import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmail
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   async register(
@@ -95,20 +96,28 @@ export class AuthController {
     return { success: true }; // Always return true
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('reset-password')
   async resetPassword(@Body() body: ResetPasswordDto) {
     return this.authService.resetPassword(body.token, body.newPassword);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('verify-email')
   async verifyEmail(@Body() body: VerifyEmailDto) {
     return this.authService.verifyEmail(body.token);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Request() req: any) {
-    return req.user;
+  async getProfile(@Req() req: Request) {
+    const token = (req as any).cookies?.['access_token'];
+    if (!token) return null;
+    try {
+      const user = await this.authService.verifyToken(token);
+      return user;
+    } catch (e) {
+      return null;
+    }
   }
 
   // --- GOOGLE OAUTH ---

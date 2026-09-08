@@ -445,6 +445,7 @@ export const ChatPanel = () => {
                 onClick={handleChallengeDuel}
                 className="px-3 py-1.5 bg-gradient-to-r from-brand-orange to-red-500 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow transition-all cursor-pointer"
                 title="Défier en Duel 1v1"
+                aria-label="Défier en Duel 1v1"
               >
                 <Swords className="w-3.5 h-3.5" /> 1v1
               </button>
@@ -452,6 +453,7 @@ export const ChatPanel = () => {
                 onClick={handleBlockUser}
                 className="text-xs text-red-400 hover:underline flex items-center gap-1 bg-red-500/10 px-2 py-1.5 rounded-xl cursor-pointer"
                 title="Bloquer"
+                aria-label="Bloquer"
               >
                 <AlertTriangle className="w-3 h-3" />
               </button>
@@ -513,6 +515,7 @@ export const ChatPanel = () => {
                 type="submit"
                 disabled={!inputValue.trim()}
                 className="w-12 h-12 bg-gradient-to-br from-brand-gold to-brand-orange text-brand-navy font-bold rounded-2xl flex items-center justify-center hover:scale-105 hover:shadow-[0_0_20px_rgba(255,204,0,0.5)] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none shrink-0 cursor-pointer"
+                aria-label="Send"
               >
                 <Send className="w-4 h-4 ml-0.5" />
               </button>
@@ -569,6 +572,7 @@ export const ChatPanel = () => {
               <button
                 onClick={() => setIsOpen(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10 hover:scale-110 transition-all border border-white/5 cursor-pointer"
+                aria-label="Close Chat"
               >
                 <X className="w-4 h-4" />
               </button>

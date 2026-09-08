@@ -1885,8 +1885,7 @@ export const ACADEMY_ARTICLES: Record<string, AcademyArticle> = {
   \n`,
       }
     }
-  }
-
+  },
 };
 
 // Aliases mapping (e.g. regles-du-sudoku -> rules)

@@ -43,6 +43,17 @@ export class AuthService {
     };
   }
 
+  async verifyToken(token: string) {
+    const payload = await this.jwtService.verifyAsync(token);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      include: { profile: true },
+    });
+    if (!user) throw new UnauthorizedException('User not found');
+    const { passwordHash, ...result } = user;
+    return result;
+  }
+
   async register(email: string, pass: string, username: string) {
     // analytics fired by caller at the end of register (needs created user id)
     const existingUser = await prisma.user.findUnique({ where: { email } });

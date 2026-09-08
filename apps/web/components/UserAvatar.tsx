@@ -1,6 +1,7 @@
 import React from "react";
 import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface UserAvatarProps {
   avatarUrl?: string | null;
@@ -41,10 +42,12 @@ export function UserAvatar({
         )}
       >
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
             alt={username || "Avatar"}
-            className="w-full h-full object-contain p-0.5 rounded-full"
+            fill
+            sizes="(max-width: 768px) 32px, 64px"
+            className="object-cover p-0.5 rounded-full"
             onError={(e) => {
               // Gracefully switch to fallback initial on broken image
               const target = e.currentTarget;

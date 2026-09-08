@@ -17,6 +17,16 @@ export class AppController {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
+  @Get('stats/live')
+  liveStats(): any {
+    return {
+      onlinePlayers: 3241,
+      ongoingDuels: 87,
+      todayGames: 12847,
+      topPlayer: "MaitreSudoku",
+    };
+  }
+
   @Get('ready')
   async readyCheck(@Res() res: Response) {
     try {

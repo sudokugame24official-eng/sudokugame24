@@ -1,0 +1,9 @@
+const fs = require('fs');
+let content = fs.readFileSync('scripts/seed-academy.sql', 'utf8');
+
+const beginnerContent = `<h2>L'Architecture Fondamentale du Sudoku</h2><p>Le Sudoku est un jeu de logique pure qui se déroule sur une grille de 81 cases. Avant même de placer un seul chiffre, il est crucial de comprendre la géométrie de ce plateau. La grille est divisée en trois structures essentielles appelées <strong>maisons</strong> (houses) :</p><ul><li><strong>Les Lignes :</strong> 9 horizontales.</li><li><strong>Les Colonnes :</strong> 9 verticales.</li><li><strong>Les Blocs (Nonnets) :</strong> 9 carrés de 3x3 cases.</li></ul><div class="bg-brand-navy-light p-5 rounded-2xl border border-brand-gold/20 my-6 shadow-lg"><h3 class="text-brand-gold font-bold mb-3 flex items-center gap-2">?? Astuce d'Expert</h3><p class="text-sm text-white/90 leading-relaxed">Chaque case individuelle appartient simultanément à exactement trois maisons (une ligne, une colonne, et un bloc). C'est cette intersection qui crée la magie du Sudoku et permet de déduire la solution finale.</p></div><h2>La Règle d'Or Universelle</h2><p>Il n'y a pas de mathématiques dans le Sudoku, uniquement de la déduction. La règle absolue est la suivante :</p><blockquote class="border-l-4 border-brand-orange pl-5 italic my-6 text-white/90 py-2">"Chaque ligne, chaque colonne et chaque bloc de 3x3 doit contenir tous les chiffres de 1 à 9, exactement une seule fois."</blockquote><h3>Ce que cela implique :</h3><p>Cela signifie qu'aucune répétition n'est tolérée, et qu'aucune omission n'est permise. Lorsqu'il ne manque qu'un seul chiffre dans une maison, il suffit de regarder quels chiffres de 1 à 9 sont déjà présents pour déduire instantanément le chiffre manquant.</p>`;
+
+// Replace lesson 1
+content = content.replace(/<h2>The Architecture of Sudoku.*?<\/p>/, beginnerContent);
+
+fs.writeFileSync('scripts/seed-academy.sql', content);

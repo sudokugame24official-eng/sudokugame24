@@ -45,7 +45,8 @@ export default function AuthPage() {
 
       const userData = await res.json();
       login(userData);
-      if (userData.role === "SUPER_ADMIN" || userData.role === "ADMIN") {
+      const userRole = userData?.user?.role || userData?.role;
+      if (userRole === "SUPER_ADMIN" || userRole === "ADMIN") {
         router.push(`/${locale}/admin`);
       } else {
         router.push(`/${locale}/profile`);
@@ -124,6 +125,7 @@ export default function AuthPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="w-full bg-[#0c1b33] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition-all text-sm font-medium"
             />
           </div>
           <div className="flex justify-end mt-1">

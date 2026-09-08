@@ -27,7 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { UserAvatar } from "@/components/UserAvatar";
 
 interface ChatMessage {
@@ -75,6 +75,7 @@ export default function ModernChatPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [playerSearch, setPlayerSearch] = useState("");
   const [mobileView, setMobileView] = useState<"channels" | "chat" | "players">("chat");
+  const router = useRouter();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -255,7 +256,7 @@ export default function ModernChatPage() {
     }
     toast.success(`⚔️ Défi 1v1 envoyé à ${targetUser.username} ! Redirection vers l'arène...`);
     setSelectedUser(null);
-    window.location.href = "/duel";
+    router.push("/duel");
   };
 
   const filteredOnlineUsers = onlineUsers.filter((u) =>

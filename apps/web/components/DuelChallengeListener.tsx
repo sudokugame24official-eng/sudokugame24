@@ -98,9 +98,9 @@ export function DuelChallengeListener() {
             <Swords className="w-5 h-5 text-brand-orange" />
           </div>
           <div>
-            <h4 className="font-black text-sm uppercase tracking-wide text-brand-gold">
+            <h2 className="font-black text-sm uppercase tracking-wide text-brand-gold">
               Défi de Duel 1v1 !
-            </h4>
+            </h2>
             <p className="text-xs text-gray-300">
               <strong className="text-white">{challenge.challengerUsername}</strong> vous invite à un match.
             </p>

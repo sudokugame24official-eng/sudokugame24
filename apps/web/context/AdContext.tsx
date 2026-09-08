@@ -68,11 +68,16 @@ export function AdProvider({ children }: { children: React.ReactNode }) {
     let isCancelled = false;
     async function fetchConfigs() {
       try {
-        const [featuresRes, settingsRes, slotsRes] = await Promise.all([
+        let settingsRes = null;
+        const [featuresRes, slotsRes] = await Promise.all([
           fetch(`${API_URL}/config/features`).catch(() => null),
-          fetch(`${API_URL}/admin/marketing-settings`).catch(() => null),
           fetch(`${API_URL}/monetization/ad-config/all`).catch(() => null),
         ]);
+        
+        // Only fetch admin marketing settings if the user is an admin to prevent 401 errors for guests
+        if (user?.role === "ADMIN" || user?.role === "OWNER") {
+          settingsRes = await fetch(`${API_URL}/admin/marketing-settings`, { credentials: "include" }).catch(() => null);
+        }
 
         if (isCancelled) return;
 
@@ -84,7 +89,9 @@ export function AdProvider({ children }: { children: React.ReactNode }) {
 
         if (settingsRes && settingsRes.ok) {
           const settings = await settingsRes.json();
-          setPublisherId(settings.ADSENSE_CLIENT_ID || settings.AD_NETWORK_CLIENT_ID || "");
+          setPublisherId(settings.ADSENSE_CLIENT_ID || settings.AD_NETWORK_CLIENT_ID || process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "");
+        } else {
+          setPublisherId(process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "");
         }
 
         if (slotsRes && slotsRes.ok) {

@@ -36,6 +36,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter, Link } from "@/navigation";
 import { toast } from "sonner";
+import { ALL_COUNTRIES } from "@/lib/countries";
 
 const AVATAR_PRESETS = [
   { id: "grandmaster", url: "/avatars/avatar_grandmaster.svg", name: "Grand Maître", tag: "Élite" },
@@ -678,19 +679,23 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Country */}
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase mb-2">
                     Pays d'Origine
                   </label>
                   <div className="space-y-2">
-                    <input
-                      type="text"
+                    <select
                       value={editCountry}
                       onChange={(e) => setEditCountry(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-brand-gold"
-                      placeholder="Ex: France, Canada, Belgique, Suisse, Maroc..."
-                    />
+                      className="w-full bg-black/40 border border-white/10 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-brand-gold appearance-none"
+                    >
+                      <option value="">Sélectionnez votre pays...</option>
+                      {ALL_COUNTRIES.map((c) => (
+                        <option key={c.code} value={`${c.flag} ${c.name}`}>
+                          {c.flag} {c.name}
+                        </option>
+                      ))}
+                    </select>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {POPULAR_COUNTRIES.map((c) => (
                         <button

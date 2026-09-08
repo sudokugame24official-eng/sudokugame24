@@ -1383,6 +1383,14 @@ export class DuelService implements OnModuleInit, OnModuleDestroy {
           await tx.unwatch();
           return { error: 'match_not_started' };
         }
+        
+        if (duel.settings?.hasTimer && duel.settings.timeLimitSec) {
+          const elapsedSec = (now - duel.startTime) / 1000;
+          if (elapsedSec > duel.settings.timeLimitSec) {
+            await tx.unwatch();
+            return { error: 'time_expired' };
+          }
+        }
         if (userId !== duel.player1Id && userId !== duel.player2Id) {
           await tx.unwatch();
           return { error: 'spectator' };

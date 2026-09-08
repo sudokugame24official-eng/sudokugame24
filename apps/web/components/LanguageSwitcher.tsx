@@ -6,12 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export const SUPPORTED_LOCALES = [
-  { code: "en", label: "English", short: "EN", flag: "🇬🇧" },
-  { code: "fr", label: "Français", short: "FR", flag: "🇫🇷" },
-  { code: "de", label: "Deutsch", short: "DE", flag: "🇩🇪" },
+  { code: "en", label: "English", short: "EN", flag: <img src="/flags/gb.png" alt="GB Flag" className="w-5 h-auto rounded-sm object-cover" /> },
+  { code: "fr", label: "Français", short: "FR", flag: <img src="/flags/fr.png" alt="FR Flag" className="w-5 h-auto rounded-sm object-cover" /> },
+  { code: "de", label: "Deutsch", short: "DE", flag: <img src="/flags/de.png" alt="DE Flag" className="w-5 h-auto rounded-sm object-cover" /> },
 ] as const;
 
-type LocaleCode = (typeof SUPPORTED_LOCALES)[number]["code"];
+type LocaleCode = "en" | "fr" | "de";
 
 function getCurrentLocale(pathname: string): LocaleCode {
   const segment = pathname.split("/")[1];
