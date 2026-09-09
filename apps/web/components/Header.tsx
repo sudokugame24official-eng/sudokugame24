@@ -584,7 +584,7 @@ export const Header = () => {
                     },
                   ].map((section) => (
                     <div key={section.label} className="mb-6">
-                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-2 px-1">{section.label}</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">{section.label}</p>
                       <div className="space-y-0.5">
                         {section.items.map((item) => (
                           <Link key={item.href} href={item.href} onClick={() => setShowMobileMenu(false)}>
@@ -611,7 +611,7 @@ export const Header = () => {
 
                 {/* Language footer */}
                 <div className="p-4 border-t border-white/8 bg-black/20">
-                  <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-3">{t("language")}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">{t("language")}</p>
                   <LanguageSwitcher />
                 </div>
               </motion.div>

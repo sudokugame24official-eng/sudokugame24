@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import HomeClient from "@/components/home/HomeClient";
+import HomeContent from "@/components/home/HomeContent";
 import { SEO_LOCALES } from "../../i18n";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -41,7 +41,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeClient />
+      <HomeContent />
     </>
   );
 }

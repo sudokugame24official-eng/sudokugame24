@@ -1,59 +1,26 @@
-"use client";
-import { API_URL } from "@/lib/api";
-import { m, LazyMotion, domAnimation, AnimatePresence } from "framer-motion";
+import { Play, Calendar, Swords, BookOpen, Trophy, Users, Star, Flame, Target, MessageSquare, Zap, Shield, ChevronRight, Sparkles, Grid3X3, Crown, CheckCircle2, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/navigation";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import {
-  Play,
-  Calendar,
-  Swords,
-  BookOpen,
-  Trophy,
-  Users,
-  Star,
-  Flame,
-  Target,
-  MessageSquare,
-  Zap,
-  Shield,
-  ChevronRight,
-  Sparkles,
-  Grid3X3,
-  Crown,
-  CheckCircle2,
-  TrendingUp,
-  UserPlus,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
-import dynamic from "next/dynamic";
-
-const AnimatedSudokuGrid = dynamic(() => import("./AnimatedSudokuGrid"), { ssr: false });
-
-// â”€â”€â”€ Stat Pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+import { HeroShowcase } from "./HeroShowcase";
 
 function StatBadge({ value, label, color }: { value: string; label: string; color: string }) {
   return (
     <div className="flex flex-col items-center">
       <span className={`text-2xl md:text-3xl font-black ${color} tracking-tight`}>{value}</span>
-      <span className="text-xs text-gray-300 font-bold mt-0.5 text-center uppercase tracking-wider">{label}</span>
+      <span className="text-xs text-gray-400 font-bold mt-0.5 text-center uppercase tracking-wider">{label}</span>
     </div>
   );
 }
 
-export default function HomeClient() {
+export default function HomeContent() {
   const t = useTranslations("home");
-  const [activeVisualTab, setActiveVisualTab] = useState<"art" | "grid">("art");
 
   return (
-    <LazyMotion features={domAnimation}>
     <div className="min-h-screen bg-[#041226] text-white font-sans overflow-x-hidden selection:bg-brand-orange selection:text-white">
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          1. HERO SECTION â€” AAA GAME STUDIO HERO WITH HERO1 ARTWORK
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* 1. HERO SECTION */}
       <section className="relative w-full min-h-[94vh] flex items-center overflow-hidden pt-6 pb-16">
-        {/* Dynamic Studio Ambient Glows */}
         <div className="absolute inset-0 bg-[#041226]" />
         <div
           className="absolute inset-0 opacity-[0.05]"
@@ -69,15 +36,12 @@ export default function HomeClient() {
 
         <div className="relative z-10 w-full max-w-[1340px] mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
-          {/* LEFT: Headline & Actions (7 Cols) */}
           <div className="lg:col-span-7 space-y-7 text-left animate-in fade-in slide-in-from-left-8 duration-1000">
-            {/* Top esports/studio badge */}
             <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-brand-orange/20 via-brand-gold/15 to-transparent border border-brand-orange/40 text-brand-gold px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,69,0,0.2)]">
               <Sparkles className="w-3.5 h-3.5 text-brand-gold animate-spin" style={{ animationDuration: "6s" }} />
               <span>{t("heroBadge")}</span>
             </div>
 
-            {/* Main Title */}
             <h1 className="text-5xl sm:text-6xl xl:text-7xl font-black leading-[1.02] tracking-tight uppercase">
               <span className="text-white drop-shadow-sm">{t("heroTitle").split('.')[0]}.</span>{" "}
               <br />
@@ -90,14 +54,12 @@ export default function HomeClient() {
               {t("heroDesc")}
             </p>
 
-            {/* Primary Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Link href="/play" className="w-full sm:w-auto">
                 <button className="relative overflow-hidden w-full sm:w-auto flex items-center justify-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-orange to-brand-orange-light text-white font-black rounded-2xl shadow-[0_10px_30px_rgba(255,69,0,0.45)] hover:shadow-[0_15px_40px_rgba(255,69,0,0.65)] hover:scale-105 active:scale-95 text-lg uppercase tracking-wider transition-all">
                   <Play className="w-5 h-5 fill-white" />
                   <span>{t("playNow")}</span>
                   <ChevronRight className="w-5 h-5 opacity-80" />
-                  {/* Shimmer light sweep */}
                   <div className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 animate-[shimmer_3s_infinite]" />
                 </button>
               </Link>
@@ -110,7 +72,6 @@ export default function HomeClient() {
               </Link>
             </div>
 
-            {/* Trust Signals */}
             <div className="flex flex-wrap items-center gap-6 text-xs text-gray-300 font-bold uppercase tracking-wider pt-1">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-400" />
@@ -126,7 +87,6 @@ export default function HomeClient() {
               </div>
             </div>
 
-            {/* Live Stats Bar */}
             <div className="flex items-center gap-6 sm:gap-10 pt-6 border-t border-white/10">
               <StatBadge value="50K+" label={t("statPlayers")} color="text-brand-orange" />
               <div className="w-px h-10 bg-white/15" />
@@ -136,119 +96,13 @@ export default function HomeClient() {
             </div>
           </div>
 
-          {/* RIGHT: Visual Showcase featuring HERO1.PNG + Interactive Switcher (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col items-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-200 fill-mode-both">
-            <div className="relative w-full max-w-[460px] group">
-              {/* Outer Radiant Glow */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-brand-orange via-brand-gold to-brand-cyan rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700 animate-pulse" />
-
-              {/* Showcase Container */}
-              <div className="relative rounded-3xl bg-brand-navy-light/95 border-2 border-brand-gold/40 p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl overflow-hidden">
-                
-                {/* Visual Mode Selector Tabs */}
-                <div className="flex items-center justify-between pb-3 px-1 border-b border-white/10 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-brand-orange animate-ping" />
-                    <span className="text-xs font-black uppercase tracking-widest text-brand-gold">
-                      {t("showcaseBadge")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
-                    <button
-                      onClick={() => setActiveVisualTab("art")}
-                      aria-label="Afficher l'illustration"
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        activeVisualTab === "art"
-                          ? "bg-brand-orange text-white shadow"
-                          : "text-gray-300 hover:text-white"
-                      }`}
-                    >
-                      {t("tabArt")}
-                    </button>
-                    <button
-                      onClick={() => setActiveVisualTab("grid")}
-                      aria-label="Afficher la grille interactive"
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        activeVisualTab === "grid"
-                          ? "bg-brand-cyan text-brand-navy shadow"
-                          : "text-gray-300 hover:text-white"
-                      }`}
-                    >
-                      {t("tabGrid")}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Content Area */}
-                {activeVisualTab === "art" ? (
-                  <div
-                    key="art"
-                    className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-inner group/art"
-                  >
-                    <Image
-                      src="/hero1.webp"
-                      alt="Sudoku Masters - Master Your Mind"
-                      width={440}
-                      height={440}
-                      priority
-                      fetchPriority="high"
-                      decoding="async"
-                      quality={75}
-                      className="w-full h-auto object-cover rounded-2xl transition-transform duration-700 group-hover/art:scale-105"
-                      sizes="(max-width: 640px) 340px, (max-width: 768px) 428px, 440px"
-                    />
-                    
-                    {/* Gradient Overlay & Tag */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
-
-                    {/* Floating Hero Badge 1 */}
-                    <m.div
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute top-3 left-3 bg-brand-navy/90 border border-brand-gold/60 px-3.5 py-1.5 rounded-full shadow-lg backdrop-blur-md flex items-center gap-2"
-                    >
-                      <Crown className="w-4 h-4 text-brand-gold" />
-                      <span className="text-xs font-black text-brand-gold uppercase tracking-wider">{t("heroBadge2")}</span>
-                    </m.div>
-
-                    {/* Floating Hero Badge 2 */}
-                    <m.div
-                      animate={{ y: [0, 6, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                      className="absolute bottom-3 right-3 bg-brand-orange/90 text-white px-3.5 py-1.5 rounded-full shadow-lg backdrop-blur-md flex items-center gap-2 border border-white/20"
-                    >
-                      <Sparkles className="w-4 h-4 text-brand-gold" />
-                      <span className="text-xs font-black uppercase tracking-wider">{t("heroBadge3")}</span>
-                    </m.div>
-                    </div>
-                ) : (
-                  <m.div
-                    key="grid"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4 }}
-                    className="p-2"
-                  >
-                    <AnimatedSudokuGrid />
-                  </m.div>
-                )}
-
-                {/* Footer caption */}
-                <div className="mt-3 pt-2 px-1 flex items-center justify-between text-xs text-gray-300 font-medium">
-                  <span>{t("showcaseJoin")}</span>
-                  <Link href="/learn" className="text-brand-cyan hover:text-brand-gold font-bold flex items-center gap-1 transition-colors">
-                    {t("showcaseExplore")} <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <HeroShowcase />
           </div>
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          2. FEATURE MODULES â€” 4 PILLARS (PLAY / DAILY / DUEL / LEARN)
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* 2. FEATURE MODULES */}
       <main className="max-w-[1340px] mx-auto py-16 px-5 sm:px-8 lg:px-12 space-y-32">
         <section>
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -306,12 +160,8 @@ export default function HomeClient() {
                 tagColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
               },
             ].map((card) => (
-              <Link key={card.href} href={card.href} className="group">
-                <m.div
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`relative bg-brand-navy-light/70 border border-white/10 rounded-3xl p-7 h-full flex flex-col justify-between transition-all duration-300 backdrop-blur-xl ${card.borderGlow}`}
-                >
+              <Link key={card.href} href={card.href} className="group h-full block">
+                <div className={`relative bg-brand-navy-light/70 border border-white/10 rounded-3xl p-7 h-full flex flex-col justify-between backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] ${card.borderGlow}`}>
                   <div>
                     <div className="flex items-center justify-between mb-6">
                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110`}>
@@ -334,15 +184,13 @@ export default function HomeClient() {
                     <span>{t("cardStart")}</span>
                     <ChevronRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
-                </m.div>
+                </div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            2.5 GUEST VS REGISTERED MEMBER COMPARISON UX
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* 2.5 GUEST VS REGISTERED MEMBER COMPARISON UX */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#061838]/90 via-[#041E42]/90 to-[#0A2A5C]/90 border-2 border-brand-gold/30 p-8 sm:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.7)] backdrop-blur-2xl">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <span className="text-xs font-black text-brand-gold tracking-[0.25em] uppercase bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/30">
@@ -388,12 +236,12 @@ export default function HomeClient() {
                 </div>
 
                 <p className="text-xs text-gray-300 italic bg-white/5 p-3 rounded-xl border border-white/5 mb-6">
-                  âš ï¸ {t("guestVsMember.guestNote")}
+                  ⚠️ {t("guestVsMember.guestNote")}
                 </p>
               </div>
 
               <Link href="/play" className="block w-full">
-                <button className="w-full py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-sm uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <button className="w-full py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-sm uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
                   <Play className="w-4 h-4 fill-white" />
                   <span>{t("guestVsMember.guestCta")}</span>
                 </button>
@@ -436,7 +284,7 @@ export default function HomeClient() {
               </div>
 
               <Link href="/auth?mode=register" className="block w-full">
-                <button className="w-full py-4 bg-gradient-to-r from-brand-orange to-brand-gold text-brand-navy font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_10px_25px_rgba(255,69,0,0.4)] hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <button className="w-full py-4 bg-gradient-to-r from-brand-orange to-brand-gold text-brand-navy font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_10px_25px_rgba(255,69,0,0.4)] hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer">
                   <UserPlus className="w-4 h-4" />
                   <span>{t("guestVsMember.memberCta")}</span>
                 </button>
@@ -445,17 +293,13 @@ export default function HomeClient() {
           </div>
         </section>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            3. ESPORTS ARENA & DUELS â€” SHOWCASING HERO2.PNG ARTWORK
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* 3. ESPORTS ARENA & DUELS */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#061838] via-[#041E42] to-[#0A2A5C] border-2 border-brand-cyan/40 p-8 sm:p-12 lg:p-14 shadow-[0_25px_70px_rgba(0,191,255,0.2)]">
-          {/* Ambient stadium neon lights */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-cyan/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-96 h-96 bg-brand-orange/15 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
-            {/* Left: Text & Features (6 Cols) */}
             <div className="lg:col-span-6 space-y-6 text-left">
               <div className="inline-flex items-center gap-2 bg-brand-cyan/20 border border-brand-cyan/50 text-brand-cyan px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-[0_0_15px_rgba(0,191,255,0.3)]">
                 <Swords className="w-4 h-4 text-brand-cyan" />
@@ -487,37 +331,23 @@ export default function HomeClient() {
 
               <div className="pt-4 flex flex-wrap gap-4">
                 <Link href="/duel">
-                  <m.button
-                    whileHover={{ scale: 1.04, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    className="flex items-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-cyan to-blue-500 text-brand-navy font-black rounded-2xl shadow-[0_10px_30px_rgba(0,191,255,0.4)] hover:shadow-[0_15px_40px_rgba(0,191,255,0.6)] text-lg uppercase tracking-wider transition-all"
-                  >
+                  <button className="flex items-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-cyan to-blue-500 text-brand-navy font-black rounded-2xl shadow-[0_10px_30px_rgba(0,191,255,0.4)] hover:shadow-[0_15px_40px_rgba(0,191,255,0.6)] text-lg uppercase tracking-wider transition-all hover:scale-105 hover:-translate-y-1 active:scale-95">
                     <Swords className="w-5 h-5" />
                     <span>{t("enterArena")}</span>
                     <ChevronRight className="w-5 h-5" />
-                  </m.button>
+                  </button>
                 </Link>
                 <Link href="/leaderboard">
-                  <m.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-2 px-7 py-4.5 bg-white/10 border border-white/20 text-white font-bold rounded-2xl hover:bg-white/20 text-lg uppercase tracking-wider transition-all"
-                  >
+                  <button className="flex items-center gap-2 px-7 py-4.5 bg-white/10 border border-white/20 text-white font-bold rounded-2xl hover:bg-white/20 text-lg uppercase tracking-wider transition-all hover:scale-[1.03] active:scale-[0.97]">
                     <Trophy className="w-5 h-5 text-brand-gold" />
                     <span>{t("competeRankings")}</span>
-                  </m.button>
+                  </button>
                 </Link>
               </div>
             </div>
 
-            {/* Right: HERO2.PNG Esports Stage Graphic (6 Cols) */}
             <div className="lg:col-span-6 flex justify-center">
-              <m.div
-                whileHover={{ scale: 1.02, rotate: 0.5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="relative w-full max-w-[500px] rounded-3xl overflow-hidden border-2 border-brand-cyan/50 shadow-[0_20px_60px_rgba(0,0,0,0.85)] group"
-              >
-                {/* Glowing border ring */}
+              <div className="relative w-full max-w-[500px] rounded-3xl overflow-hidden border-2 border-brand-cyan/50 shadow-[0_20px_60px_rgba(0,0,0,0.85)] group transition-transform duration-500 hover:scale-[1.02] hover:rotate-1">
                 <div className="absolute -inset-1 bg-gradient-to-r from-brand-cyan via-brand-gold to-brand-orange rounded-3xl blur-md opacity-50 group-hover:opacity-100 transition duration-500" />
                 
                 <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-black">
@@ -532,13 +362,11 @@ export default function HomeClient() {
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 640px) 340px, (max-width: 768px) 496px, 500px"
                   />
-                  {/* Subtle vignette */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
-                  {/* Top LIVE Banner */}
                   <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
                     <div className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg animate-pulse">
-                                            <span className="w-2 h-2 rounded-full bg-white" />
+                      <span className="w-2 h-2 rounded-full bg-white" />
                       {t("finalsLive")}
                     </div>
                     <div className="bg-brand-navy/90 border border-brand-gold/60 text-brand-gold px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider backdrop-blur-md">
@@ -546,7 +374,6 @@ export default function HomeClient() {
                     </div>
                   </div>
 
-                  {/* Bottom live overlay */}
                   <div className="absolute bottom-4 left-4 right-4 bg-brand-navy-light/95 border border-brand-cyan/40 p-4 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center justify-between">
                     <div>
                       <p className="text-xs text-brand-cyan font-black uppercase tracking-wider">{t("topDuel")}</p>
@@ -559,15 +386,13 @@ export default function HomeClient() {
                     </Link>
                   </div>
                 </div>
-              </m.div>
+              </div>
             </div>
 
           </div>
         </section>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            4. DAILY EVENT HIGHLIGHT â€” CALENDAR & STREAK
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* 4. DAILY EVENT HIGHLIGHT */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#12284C] via-[#0A2A5C] to-[#041E42] border-2 border-brand-gold/40 p-8 sm:p-12 shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/10 rounded-full blur-3xl" />
 
@@ -603,24 +428,18 @@ export default function HomeClient() {
 
             <div className="flex flex-col items-center gap-4 shrink-0">
               <Link href="/daily">
-                <m.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-10 py-5 bg-gradient-to-r from-brand-gold to-amber-400 text-brand-navy font-black rounded-2xl shadow-[0_10px_35px_rgba(255,204,0,0.4)] hover:shadow-[0_15px_45px_rgba(255,204,0,0.6)] text-xl uppercase tracking-widest transition-all flex items-center gap-3"
-                >
+                <button className="px-10 py-5 bg-gradient-to-r from-brand-gold to-amber-400 text-brand-navy font-black rounded-2xl shadow-[0_10px_35px_rgba(255,204,0,0.4)] hover:shadow-[0_15px_45px_rgba(255,204,0,0.6)] text-xl uppercase tracking-widest transition-all flex items-center gap-3 hover:scale-105 hover:-translate-y-1 active:scale-95">
                   <Calendar className="w-6 h-6" />
                   <span>{t("playToday")}</span>
                   <ChevronRight className="w-6 h-6" />
-                </m.button>
+                </button>
               </Link>
               <span className="text-xs text-gray-300 font-bold uppercase tracking-wider">{t("resetCaption")}</span>
             </div>
           </div>
         </section>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            5. SUDOKU ACADEMY â€” 3 TIERS (BEGINNER / INTERMEDIATE / ADVANCED)
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* 5. SUDOKU ACADEMY */}
         <section className="text-center">
           <div className="max-w-3xl mx-auto mb-14">
             <span className="text-xs font-black text-brand-gold tracking-[0.25em] uppercase bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/30">
@@ -650,7 +469,7 @@ export default function HomeClient() {
                 href: "/learn/intermediate",
                 color: "from-brand-gold to-amber-500",
                 badge: t("academyLevel2Popular"),
-                border: "border-brand-gold/40 group-hover:border-brand-gold group-hover:shadow-[0_15px_35px_rgba(255,204,0,0.35)] scale-105 bg-brand-navy-light/90",
+                border: "border-brand-gold/40 group-hover:border-brand-gold group-hover:shadow-[0_15px_35px_rgba(255,204,0,0.35)] lg:scale-105 bg-brand-navy-light/90",
                 featured: true,
               },
               {
@@ -662,12 +481,8 @@ export default function HomeClient() {
                 border: "border-brand-orange/30 group-hover:border-brand-orange group-hover:shadow-[0_10px_30px_rgba(255,69,0,0.25)]",
               },
             ].map((item) => (
-              <Link key={item.href} href={item.href} className="group">
-                <m.div
-                  whileHover={{ y: -8 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`relative rounded-3xl p-8 text-left bg-brand-navy-light/70 border flex flex-col justify-between h-full transition-all duration-300 backdrop-blur-xl ${item.border}`}
-                >
+              <Link key={item.href} href={item.href} className="group h-full block">
+                <div className={`relative rounded-3xl p-8 text-left bg-brand-navy-light/70 border flex flex-col justify-between h-full transition-all duration-300 backdrop-blur-xl hover:-translate-y-2 active:scale-[0.98] ${item.border}`}>
                   <div>
                     <div className="flex items-center justify-between mb-6">
                       <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110`}>
@@ -690,20 +505,15 @@ export default function HomeClient() {
                     <span>{t("readGuides")}</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
-                </m.div>
+                </div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            6. COMMUNITY & ACHIEVEMENTS
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* 6. COMMUNITY & ACHIEVEMENTS */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <m.div
-            whileHover={{ y: -6 }}
-            className="bg-brand-navy-light/80 border-2 border-brand-cyan/30 p-8 sm:p-10 rounded-3xl backdrop-blur-xl shadow-xl hover:border-brand-cyan transition-all group text-left"
-          >
+          <div className="bg-brand-navy-light/80 border-2 border-brand-cyan/30 p-8 sm:p-10 rounded-3xl backdrop-blur-xl shadow-xl hover:border-brand-cyan transition-all duration-300 hover:-translate-y-2 group text-left">
             <div className="w-14 h-14 rounded-2xl bg-brand-cyan/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <MessageSquare className="w-7 h-7 text-brand-cyan" />
             </div>
@@ -711,16 +521,13 @@ export default function HomeClient() {
             <p className="text-gray-300 text-base leading-relaxed mb-8">{t("joinCommunityDesc")}</p>
             <Link href="/forum">
               <button className="px-7 py-3.5 bg-brand-cyan text-brand-navy font-black rounded-xl uppercase tracking-wider hover:brightness-110 transition-all flex items-center gap-2 shadow-lg">
-                <span>{t("browseForums")}</span>
-                <ChevronRight className="w-4 h-4" />
+                <MessageSquare className="w-4 h-4" />
+                <span>{t("visitForum")}</span>
               </button>
             </Link>
-          </m.div>
+          </div>
 
-          <m.div
-            whileHover={{ y: -6 }}
-            className="bg-brand-navy-light/80 border-2 border-brand-gold/30 p-8 sm:p-10 rounded-3xl backdrop-blur-xl shadow-xl hover:border-brand-gold transition-all group text-left"
-          >
+          <div className="bg-brand-navy-light/80 border-2 border-brand-gold/30 p-8 sm:p-10 rounded-3xl backdrop-blur-xl shadow-xl hover:border-brand-gold transition-all duration-300 hover:-translate-y-2 group text-left">
             <div className="w-14 h-14 rounded-2xl bg-brand-gold/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Trophy className="w-7 h-7 text-brand-gold" />
             </div>
@@ -732,12 +539,10 @@ export default function HomeClient() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </Link>
-          </m.div>
+          </div>
         </section>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            7. FINAL STUDIO CALL-TO-ACTION
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* 7. FINAL STUDIO CALL-TO-ACTION */}
         <section className="relative overflow-hidden rounded-[3rem] text-center py-20 px-6 sm:px-12 bg-gradient-to-br from-brand-orange/20 via-brand-navy to-brand-cyan/20 border-2 border-brand-gold/40 shadow-[0_25px_80px_rgba(0,0,0,0.8)]">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/15 rounded-full blur-[140px] pointer-events-none" />
 
@@ -757,23 +562,16 @@ export default function HomeClient() {
 
             <div className="pt-4 flex justify-center">
               <Link href="/play">
-                <m.button
-                  whileHover={{ scale: 1.06, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-12 py-5 text-xl font-black text-white bg-gradient-to-r from-brand-orange via-brand-orange-light to-brand-orange rounded-2xl shadow-[0_10px_40px_rgba(255,69,0,0.55)] hover:shadow-[0_15px_50px_rgba(255,69,0,0.75)] uppercase tracking-widest transition-all flex items-center gap-3"
-                >
+                <button className="px-12 py-5 text-xl font-black text-white bg-gradient-to-r from-brand-orange via-brand-orange-light to-brand-orange rounded-2xl shadow-[0_10px_40px_rgba(255,69,0,0.55)] hover:shadow-[0_15px_50px_rgba(255,69,0,0.75)] uppercase tracking-widest transition-all flex items-center gap-3 hover:scale-[1.06] hover:-translate-y-1 active:scale-[0.95]">
                   <Play className="w-6 h-6 fill-white" />
                   <span>{t("playNow")}</span>
                   <ChevronRight className="w-6 h-6" />
-                </m.button>
+                </button>
               </Link>
             </div>
           </div>
         </section>
       </main>
     </div>
-    </LazyMotion>
   );
 }
-
-
