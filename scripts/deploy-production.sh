@@ -99,7 +99,7 @@ echo "✅ PostgreSQL is healthy."
 
 # 6. Apply Prisma database migrations (Before API handles traffic)
 echo "🐘 Applying Prisma database migrations..."
-docker-compose -f docker-compose.prod.yml run --rm api npx prisma migrate deploy
+docker-compose -f docker-compose.prod.yml run --rm api npx prisma migrate deploy --schema=packages/database/prisma/schema.prisma
 
 # 7. Start Application Tier
 echo "🚀 Starting application tier (API & Web)..."
