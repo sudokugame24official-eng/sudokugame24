@@ -72,7 +72,7 @@ export function HeroShowcase() {
                 decoding="async"
                 quality={75}
                 className="w-full h-auto object-cover rounded-2xl transition-transform duration-700 group-hover/art:scale-105"
-                sizes="(max-width: 640px) 340px, (max-width: 768px) 428px, 440px"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 440px"
               />
               
               {/* Gradient Overlay & Tag */}

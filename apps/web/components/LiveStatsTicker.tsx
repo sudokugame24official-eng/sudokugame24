@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { m, LazyMotion, domAnimation, AnimatePresence } from "framer-motion";
 import { Swords, Users, Trophy, Flame, Globe } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { API_URL } from "@/lib/api";
@@ -35,7 +34,7 @@ function useCountUp(target: number, duration = 1200) {
         if (progress >= 1) clearInterval(timer);
       }, 16);
       return () => clearInterval(timer);
-    }, 1500); // Delay 1.5s to free main thread during LCP
+    }, 1500);
 
     return () => clearTimeout(delayTimeout);
   }, [target, duration]);
@@ -99,25 +98,17 @@ export const LiveStatsTicker = () => {
   if (!visible) return null;
 
   return (
-    <LazyMotion features={domAnimation}>
     <div className="w-full bg-brand-navy border-b border-white/5 relative overflow-hidden">
-      {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/5 via-transparent to-brand-gold/5 animate-pulse pointer-events-none" />
 
       <div className="max-w-[1400px] mx-auto flex items-center justify-between px-4">
-        {/* Left: Live indicator */}
         <div className="flex items-center gap-2 py-1.5 shrink-0">
-          <m.div
-            animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-1.5 h-1.5 bg-green-400 rounded-full"
-          />
+          <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-[pulse_2s_ease-in-out_infinite]" />
           <span className="text-[10px] font-black uppercase tracking-[0.15em] text-green-400">
             Live
           </span>
         </div>
 
-        {/* Center: Scrolling stats */}
         <div className="flex items-center overflow-hidden flex-1 mx-4">
           <div className="flex items-center animate-[ticker_20s_linear_infinite] hover:[animation-play-state:paused]">
             <StatItem icon={Users} value={stats.onlinePlayers} label={t("tickerOnline")} color="text-green-400" pulse />
@@ -133,7 +124,6 @@ export const LiveStatsTicker = () => {
               </>
             )}
             <StatItem icon={Globe} value={String(SUPPORTED_LOCALES.length)} label={t("tickerLangs")} color="text-purple-400" />
-            {/* Repeat for seamless loop */}
             <span className="text-gray-700 mx-2 pl-8">•</span>
             <StatItem icon={Users} value={stats.onlinePlayers} label={t("tickerOnline")} color="text-green-400" pulse />
             <span className="text-gray-700 mx-2">•</span>
@@ -141,12 +131,11 @@ export const LiveStatsTicker = () => {
           </div>
         </div>
 
-        {/* Right: Close */}
         <button
           onClick={() => setVisible(false)}
           className="text-gray-400 hover:text-white transition-colors text-xs shrink-0 py-1.5"
         >
-          âœ•
+          ✕
         </button>
       </div>
 
@@ -157,7 +146,5 @@ export const LiveStatsTicker = () => {
         }
       `}</style>
     </div>
-    </LazyMotion>
   );
 };
-
