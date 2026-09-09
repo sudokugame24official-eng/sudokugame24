@@ -54,8 +54,8 @@ ufw --force enable
 # 3. Backup Database Before Deployment
 echo "💾 Triggering pre-deployment backup..."
 if [ -f "${APP_DIR}/scripts/backup-db.js" ]; then
-    # Run the backup script inside a temporary API container so it can resolve the 'postgres' docker hostname
-    if ! docker-compose -f docker-compose.prod.yml run --rm api node scripts/backup-db.js; then
+    # Run the backup script inside a temporary backup container so it can resolve the 'postgres' docker hostname
+    if ! docker-compose -f docker-compose.prod.yml run --rm backup node scripts/backup-db.js; then
         echo "❌ CRITICAL: Pre-deploy backup failed!"
         echo "Deployment aborted to protect existing data."
         exit 1
