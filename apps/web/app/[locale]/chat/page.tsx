@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useRouter } from "@/navigation";
 import { UserAvatar } from "@/components/UserAvatar";
+import { MemberOnlyModal } from "@/components/MemberOnlyModal";
 
 interface ChatMessage {
   id: string;
@@ -78,6 +79,14 @@ export default function ModernChatPage() {
   const router = useRouter();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  if (!user) {
+    return (
+      <div className="h-[calc(100vh-70px)] bg-[#041226]">
+        <MemberOnlyModal isOpen={true} onClose={() => router.push("/")} />
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Initial sample messages for immediate atmosphere

@@ -70,12 +70,7 @@ export default function HomeClient() {
         <div className="relative z-10 w-full max-w-[1340px] mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
           {/* LEFT: Headline & Actions (7 Cols) */}
-          <m.div
-            initial={{ x: -40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="lg:col-span-7 space-y-7 text-left"
-          >
+          <div className="lg:col-span-7 space-y-7 text-left animate-in fade-in slide-in-from-left-8 duration-1000">
             {/* Top esports/studio badge */}
             <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-brand-orange/20 via-brand-gold/15 to-transparent border border-brand-orange/40 text-brand-gold px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,69,0,0.2)]">
               <Sparkles className="w-3.5 h-3.5 text-brand-gold animate-spin" style={{ animationDuration: "6s" }} />
@@ -98,32 +93,20 @@ export default function HomeClient() {
             {/* Primary Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Link href="/play" className="w-full sm:w-auto">
-                <m.button
-                  whileHover={{ scale: 1.04, y: -2 }}
-                  whileTap={{ scale: 0.96 }}
-                  className="relative overflow-hidden w-full sm:w-auto flex items-center justify-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-orange to-brand-orange-light text-white font-black rounded-2xl shadow-[0_10px_30px_rgba(255,69,0,0.45)] hover:shadow-[0_15px_40px_rgba(255,69,0,0.65)] text-lg uppercase tracking-wider transition-all"
-                >
+                <button className="relative overflow-hidden w-full sm:w-auto flex items-center justify-center gap-3 px-9 py-4.5 bg-gradient-to-r from-brand-orange to-brand-orange-light text-white font-black rounded-2xl shadow-[0_10px_30px_rgba(255,69,0,0.45)] hover:shadow-[0_15px_40px_rgba(255,69,0,0.65)] hover:scale-105 active:scale-95 text-lg uppercase tracking-wider transition-all">
                   <Play className="w-5 h-5 fill-white" />
                   <span>{t("playNow")}</span>
                   <ChevronRight className="w-5 h-5 opacity-80" />
                   {/* Shimmer light sweep */}
-                  <m.div
-                    animate={{ x: ["-100%", "250%"] }}
-                    transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.5 }}
-                    className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                  />
-                </m.button>
+                  <div className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 animate-[shimmer_3s_infinite]" />
+                </button>
               </Link>
 
               <Link href="/daily" className="w-full sm:w-auto">
-                <m.button
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4.5 bg-brand-navy-light/80 border-2 border-brand-gold/40 text-brand-gold font-black rounded-2xl hover:bg-brand-gold/15 hover:border-brand-gold shadow-[0_10px_25px_rgba(0,0,0,0.4)] text-lg uppercase tracking-wider transition-all backdrop-blur-xl"
-                >
+                <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4.5 bg-brand-navy-light/80 border-2 border-brand-gold/40 text-brand-gold font-black rounded-2xl hover:bg-brand-gold/15 hover:border-brand-gold shadow-[0_10px_25px_rgba(0,0,0,0.4)] hover:scale-105 active:scale-95 text-lg uppercase tracking-wider transition-all backdrop-blur-xl">
                   <Calendar className="w-5 h-5 text-brand-gold" />
                   <span>{t("dailyChallenge")}</span>
-                </m.button>
+                </button>
               </Link>
             </div>
 
@@ -151,15 +134,10 @@ export default function HomeClient() {
               <div className="w-px h-10 bg-white/15" />
               <StatBadge value="4.9 ★" label={t("statRating")} color="text-brand-cyan" />
             </div>
-          </m.div>
+          </div>
 
           {/* RIGHT: Visual Showcase featuring HERO1.PNG + Interactive Switcher (5 Cols) */}
-          <m.div
-            initial={{ x: 40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="lg:col-span-5 flex flex-col items-center"
-          >
+          <div className="lg:col-span-5 flex flex-col items-center animate-in fade-in slide-in-from-right-8 duration-1000 delay-200 fill-mode-both">
             <div className="relative w-full max-w-[460px] group">
               {/* Outer Radiant Glow */}
               <div className="absolute -inset-2 bg-gradient-to-r from-brand-orange via-brand-gold to-brand-cyan rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700 animate-pulse" />
@@ -203,11 +181,8 @@ export default function HomeClient() {
 
                 {/* Content Area */}
                 {activeVisualTab === "art" ? (
-                  <m.div
+                  <div
                     key="art"
-                    initial={false}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4 }}
                     className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-inner group/art"
                   >
                     <Image
@@ -217,6 +192,7 @@ export default function HomeClient() {
                       height={440}
                       priority
                       fetchPriority="high"
+                      decoding="async"
                       quality={75}
                       className="w-full h-auto object-cover rounded-2xl transition-transform duration-700 group-hover/art:scale-105"
                       sizes="(max-width: 640px) 340px, (max-width: 768px) 428px, 440px"
@@ -244,7 +220,7 @@ export default function HomeClient() {
                       <Sparkles className="w-4 h-4 text-brand-gold" />
                       <span className="text-xs font-black uppercase tracking-wider">{t("heroBadge3")}</span>
                     </m.div>
-                  </m.div>
+                    </div>
                 ) : (
                   <m.div
                     key="grid"
@@ -266,7 +242,7 @@ export default function HomeClient() {
                 </div>
               </div>
             </div>
-          </m.div>
+          </div>
         </div>
       </section>
 
@@ -551,6 +527,7 @@ export default function HomeClient() {
                     fill
                     priority
                     fetchPriority="high"
+                    decoding="async"
                     quality={75}
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 640px) 340px, (max-width: 768px) 496px, 500px"

@@ -29,31 +29,43 @@ import { UserAvatar } from "./UserAvatar";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
-/* ---------- Animated Sudoku Grid Logo Icon ---------- */
+/* ---------- Modern Community Sudoku Logo ---------- */
 const SudokuLogoIcon = () => (
   <motion.div
-    whileHover={{ scale: 1.1, rotate: 5 }}
-    transition={{ type: "spring", stiffness: 300 }}
-    className="w-9 h-9 rounded-xl relative overflow-hidden shadow-[0_0_15px_rgba(255,69,0,0.5)]"
-    style={{ background: "linear-gradient(135deg, #FF4500, #FF6B33)" }}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    className="relative w-10 h-10 flex items-center justify-center"
   >
-    <div className="absolute inset-0.5 grid grid-cols-3 grid-rows-3 gap-0.5 p-0.5">
-      {[...Array(9)].map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0.4 }}
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{
-            duration: 2,
-            delay: i * 0.15,
-            repeat: Infinity,
-            repeatDelay: 1.5,
-          }}
-          className="rounded-[2px]"
-          style={{ background: i % 3 === 1 ? "rgba(255,204,0,0.9)" : "rgba(255,255,255,0.7)" }}
-        />
-      ))}
-    </div>
+    <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+      {/* Background Glow */}
+      <circle cx="50" cy="50" r="40" fill="url(#logoGlow)" className="opacity-40" />
+      
+      {/* Network Nodes (Community) */}
+      <motion.circle cx="20" cy="20" r="6" fill="#FFCC00" animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 3, repeat: Infinity, delay: 0 }} />
+      <motion.circle cx="80" cy="20" r="6" fill="#FF4500" animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 3, repeat: Infinity, delay: 0.5 }} />
+      <motion.circle cx="20" cy="80" r="6" fill="#00BFFF" animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 3, repeat: Infinity, delay: 1 }} />
+      <motion.circle cx="80" cy="80" r="6" fill="#FFCC00" animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 3, repeat: Infinity, delay: 1.5 }} />
+      <motion.circle cx="50" cy="50" r="8" fill="#FF4500" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }} />
+
+      {/* Connecting Lines (Network) */}
+      <path d="M 20 20 L 50 50 M 80 20 L 50 50 M 20 80 L 50 50 M 80 80 L 50 50" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeDasharray="4 4" />
+
+      {/* Sudoku Grid overlay */}
+      <g stroke="#ffffff" strokeWidth="2" strokeOpacity="0.8" fill="none">
+        <rect x="30" y="30" width="40" height="40" rx="4" />
+        <line x1="43.3" y1="30" x2="43.3" y2="70" />
+        <line x1="56.6" y1="30" x2="56.6" y2="70" />
+        <line x1="30" y1="43.3" x2="70" y2="43.3" />
+        <line x1="30" y1="56.6" x2="70" y2="56.6" />
+      </g>
+
+      <defs>
+        <radialGradient id="logoGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#00BFFF" />
+          <stop offset="100%" stopColor="#0A2A5C" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+    </svg>
   </motion.div>
 );
 
@@ -80,14 +92,16 @@ const MegaItem = ({
   label,
   desc,
   color = "text-white",
+  onClick,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
   desc?: string;
   color?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }) => (
-  <Link href={href}>
+  <Link href={href} onClick={onClick}>
     <motion.div
       whileHover={{ x: 6, backgroundColor: "rgba(255,255,255,0.08)" }}
       whileTap={{ scale: 0.98 }}
@@ -113,11 +127,13 @@ const NavDropdown = ({
   href,
   children,
   isActive,
+  onClick,
 }: {
   label: string;
   href: string;
   children: React.ReactNode;
   isActive: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -129,6 +145,7 @@ const NavDropdown = ({
     >
       <Link
         href={href}
+        onClick={onClick}
         className={`group relative px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[14px] font-black uppercase tracking-wider transition-all duration-200 ${
           isActive
             ? "text-brand-gold bg-brand-gold/10"
@@ -204,6 +221,7 @@ const NavLink = ({ href, label, isActive }: { href: string; label: string; isAct
 );
 
 import { useAuth } from "./AuthProvider";
+import { MemberOnlyModal } from "./MemberOnlyModal";
 
 /* ---------- MAIN HEADER ---------- */
 export const Header = () => {
@@ -213,6 +231,14 @@ export const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
+
+  const handleProtectedAction = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      setShowMemberModal(true);
+    }
+  };
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10);
@@ -268,10 +294,10 @@ export const Header = () => {
 
             <NavLink href="/daily" label={t("daily")} isActive={isActive("/daily")} />
 
-            <NavDropdown label={t("duel")} href="/duel" isActive={isActive("/duel")}>
-              <MegaItem href="/duel" icon={Swords} label={t("findOpponent")} desc={t("findOpponentDesc")} color="text-brand-orange" />
-              <MegaItem href="/duel" icon={Star} label={t("createTable")} desc={t("createTableDesc")} color="text-brand-gold" />
-              <MegaItem href="/leaderboard" icon={Trophy} label={t("duelRanking")} desc={t("duelRankingDesc")} color="text-brand-cyan" />
+            <NavDropdown label={t("duel")} href="/duel" isActive={isActive("/duel")} onClick={handleProtectedAction}>
+              <MegaItem href="/duel" onClick={handleProtectedAction} icon={Swords} label={t("findOpponent")} desc={t("findOpponentDesc")} color="text-brand-orange" />
+              <MegaItem href="/duel" onClick={handleProtectedAction} icon={Star} label={t("createTable")} desc={t("createTableDesc")} color="text-brand-gold" />
+              <MegaItem href="/leaderboard" onClick={handleProtectedAction} icon={Trophy} label={t("duelRanking")} desc={t("duelRankingDesc")} color="text-brand-cyan" />
             </NavDropdown>
 
             <NavLink href="/leaderboard" label={t("leaderboard")} isActive={isActive("/leaderboard")} />
@@ -298,7 +324,7 @@ export const Header = () => {
 
             {/* CTA Button with shimmer */}
             <div className="hidden lg:flex items-center gap-2.5">
-              <Link href="/chat">
+              <Link href="/chat" onClick={handleProtectedAction}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -334,7 +360,13 @@ export const Header = () => {
 
             {/* Notifications */}
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={(e) => {
+                if (!user) {
+                  setShowMemberModal(true);
+                } else {
+                  setShowNotifications(!showNotifications);
+                }
+              }}
               aria-label="Notifications"
               className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/90 hover:text-brand-gold transition-colors"
             >
@@ -587,6 +619,7 @@ export const Header = () => {
           )}
         </AnimatePresence>
       </header>
+      <MemberOnlyModal isOpen={showMemberModal} onClose={() => setShowMemberModal(false)} />
     </>
   );
 };

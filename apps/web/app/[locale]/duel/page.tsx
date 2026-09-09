@@ -319,6 +319,14 @@ export default function DuelLobbyPage() {
   const [targetUsername, setTargetUsername] = useState("");
   const router = useRouter();
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#050505]">
+        <MemberOnlyModal isOpen={true} onClose={() => router.push("/")} />
+      </div>
+    );
+  }
+
   // Create table state
   const [difficulty, setDifficulty] = useState("MEDIUM");
   const [bet, setBet] = useState(50);
