@@ -123,7 +123,7 @@ echo "✅ API is healthy."
 
 # 8. Seed Canonical Email Templates & Super Admin
 echo "📧 Seeding Canonical Email Templates..."
-docker-compose -f docker-compose.prod.yml exec -T api node scripts/seed-canonical-email-templates.js
+docker-compose -f docker-compose.prod.yml run --rm backup node scripts/seed-canonical-email-templates.js
 
 # 9. Setup Automated Daily Backup Cron Job
 echo "⏰ Configuring Automated Daily Backup Cron Job (03:00 UTC)..."
