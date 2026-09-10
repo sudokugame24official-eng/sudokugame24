@@ -289,7 +289,7 @@ export const Header = () => {
           </div>
 
           {/* ---- Desktop Navigation ---- */}
-          <nav className="hidden lg:flex items-center gap-5 ml-6 flex-1">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-5 ml-2 xl:ml-6 flex-1">
             <NavLink href="/play" label={t("play")} isActive={isActive("/play")} />
 
             <NavLink href="/daily" label={t("daily")} isActive={isActive("/daily")} />
@@ -320,10 +320,10 @@ export const Header = () => {
           </nav>
 
           {/* ---- Right Actions ---- */}
-          <div className="flex items-center gap-3 relative">
+          <div className="flex items-center gap-2 sm:gap-3 relative shrink-0">
 
             {/* CTA Button with shimmer */}
-            <div className="hidden lg:flex items-center gap-2.5">
+            <div className="hidden xl:flex items-center gap-2.5">
               <Link href="/chat" onClick={handleProtectedAction}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}

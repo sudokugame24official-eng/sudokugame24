@@ -35,7 +35,7 @@ export function UserAvatar({
     <div className="relative inline-block shrink-0">
       <div
         className={cn(
-          "rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-[#0A2A5C] to-[#041E42] border-2 border-brand-gold/40 shadow-md",
+          "relative rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-[#0A2A5C] to-[#041E42] border-2 border-brand-gold/40 shadow-md",
           sizeClasses[size],
           borderClassName,
           className,
