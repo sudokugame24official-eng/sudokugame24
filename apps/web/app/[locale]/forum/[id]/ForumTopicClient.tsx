@@ -285,9 +285,11 @@ export default function ForumTopicClient({
           <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10 relative">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFCC00] to-[#E6B800] flex items-center justify-center font-black text-2xl text-[#041E42] shadow-lg">
-                {topic.author?.profile?.avatarUrl ||
-                  topic.author?.profile?.username?.charAt(0) ||
-                  "U"}
+                {topic.author?.profile?.avatarUrl ? (
+                  <img src={topic.author.profile.avatarUrl} alt={topic.author.profile.username || "User"} className="w-full h-full object-cover rounded-2xl" />
+                ) : (
+                  topic.author?.profile?.username?.charAt(0) || "U"
+                )}
               </div>
               <div>
                 <div
@@ -431,9 +433,11 @@ export default function ForumTopicClient({
                             : "bg-gradient-to-br from-gray-600 to-gray-800 text-white"
                       }`}
                     >
-                      {reply.author?.profile?.avatarUrl ||
-                        reply.author?.profile?.username?.charAt(0) ||
-                        "U"}
+                      {reply.author?.profile?.avatarUrl ? (
+                        <img src={reply.author.profile.avatarUrl} alt={reply.author.profile.username || "User"} className="w-full h-full object-cover rounded-xl" />
+                      ) : (
+                        reply.author?.profile?.username?.charAt(0) || "U"
+                      )}
                     </div>
                     <div>
                       <div
