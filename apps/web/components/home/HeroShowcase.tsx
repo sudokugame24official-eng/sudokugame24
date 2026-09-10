@@ -17,7 +17,7 @@ export function HeroShowcase() {
     <LazyMotion features={domAnimation}>
       <div className="relative w-full max-w-[460px] group">
         {/* Outer Radiant Glow */}
-        <div className="absolute -inset-2 bg-gradient-to-r from-brand-orange via-brand-gold to-brand-cyan rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700 animate-pulse" />
+        <div className="hidden md:block absolute -inset-2 bg-gradient-to-r from-brand-orange via-brand-gold to-brand-cyan rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700 animate-pulse" />
 
         {/* Showcase Container */}
         <div className="relative rounded-3xl bg-brand-navy-light/95 border-2 border-brand-gold/40 p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl overflow-hidden">

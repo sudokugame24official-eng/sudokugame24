@@ -30,9 +30,9 @@ export default function HomeContent() {
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] bg-brand-orange/15 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute top-[20%] right-[-5%] w-[45vw] h-[45vw] bg-brand-gold/15 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[30%] w-[40vw] h-[40vw] bg-brand-cyan/15 rounded-full blur-[130px] pointer-events-none" />
+        <div className="hidden md:block absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] bg-brand-orange/15 rounded-full blur-[140px] pointer-events-none" />
+        <div className="hidden md:block absolute top-[20%] right-[-5%] w-[45vw] h-[45vw] bg-brand-gold/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="hidden md:block absolute bottom-[-10%] left-[30%] w-[40vw] h-[40vw] bg-brand-cyan/15 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-[1340px] mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
@@ -250,7 +250,7 @@ export default function HomeContent() {
 
             {/* MEMBER CARD */}
             <div className="bg-gradient-to-br from-brand-orange/15 via-[#0A2A5C] to-brand-gold/10 border-2 border-brand-gold/50 rounded-3xl p-8 flex flex-col justify-between text-left shadow-[0_10px_40px_rgba(255,204,0,0.15)] relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="hidden lg:block absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 rounded-full blur-2xl pointer-events-none" />
 
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -295,8 +295,8 @@ export default function HomeContent() {
 
         {/* 3. ESPORTS ARENA & DUELS */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#061838] via-[#041E42] to-[#0A2A5C] border-2 border-brand-cyan/40 p-8 sm:p-12 lg:p-14 shadow-[0_25px_70px_rgba(0,191,255,0.2)]">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-cyan/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-96 h-96 bg-brand-orange/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="hidden lg:block absolute top-0 right-0 w-96 h-96 bg-brand-cyan/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="hidden lg:block absolute -bottom-10 -left-10 w-96 h-96 bg-brand-orange/15 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
@@ -355,12 +355,11 @@ export default function HomeContent() {
                     src="/hero2.webp"
                     alt="Sudoku World Championship Grand Finals"
                     fill
-                    priority
-                    fetchPriority="high"
+                    loading="lazy"
                     decoding="async"
                     quality={75}
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    sizes="(max-width: 640px) 340px, (max-width: 768px) 496px, 500px"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 496px, 500px"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
@@ -394,7 +393,7 @@ export default function HomeContent() {
 
         {/* 4. DAILY EVENT HIGHLIGHT */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#12284C] via-[#0A2A5C] to-[#041E42] border-2 border-brand-gold/40 p-8 sm:p-12 shadow-2xl">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/10 rounded-full blur-3xl" />
+          <div className="hidden lg:block absolute top-0 right-0 w-80 h-80 bg-brand-gold/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
             <div className="space-y-5 max-w-2xl text-left">
@@ -544,7 +543,7 @@ export default function HomeContent() {
 
         {/* 7. FINAL STUDIO CALL-TO-ACTION */}
         <section className="relative overflow-hidden rounded-[3rem] text-center py-20 px-6 sm:px-12 bg-gradient-to-br from-brand-orange/20 via-brand-navy to-brand-cyan/20 border-2 border-brand-gold/40 shadow-[0_25px_80px_rgba(0,0,0,0.8)]">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/15 rounded-full blur-[140px] pointer-events-none" />
+          <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/15 rounded-full blur-[140px] pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-brand-gold px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
