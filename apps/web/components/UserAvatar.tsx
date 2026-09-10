@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -20,6 +21,7 @@ export function UserAvatar({
   isOnline,
   borderClassName,
 }: UserAvatarProps) {
+  const [imageError, setImageError] = useState(false);
   const sizeClasses = {
     xs: "w-6 h-6 text-[10px]",
     sm: "w-8 h-8 text-xs",
@@ -41,21 +43,14 @@ export function UserAvatar({
           className,
         )}
       >
-        {avatarUrl ? (
+        {avatarUrl && !imageError ? (
           <Image
             src={avatarUrl}
             alt={username || "Avatar"}
             fill
             sizes="(max-width: 768px) 32px, 64px"
             className="object-cover p-0.5 rounded-full"
-            onError={(e) => {
-              // Gracefully switch to fallback initial on broken image
-              const target = e.currentTarget;
-              target.style.display = "none";
-              if (target.parentElement) {
-                target.parentElement.innerHTML = `<span class="font-black text-brand-gold">${initial}</span>`;
-              }
-            }}
+            onError={() => setImageError(true)}
           />
         ) : (
           <span className="font-black text-brand-gold select-none">
