@@ -1,4 +1,6 @@
 import { PrismaClient, Difficulty, Role } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 
 const prisma = new PrismaClient();
 
@@ -428,62 +430,13 @@ async function main() {
 
   // 5. Sudoku Academy Articles (CMS)
   const academyAuthor = userIds["Sudoku Academy"] || "";
-  const articles = [
-    {
-      title: "What Is Sudoku?",
-      slug: "what-is-sudoku",
-      category: "Beginner",
-      content: `<h2>The History and Rules of Sudoku</h2><p>Sudoku is a logic-based, combinatorial number-placement puzzle. The objective is to fill a 9×9 grid with digits so that each column, each row, and each of the nine 3×3 subgrids that compose the grid contain all of the digits from 1 to 9.</p><h3>Why is it so popular?</h3><p>Because it requires no math skills, only logic!</p>`,
-    },
-    {
-      title: "How to Play Sudoku",
-      slug: "how-to-play-sudoku",
-      category: "Beginner",
-      content: `<h2>Step-by-Step Guide for Beginners</h2><ol><li><strong>Understand the Grid:</strong> You have 9 rows, 9 columns, and 9 3x3 blocks.</li><li><strong>Scan for easy numbers:</strong> Look for rows or columns that already have 7 or 8 numbers filled in.</li><li><strong>Use Pencil Marks:</strong> When you aren't sure, write down the possible candidates in the corner of the cell.</li><li><strong>Never Guess:</strong> Sudoku is purely logical. If you guess, you will likely make a mistake that ruins the board.</li></ol>`,
-    },
-    {
-      title: "Naked Singles",
-      slug: "naked-singles",
-      category: "Intermediate",
-      content: `<h2>Spotting Naked Singles</h2><p>A Naked Single is the easiest pattern to spot when you are using pencil marks (candidates). It occurs when a cell has only <strong>one possible digit</strong> left that can be placed in it, because all other digits (1-9) already exist in its row, column, or 3x3 block.</p><h3>How to find them</h3><p>Simply scan the board. If a cell sees 8 unique numbers, the 9th number must go there.</p>`,
-    },
-    {
-      title: "X-Wing Sudoku",
-      slug: "x-wing-sudoku",
-      category: "Advanced",
-      content: `<h2>Mastering the X-Wing Technique</h2><p>The X-Wing is an advanced pattern used to eliminate candidates. It requires looking at a single number.</p><h3>How it works:</h3><p>If you find a number (e.g., 4) that can only go in exactly <strong>two cells</strong> in Row 2, and exactly <strong>two cells</strong> in Row 7, AND those cells align perfectly in the exact same columns, you have found an X-Wing.</p><p>Because the 4 MUST be in one of those corners for both rows, it is impossible for the 4 to appear anywhere else in those two columns.</p><h3>The Result</h3><p>You can safely erase 4 as a candidate from any other cell in those two columns!</p>`,
-    },
-  ];
-
-  // Procedurally generate the rest
-  const otherTitles = [
-    "Sudoku Rules",
-    "Common Sudoku Mistakes",
-    "Hidden Singles",
-    "Naked Pairs",
-    "Hidden Pairs",
-    "Locked Candidates",
-    "Pointing Pairs",
-    "Swordfish Sudoku",
-    "Jellyfish",
-    "XY-Wing",
-    "XYZ-Wing",
-    "How to Solve Sudoku Faster",
-    "Sudoku Rating System Explained",
-  ];
-
-  for (const title of otherTitles) {
-    articles.push({
-      title: title,
-      slug: title.toLowerCase().replace(/ /g, "-"),
-      category:
-        title.includes("Sudoku Rules") || title.includes("Mistakes")
-          ? "Beginner"
-          : title.includes("Wing") || title.includes("fish")
-            ? "Advanced"
-            : "Intermediate",
-      content: `<h2>Mastering ${title}</h2><p>This is the official step-by-step guide provided by the Sudoku Academy to help you learn ${title}. Always remember to use candidates effectively.</p>`,
-    });
+  let articles = [];
+  try {
+    const articlesPath = path.join(__dirname, "articles-generated.json");
+    const fileData = fs.readFileSync(articlesPath, "utf-8");
+    articles = JSON.parse(fileData);
+  } catch (err) {
+    console.error("Failed to load articles-generated.json", err);
   }
 
   for (const article of articles) {
