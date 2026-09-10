@@ -146,7 +146,7 @@ const NavDropdown = ({
       <Link
         href={href}
         onClick={onClick}
-        className={`group relative px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[14px] font-black uppercase tracking-wider transition-all duration-200 ${
+        className={`group relative px-1.5 xl:px-3 py-1.5 rounded-lg flex items-center gap-1 xl:gap-1.5 text-[11px] xl:text-[14px] font-black uppercase tracking-wider transition-all duration-200 ${
           isActive
             ? "text-brand-gold bg-brand-gold/10"
             : "text-white/85 hover:text-brand-gold hover:bg-white/5"
@@ -202,7 +202,7 @@ const NavLink = ({ href, label, isActive }: { href: string; label: string; isAct
   <div className="relative py-5">
     <Link
       href={href}
-      className={`group px-3 py-1.5 rounded-lg text-[14px] font-black uppercase tracking-wider transition-all duration-200 flex items-center ${
+      className={`group px-1.5 xl:px-3 py-1.5 rounded-lg text-[11px] xl:text-[14px] font-black uppercase tracking-wider transition-all duration-200 flex items-center ${
         isActive
           ? "text-brand-gold bg-brand-gold/10"
           : "text-white/85 hover:text-brand-gold hover:bg-white/5"
@@ -268,7 +268,7 @@ export const Header = () => {
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowMobileMenu(true)}
               aria-label="Ouvrir le menu mobile"
-              className="md:hidden p-2 -ml-2 text-white/80 hover:text-brand-gold transition-colors"
+              className="lg:hidden p-2 -ml-2 text-white/80 hover:text-brand-gold transition-colors"
             >
               <Menu className="w-6 h-6" />
             </motion.button>
@@ -513,14 +513,14 @@ export const Header = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowMobileMenu(false)}
-                className="fixed inset-0 bg-black/70 z-[100] md:hidden backdrop-blur-sm"
+                className="fixed inset-0 bg-black/70 z-[100] lg:hidden backdrop-blur-sm"
               />
               <motion.div
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 250 }}
-                className="fixed top-0 left-0 bottom-0 w-[80%] max-w-sm z-[101] md:hidden flex flex-col shadow-2xl overflow-hidden"
+                className="fixed top-0 left-0 bottom-0 w-[80%] max-w-sm z-[101] lg:hidden flex flex-col shadow-2xl overflow-hidden"
                 style={{ background: "linear-gradient(160deg, #0A2A5C 0%, #041E42 50%, #050505 100%)" }}
               >
                 {/* Header */}
