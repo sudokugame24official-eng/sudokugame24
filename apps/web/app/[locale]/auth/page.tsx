@@ -44,9 +44,25 @@ export default function AuthPage() {
       }
 
       const userData = await res.json();
-      login(userData);
-      const userRole = userData?.user?.role || userData?.role;
-      if (userRole === "SUPER_ADMIN" || userRole === "ADMIN") {
+      const actualUser = userData?.user || userData;
+      login(actualUser);
+
+      const isStaffRole = [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "CONTENT_MANAGER",
+        "MODERATOR",
+        "ANALYST",
+        "SUPPORT_AGENT",
+      ].includes(actualUser?.role);
+
+      if (isStaffRole) {
+        // Systematically open Admin Panel in a second browser tab for admins
+        try {
+          window.open(`/${locale}/admin`, "_blank");
+        } catch (e) {
+          console.error("Tab pop-up blocked", e);
+        }
         router.push(`/${locale}/admin`);
       } else {
         router.push(`/${locale}/profile`);

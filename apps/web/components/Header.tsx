@@ -21,13 +21,14 @@ import {
   Home,
   Globe,
   Search,
+  ShieldAlert,
 } from "lucide-react";
 import { Link } from "@/navigation";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { UserAvatar } from "./UserAvatar";
 import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 
 /* ---------- Modern Community Sudoku Logo ---------- */
 const SudokuLogoIcon = () => (
@@ -227,6 +228,8 @@ import { MemberOnlyModal } from "./MemberOnlyModal";
 export const Header = () => {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const params = useParams<{ locale?: string }>();
+  const locale = params?.locale || "fr";
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -423,6 +426,33 @@ export const Header = () => {
               )}
             </AnimatePresence>
 
+            {/* Staff Admin Quick Button (Opens Admin Panel in a new tab) */}
+            {user && [
+              "SUPER_ADMIN",
+              "ADMIN",
+              "CONTENT_MANAGER",
+              "MODERATOR",
+              "ANALYST",
+              "SUPPORT_AGENT",
+            ].includes(user.role) && (
+              <a
+                href={`/${locale}/admin`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Ouvrir le Panneau Admin dans un nouvel onglet"
+                className="hidden sm:flex shrink-0"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="h-8 px-3 rounded-full text-[11px] font-black uppercase tracking-wider text-brand-gold bg-brand-gold/15 hover:bg-brand-gold/25 border border-brand-gold/40 flex items-center gap-1.5 shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>ADMIN ↗</span>
+                </motion.button>
+              </a>
+            )}
+
             {/* Profile Menu */}
             <div className="relative group shrink-0">
               <Link
@@ -463,11 +493,34 @@ export const Header = () => {
                       {!user ? (
                         <Link href="/auth" className="text-[11px] text-brand-gold hover:underline">{t("signInCta")} →</Link>
                       ) : (
-                        <span className="text-[11px] text-gray-400 font-mono">Connecté</span>
+                        <span className="text-[11px] text-brand-gold font-mono uppercase font-bold">{user.role}</span>
                       )}
                     </div>
                   </div>
                   <div className="py-2">
+                    {user && [
+                      "SUPER_ADMIN",
+                      "ADMIN",
+                      "CONTENT_MANAGER",
+                      "MODERATOR",
+                      "ANALYST",
+                      "SUPPORT_AGENT",
+                    ].includes(user.role) && (
+                      <>
+                        <a href={`/${locale}/admin`} target="_blank" rel="noopener noreferrer">
+                          <motion.div
+                            whileHover={{ x: 4, backgroundColor: "rgba(255,204,0,0.15)" }}
+                            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer bg-brand-gold/10 border-y border-brand-gold/20"
+                          >
+                            <ShieldAlert className="w-4 h-4 text-brand-gold" />
+                            <span className="text-xs font-black text-brand-gold uppercase tracking-wider">
+                              Panneau Admin ↗
+                            </span>
+                          </motion.div>
+                        </a>
+                        <div className="h-px bg-white/8 my-1 mx-3" />
+                      </>
+                    )}
                     {[
                       { href: "/profile", label: t("profile"), icon: User },
                       { href: "/settings", label: t("settings"), icon: SettingsIcon },
