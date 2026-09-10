@@ -63,12 +63,6 @@ export async function generateMetadata({
       title: t("defaultTitle"),
       description: t("defaultDesc"),
     },
-    alternates: {
-      canonical: `/${locale}`,
-      languages: Object.fromEntries(
-        require("../../i18n").SEO_LOCALES.map((l: string) => [l, `/${l}`])
-      ),
-    },
   };
 }
 
