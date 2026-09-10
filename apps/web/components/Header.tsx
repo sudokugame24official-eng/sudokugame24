@@ -146,7 +146,7 @@ const NavDropdown = ({
       <Link
         href={href}
         onClick={onClick}
-        className={`group relative px-1.5 xl:px-3 py-1.5 rounded-lg flex items-center gap-1 xl:gap-1.5 text-[11px] xl:text-[14px] font-black uppercase tracking-wider transition-all duration-200 ${
+        className={`group relative px-1.5 xl:px-2.5 2xl:px-3 py-1.5 rounded-lg flex items-center gap-1 text-[11px] xl:text-[12.5px] 2xl:text-[13.5px] font-black uppercase tracking-wider transition-all duration-200 ${
           isActive
             ? "text-brand-gold bg-brand-gold/10"
             : "text-white/85 hover:text-brand-gold hover:bg-white/5"
@@ -202,7 +202,7 @@ const NavLink = ({ href, label, isActive }: { href: string; label: string; isAct
   <div className="relative py-5">
     <Link
       href={href}
-      className={`group px-1.5 xl:px-3 py-1.5 rounded-lg text-[11px] xl:text-[14px] font-black uppercase tracking-wider transition-all duration-200 flex items-center ${
+      className={`group px-1.5 xl:px-2.5 2xl:px-3 py-1.5 rounded-lg text-[11px] xl:text-[12.5px] 2xl:text-[13.5px] font-black uppercase tracking-wider transition-all duration-200 flex items-center ${
         isActive
           ? "text-brand-gold bg-brand-gold/10"
           : "text-white/85 hover:text-brand-gold hover:bg-white/5"
@@ -260,7 +260,7 @@ export const Header = () => {
             : "bg-brand-navy border-b border-brand-gold/20"
         }`}
       >
-        <div className="flex h-[68px] items-center justify-between px-4 md:px-8 max-w-[1400px] mx-auto">
+        <div className="flex h-[68px] items-center justify-between px-3 sm:px-5 xl:px-8 max-w-[1600px] w-full mx-auto">
 
           {/* ---- Mobile Menu & Logo ---- */}
           <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export const Header = () => {
           </div>
 
           {/* ---- Desktop Navigation ---- */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-5 ml-2 xl:ml-6 flex-1">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2.5 2xl:gap-5 ml-2 xl:ml-4 2xl:ml-6 flex-1">
             <NavLink href="/play" label={t("play")} isActive={isActive("/play")} />
 
             <NavLink href="/daily" label={t("daily")} isActive={isActive("/daily")} />
@@ -320,22 +320,22 @@ export const Header = () => {
           </nav>
 
           {/* ---- Right Actions ---- */}
-          <div className="flex items-center gap-2 sm:gap-3 relative shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 xl:gap-3 relative shrink-0">
 
-            {/* CTA Button with shimmer */}
-            <div className="hidden xl:flex items-center gap-2.5">
+            {/* CTA Button with shimmer (visible on 2xl screens to avoid squeezing laptop viewports) */}
+            <div className="hidden 2xl:flex items-center gap-2.5">
               <Link href="/chat" onClick={handleProtectedAction}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label="Tchat"
-                  className="h-9 px-5 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 transition-colors border border-white/20 flex items-center justify-center gap-2.5 min-w-[115px]"
+                  className="h-9 px-4 rounded-full font-black text-[12px] uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 transition-colors border border-white/20 flex items-center justify-center gap-2 min-w-[105px]"
                 >
                   <span className="relative flex h-2 w-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                   </span>
-                  <MessageSquare className="w-4 h-4" />
+                  <MessageSquare className="w-3.5 h-3.5" />
                   <span>TCHAT</span>
                 </motion.button>
               </Link>
@@ -345,16 +345,16 @@ export const Header = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label={t("play")}
-                  className="h-9 px-5 rounded-full font-black text-[13px] uppercase tracking-wider text-white bg-brand-orange hover:bg-brand-orange-light transition-colors shadow-lg shadow-brand-orange/30 flex items-center justify-center gap-2.5 min-w-[115px]"
+                  className="h-9 px-4 rounded-full font-black text-[12px] uppercase tracking-wider text-white bg-brand-orange hover:bg-brand-orange-light transition-colors shadow-lg shadow-brand-orange/30 flex items-center justify-center gap-2 min-w-[105px]"
                 >
-                  <Play className="w-4 h-4 fill-white shrink-0" />
+                  <Play className="w-3.5 h-3.5 fill-white shrink-0" />
                   <span>{t("play").toUpperCase()}</span>
                 </motion.button>
               </Link>
             </div>
 
             {/* Language Switcher with Flags */}
-            <div className="hidden md:block">
+            <div className="hidden md:block shrink-0">
               <LanguageSwitcher />
             </div>
 
@@ -368,7 +368,7 @@ export const Header = () => {
                 }
               }}
               aria-label="Notifications"
-              className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/90 hover:text-brand-gold transition-colors"
+              className="relative p-2 min-w-[38px] min-h-[38px] flex items-center justify-center text-white/90 hover:text-brand-gold transition-colors shrink-0"
             >
               <Bell className="w-5 h-5" />
               <motion.span
@@ -424,17 +424,21 @@ export const Header = () => {
             </AnimatePresence>
 
             {/* Profile Menu */}
-            <div className="relative group">
-              <Link href={user ? "/profile" : "/auth"}>
+            <div className="relative group shrink-0">
+              <Link
+                href={user ? "/profile" : "/auth"}
+                aria-label={user ? (user.profile?.username || "Profil") : "Se connecter"}
+                className="block"
+              >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="cursor-pointer transition-all"
+                  className="cursor-pointer transition-all flex items-center justify-center p-0.5 rounded-full hover:bg-white/5"
                 >
                   <UserAvatar
                     avatarUrl={user?.profile?.avatarUrl}
                     username={user?.profile?.username || user?.email}
                     size="sm"
-                    borderClassName="border-2 border-brand-gold/60 hover:border-brand-gold shadow-[0_0_12px_rgba(255,204,0,0.3)]"
+                    borderClassName="border-2 border-brand-gold/70 hover:border-brand-gold shadow-[0_0_12px_rgba(255,204,0,0.35)] bg-[#0A2A5C]"
                   />
                 </motion.div>
               </Link>

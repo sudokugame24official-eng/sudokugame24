@@ -31,7 +31,7 @@ export function UserAvatar({
     "2xl": "w-28 h-28 text-4xl",
   };
 
-  const initial = username ? username.charAt(0).toUpperCase() : "U";
+  const initial = username ? username.charAt(0).toUpperCase() : null;
 
   return (
     <div className="relative inline-block shrink-0">
@@ -52,10 +52,25 @@ export function UserAvatar({
             className="object-cover p-0.5 rounded-full"
             onError={() => setImageError(true)}
           />
-        ) : (
+        ) : initial ? (
           <span className="font-black text-brand-gold select-none">
             {initial}
           </span>
+        ) : (
+          <User
+            className={cn(
+              "text-brand-gold/90 shrink-0",
+              size === "xs"
+                ? "w-3 h-3"
+                : size === "sm"
+                  ? "w-4 h-4"
+                  : size === "md"
+                    ? "w-5 h-5"
+                    : size === "lg"
+                      ? "w-7 h-7"
+                      : "w-10 h-10",
+            )}
+          />
         )}
       </div>
 
