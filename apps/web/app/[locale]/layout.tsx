@@ -29,6 +29,8 @@ export async function generateMetadata({
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://sudokugame24.com";
 
+  const currentLocale = ["en", "fr", "de"].includes(locale) ? locale : "en";
+
   return {
     metadataBase: new URL(siteUrl),
     title: {
@@ -39,6 +41,15 @@ export async function generateMetadata({
     keywords: t("keywords")
       .split(",")
       .map((k) => k.trim()),
+    alternates: {
+      canonical: `${siteUrl}/${currentLocale}`,
+      languages: {
+        en: `${siteUrl}/en`,
+        fr: `${siteUrl}/fr`,
+        de: `${siteUrl}/de`,
+        "x-default": `${siteUrl}/en`,
+      },
+    },
     robots: {
       index: true,
       follow: true,
@@ -53,9 +64,10 @@ export async function generateMetadata({
     openGraph: {
       title: t("defaultTitle"),
       description: t("defaultDesc"),
-      url: siteUrl,
+      url: `${siteUrl}/${currentLocale}`,
       siteName: t("siteName"),
-      locale: locale,
+      locale: currentLocale === "fr" ? "fr_FR" : currentLocale === "de" ? "de_DE" : "en_US",
+      alternateLocale: ["en_US", "fr_FR", "de_DE"],
       type: "website",
     },
     twitter: {
